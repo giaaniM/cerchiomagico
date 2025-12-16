@@ -42,8 +42,8 @@ const soundManager = {
     },
 
     playError() {
-        // Error sound: Descending fast tones
-        this.playTone(100, 'triangle', 0.4, 0.1);
+        // Error sound: Low triangle wave, boosted volume
+        this.playTone(80, 'triangle', 0.4, 0.4);
     },
 
     playReveal() {
@@ -120,15 +120,40 @@ const elements = {
 
     // Hint
     hintDisplay: document.getElementById('hint-display'),
-    hintText: document.getElementById('hint-text')
+    hintText: document.getElementById('hint-text'),
+
+    // Intro Button
+    startGiftHuntBtn: document.getElementById('start-gift-hunt-btn')
 };
 
 // ===== Gift Levels =====
+// ===== Gift Levels =====
 const GIFT_LEVELS = [
-    { phrase: "GELATO CONFEZIONATO", hint: "Al supermercato" },
+    { phrase: "FAMOSO GELATO CONFEZIONATO", hint: "Al supermercato" },
     { phrase: "UN REGALO NON MATERIALE", hint: "Da scartare" },
     { phrase: "PRENDERE UN AEREO INSIEME", hint: "Dopo sei anni" }
 ];
+
+// ... (SoundManager update)
+
+// ===== Event Listeners =====
+if (elements.startGameBtn) elements.startGameBtn.addEventListener('click', () => startGame('free'));
+
+// Wire up Intro Screen flow
+if (elements.startSpecialBtn) {
+    elements.startSpecialBtn.addEventListener('click', () => {
+        soundManager.playClick();
+        // Show intro screen properly
+        showScreen('intro-screen');
+    });
+}
+
+if (elements.startGiftHuntBtn) {
+    elements.startGiftHuntBtn.addEventListener('click', () => {
+        // Start the actual game from the intro screen
+        startGame('special');
+    });
+}
 
 const VIENNA_IMAGE_PATH = "file:///Users/valeriopadovano/.gemini/antigravity/brain/0b4517b4-62a4-4c3a-ac9a-1848ee4b37c9/uploaded_image_1765810461415.jpg";
 
@@ -405,9 +430,11 @@ function startWithLetters() {
             if (count > 0) {
                 soundManager.playCorrect();
                 revealLetter(letter, true);
+                elements.popupMessage.className = 'popup-message success'; // Add green class
                 showPopupMessage(`La lettera ${letter} c'è! (${count})`, 0);
             } else {
                 soundManager.playError();
+                elements.popupMessage.className = 'popup-message error'; // Add red class
                 showPopupMessage(`La lettera ${letter} non c'è...`, 0);
             }
         }, delay);
@@ -416,6 +443,7 @@ function startWithLetters() {
 
     setTimeout(() => {
         soundManager.playClick();
+        elements.popupMessage.className = 'popup-message'; // Reset class
         showPopupMessage("Tocca a te! 🎮", 1500);
         elements.letterInput.disabled = false;
         elements.guessBtn.disabled = false;
