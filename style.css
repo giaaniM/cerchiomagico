@@ -89,6 +89,7 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-shadow: none;
+    margin-top: 100px;
     margin-bottom: 5px;
 }
 
@@ -382,9 +383,9 @@ body {
 
 .game-header {
     text-align: center;
-    margin-bottom: 30px;
-    padding-top: 100px;
-    /* Increased from 60px */
+    margin-bottom: 20px;
+    padding-top: 0;
+    /* Removed large padding to center content */
     position: relative;
     z-index: 10;
 }
@@ -665,6 +666,11 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    transition: background-color 0.3s ease;
+}
+
+.modal-overlay.transparent {
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .modal-content {
@@ -800,6 +806,26 @@ body {
     border: 2px solid var(--accent-gold);
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
     animation: slideUpFade 0.5s ease-out;
+
+    /* Position at bottom */
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 600px;
+}
+
+.popup-message.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-color: #34d399;
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+}
+
+.popup-message.error {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    border-color: #f87171;
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
 }
 
 @keyframes slideUpFade {
@@ -973,4 +999,43 @@ body {
     .action-buttons button {
         width: 100%;
     }
+}
+
+/* ===== Welcome Screen ===== */
+.welcome-image-container {
+    margin: 20px 0;
+    width: 100%;
+    max-width: 700px;
+    /* Enlarge image */
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    border: 4px solid white;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#welcome-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+#welcome-image:hover {
+    transform: scale(1.02);
+}
+
+/* ===== Game Mode Adjustments ===== */
+/* When .game-mode class is added to game-container */
+.game-container.game-mode .game-header {
+    margin-top: 40px;
+    /* Add space specifically for game mode */
+    margin-bottom: 20px;
+}
+
+.game-container.game-mode {
+    justify-content: flex-start;
+    /* Prevent centering form pushing top off-screen */
+    padding-top: 20px;
 }

@@ -83,6 +83,8 @@ const elements = {
     setupScreen: document.getElementById('setup-screen'),
     gameScreen: document.getElementById('game-screen'),
     winScreen: document.getElementById('win-screen'),
+    welcomeScreen: document.getElementById('welcome-screen'),
+    proceedToGiftBtn: document.getElementById('proceed-to-gift-btn'),
 
     // Overlays
     modalOverlay: document.getElementById('modal-overlay'),
@@ -139,12 +141,16 @@ const GIFT_LEVELS = [
 // ===== Event Listeners =====
 if (elements.startGameBtn) elements.startGameBtn.addEventListener('click', () => startGame('free'));
 
-// Wire up Intro Screen flow
+// Wire up Special Mode flow (Welcome -> Intro -> Game)
 if (elements.startSpecialBtn) {
     elements.startSpecialBtn.addEventListener('click', () => {
-        soundManager.playClick();
-        // Show intro screen properly
-        showScreen('intro-screen');
+        openWelcomeScreen();
+    });
+}
+
+if (elements.proceedToGiftBtn) {
+    elements.proceedToGiftBtn.addEventListener('click', () => {
+        proceedFromWelcome();
     });
 }
 
@@ -183,6 +189,14 @@ function showScreen(screenId) {
         screen.classList.remove('active');
     });
     document.getElementById(screenId).classList.add('active');
+
+    // Manage 'game-mode' class for layout adjustments
+    const container = document.querySelector('.game-container');
+    if (screenId === 'game-screen') {
+        container.classList.add('game-mode');
+    } else {
+        container.classList.remove('game-mode');
+    }
 }
 
 // ===== Game Board Functions =====
@@ -307,11 +321,13 @@ function checkWin() {
     const totalLetterTiles = document.querySelectorAll('.tile.letter').length;
     if (totalRevealed === totalLetterTiles) {
         soundManager.playWin();
+        playWinAudio(); // Play custom win audio
         setTimeout(showWinScreen, 1500);
         return true;
     }
     return false;
 }
+
 
 function showWinScreen() {
     elements.winPhrase.textContent = gameState.phrase.toUpperCase();
@@ -418,6 +434,9 @@ function startWithLetters() {
     elements.guessBtn.disabled = true;
     elements.solutionInput.disabled = true;
 
+    // Make overlay transparent to see the board
+    elements.modalOverlay.classList.add('transparent');
+
     showPopupMessage("Sveliamo le lettere...", 0);
 
     let delay = 1500;
@@ -444,7 +463,19 @@ function startWithLetters() {
     setTimeout(() => {
         soundManager.playClick();
         elements.popupMessage.className = 'popup-message'; // Reset class
+
+        // Remove transparent class as we might need opacity for other modals later
+        // But for "Tocca a te", we probably still want to see the board? 
+        // Actually, "Tocca a te" is a short message. Keeping transparent is fine.
+        // But eventually we might close the overlay.
+
         showPopupMessage("Tocca a te! 🎮", 1500);
+
+        // Cleanup transparency after message hides
+        setTimeout(() => {
+            elements.modalOverlay.classList.remove('transparent');
+        }, 1500);
+
         elements.letterInput.disabled = false;
         elements.guessBtn.disabled = false;
         elements.solutionInput.disabled = false;
@@ -452,6 +483,31 @@ function startWithLetters() {
     }, delay);
 }
 
+
+
+const welcomeAudio = new Audio('welcomegift.mp3');
+const winAudio = new Audio('fraseindovinata.mp3');
+
+function playWinAudio() {
+    winAudio.currentTime = 0;
+    winAudio.play().catch(e => console.warn("Win Audio play blocked", e));
+}
+
+function openWelcomeScreen() {
+    soundManager.playClick();
+    showScreen('welcome-screen');
+    welcomeAudio.currentTime = 0;
+    welcomeAudio.volume = 1.0;
+    welcomeAudio.play().catch(e => console.warn("Audio play blocked", e));
+}
+
+function proceedFromWelcome() {
+    soundManager.playClick();
+    welcomeAudio.pause();
+    welcomeAudio.currentTime = 0;
+    // Skip intro screen, start game directly
+    startGame('special');
+}
 
 // ===== Game Actions =====
 function startGame(mode = 'free') {
@@ -542,6 +598,7 @@ function trySolution() {
 
     if (normalizePhrase(guess) === gameState.normalizedPhrase) {
         soundManager.playWin();
+        playWinAudio();
         showMessage('🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉', 'success');
         revealAllLetters();
         setTimeout(showWinScreen, 1500);
@@ -565,7 +622,7 @@ function newGame() {
 
 // ===== Event Listeners =====
 if (elements.startGameBtn) elements.startGameBtn.addEventListener('click', () => startGame('free'));
-if (elements.startSpecialBtn) elements.startSpecialBtn.addEventListener('click', () => startGame('special'));
+// if (elements.startSpecialBtn) elements.startSpecialBtn.addEventListener('click', () => startGame('special'));
 
 if (elements.confirmSelectionBtn) elements.confirmSelectionBtn.addEventListener('click', confirmSelection);
 
