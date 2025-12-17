@@ -106,6 +106,7 @@ const elements = {
     gameBoard: document.getElementById('game-board'),
     letterInput: document.getElementById('letter-input'),
     guessBtn: document.getElementById('guess-btn'),
+    guessBtn: document.getElementById('guess-btn'),
     solutionInput: document.getElementById('solution-input'),
     trySolutionBtn: document.getElementById('try-solution-btn'),
     messageDisplay: document.getElementById('message-display'),
@@ -125,8 +126,17 @@ const elements = {
     hintText: document.getElementById('hint-text'),
 
     // Intro Button
-    startGiftHuntBtn: document.getElementById('start-gift-hunt-btn')
+    // Intro Button
+    startGiftHuntBtn: document.getElementById('start-gift-hunt-btn'),
+
+    // Reveal HUD
+    revealHud: document.getElementById('reveal-hud'),
+    revealLettersContainer: document.getElementById('reveal-letters-container')
 };
+
+const welcomeAudio = new Audio('welcomegift.mp3');
+const winAudio = new Audio('fraseindovinata.mp3');
+const christmasAudio = new Audio('jinglebells.mp3');
 
 // ===== Gift Levels =====
 // ===== Gift Levels =====
@@ -301,17 +311,34 @@ function showMessage(text, type = 'info') {
 }
 
 // Popup message (Overlay)
-function showPopupMessage(text, duration = 2000) {
+function showPopupMessage(text, duration = 2000, type = 'bottom') {
     elements.modalOverlay.style.display = 'flex';
-    elements.selectionModal.style.display = 'none';
-    elements.popupMessage.style.display = 'block';
 
-    elements.popupMessage.textContent = text;
+    elements.popupMessage.className = 'popup-message'; // Reset
+
+    // logic to keep modal visible if we are in "reveal" mode (transparent overlay)
+    // AND if the message is NOT the "Center" type (which should probably cover everything or be distinct)
+    if (!elements.modalOverlay.classList.contains('transparent')) {
+        elements.selectionModal.style.display = 'none';
+    } else {
+        elements.selectionModal.style.display = 'block';
+    }
+
+    if (type === 'center') {
+        elements.popupMessage.classList.add('center-screen');
+    }
+
+    elements.popupMessage.style.display = 'block';
+    elements.popupMessage.innerHTML = text; // Allow HTML for bigger styling if needed
 
     if (duration > 0) {
         setTimeout(() => {
             elements.popupMessage.style.display = 'none';
-            elements.modalOverlay.style.display = 'none';
+            if (elements.modalOverlay.classList.contains('transparent') && type === 'center') {
+                // specific cleanup if needed, but usually handled by caller
+            } else {
+                elements.modalOverlay.style.display = 'none';
+            }
         }, duration);
     }
 }
@@ -321,7 +348,16 @@ function checkWin() {
     const totalLetterTiles = document.querySelectorAll('.tile.letter').length;
     if (totalRevealed === totalLetterTiles) {
         soundManager.playWin();
-        playWinAudio(); // Play custom win audio
+
+        if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
+            // Final Level: Play Christmas Audio immediately to ensure it works (user gesture)
+            winAudio.pause();
+            christmasAudio.currentTime = 0;
+            christmasAudio.play().catch(e => console.warn("Christmas Audio play blocked", e));
+        } else {
+            playWinAudio(); // Standard win audio
+        }
+
         setTimeout(showWinScreen, 1500);
         return true;
     }
@@ -334,6 +370,9 @@ function showWinScreen() {
 
     if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
         elements.winTitle.textContent = "Ora puoi scartare il regalo Amore ❤️";
+
+        // Audio already started in checkWin/trySolution to ensure playback
+
         elements.winMessage.textContent = "";
         elements.finalImageContainer.style.display = 'block';
         elements.finalImage.src = VIENNA_IMAGE_PATH; // Set image
@@ -424,7 +463,20 @@ function confirmSelection() {
 
     if (valid) {
         gameState.selectedLetters = selected;
-        elements.selectionModal.style.display = 'none';
+        elements.selectionModal.style.display = 'none'; // Hide modal immediately
+
+        // Show HUD
+        elements.revealHud.style.display = 'flex';
+        elements.revealLettersContainer.innerHTML = '';
+
+        // Create HUD tiles
+        gameState.selectedLetters.forEach(letter => {
+            const tile = document.createElement('div');
+            tile.className = 'reveal-tile';
+            tile.textContent = letter;
+            elements.revealLettersContainer.appendChild(tile);
+        });
+
         startWithLetters();
     }
 }
@@ -437,44 +489,47 @@ function startWithLetters() {
     // Make overlay transparent to see the board
     elements.modalOverlay.classList.add('transparent');
 
-    showPopupMessage("Sveliamo le lettere...", 0);
+    // showPopupMessage("Sveliamo le lettere...", 0); // Removed initial message too
 
-    let delay = 1500;
+    let delay = 1000;
 
-    gameState.selectedLetters.forEach((letter) => {
+    const hudTiles = document.querySelectorAll('.reveal-tile');
+
+    gameState.selectedLetters.forEach((letter, index) => {
         setTimeout(() => {
+            const currentTile = hudTiles[index];
+            if (currentTile) currentTile.classList.add('active');
+
             const count = countLetterOccurrences(gameState.phrase, letter);
             gameState.usedLetters.add(normalizeChar(letter));
 
-            if (count > 0) {
-                soundManager.playCorrect();
-                revealLetter(letter, true);
-                elements.popupMessage.className = 'popup-message success'; // Add green class
-                showPopupMessage(`La lettera ${letter} c'è! (${count})`, 0);
-            } else {
-                soundManager.playError();
-                elements.popupMessage.className = 'popup-message error'; // Add red class
-                showPopupMessage(`La lettera ${letter} non c'è...`, 0);
-            }
+            setTimeout(() => {
+                if (count > 0) {
+                    soundManager.playCorrect();
+                    revealLetter(letter, true);
+                    if (currentTile) currentTile.classList.add('success');
+                } else {
+                    soundManager.playError();
+                    if (currentTile) currentTile.classList.add('error');
+                }
+                if (currentTile) currentTile.classList.remove('active');
+            }, 500); // Small delay for "checking" animation feel
+
         }, delay);
         delay += 2500;
     });
 
     setTimeout(() => {
+        // Hide HUD
+        elements.revealHud.style.display = 'none';
+
         soundManager.playClick();
-        elements.popupMessage.className = 'popup-message'; // Reset class
 
-        // Remove transparent class as we might need opacity for other modals later
-        // But for "Tocca a te", we probably still want to see the board? 
-        // Actually, "Tocca a te" is a short message. Keeping transparent is fine.
-        // But eventually we might close the overlay.
+        // Cleanup transparency
+        elements.modalOverlay.classList.remove('transparent');
 
-        showPopupMessage("Tocca a te! 🎮", 1500);
-
-        // Cleanup transparency after message hides
-        setTimeout(() => {
-            elements.modalOverlay.classList.remove('transparent');
-        }, 1500);
+        // Center "Tocca a te"
+        showPopupMessage("TOCCA A TE", 2000, 'center');
 
         elements.letterInput.disabled = false;
         elements.guessBtn.disabled = false;
@@ -485,8 +540,18 @@ function startWithLetters() {
 
 
 
-const welcomeAudio = new Audio('welcomegift.mp3');
-const winAudio = new Audio('fraseindovinata.mp3');
+
+
+function stopExternalAudio() {
+    welcomeAudio.pause();
+    welcomeAudio.currentTime = 0;
+
+    winAudio.pause();
+    winAudio.currentTime = 0;
+
+    christmasAudio.pause();
+    christmasAudio.currentTime = 0;
+}
 
 function playWinAudio() {
     winAudio.currentTime = 0;
@@ -513,6 +578,7 @@ function proceedFromWelcome() {
 function startGame(mode = 'free') {
     soundManager.init(); // Init audio context on user gesture
     soundManager.playClick();
+    stopExternalAudio(); // Stop any lingering audio
 
     let phrase = '';
     let hint = '';
@@ -543,6 +609,7 @@ function startGame(mode = 'free') {
 
     elements.messageDisplay.textContent = '';
     elements.messageDisplay.className = 'message-display';
+    elements.messageDisplay.className = 'message-display';
     elements.letterInput.value = '';
     elements.solutionInput.value = '';
 
@@ -555,6 +622,7 @@ function startGame(mode = 'free') {
 
 function nextLevel() {
     gameState.currentLevel++;
+    stopExternalAudio();
     startGame('special');
 }
 
@@ -598,7 +666,15 @@ function trySolution() {
 
     if (normalizePhrase(guess) === gameState.normalizedPhrase) {
         soundManager.playWin();
-        playWinAudio();
+
+        if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
+            winAudio.pause();
+            christmasAudio.currentTime = 0;
+            christmasAudio.play().catch(e => console.warn("Christmas Audio play blocked", e));
+        } else {
+            playWinAudio();
+        }
+
         showMessage('🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉', 'success');
         revealAllLetters();
         setTimeout(showWinScreen, 1500);
@@ -614,6 +690,7 @@ function trySolution() {
 
 function newGame() {
     soundManager.playClick();
+    stopExternalAudio();
     showScreen('setup-screen');
     elements.phraseInput.value = '';
     elements.phraseInput.focus();
