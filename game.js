@@ -252,13 +252,16 @@ function createBoard() {
             const char = text[charIndex];
 
             if (charIndex >= 0 && charIndex < text.length && char !== ' ') {
+                const normalizedChar = normalizeChar(char);
                 if (/[A-ZÀ-ÿ]/i.test(char)) {
-                    tile.className = 'tile letter';
+                    const isRevealed = gameState.revealedLetters.has(normalizedChar);
+                    tile.className = isRevealed ? 'tile letter revealed' : 'tile letter';
                     tile.dataset.letter = char.toUpperCase();
-                    tile.dataset.normalized = normalizeChar(char);
+                    tile.dataset.normalized = normalizedChar;
+                    if (isRevealed) tile.textContent = char.toUpperCase();
                 } else {
-                    // Special char logic if needed, treating as empty for now or display directly
-                    tile.className = 'tile letter revealed'; // Show punctuation immediately
+                    // Punctuation
+                    tile.className = 'tile letter revealed';
                     tile.textContent = char;
                 }
             } else {
@@ -799,7 +802,7 @@ async function fetchPuzzleFromAI() {
     const API_KEY = 'AIzaSyAq2P04FaQP5cJAO5n0FdAYV5jmFV0hd9k';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
     // Force prompt to be very explicit
-    const prompt = 'Genera una frase per il gioco "La Ruota della Fortuna" in italiano. REQUISITO OBBLIGATORIO: MINIMO 25 LETTERE (esclusi spazi). Categorie: Proverbi lunghi, Citazioni, Titoli estesi. Restituisci SOLO un JSON valido (senza markdown) con: "phrase" (maiuscolo, solo lettere/spazi) e "hint". Esempio: {"phrase": "CHI TROVA UN AMICO TROVA UN TESORO", "hint": "Proverbio"}';
+    const prompt = 'Genera una frase per il gioco "La Ruota della Fortuna" in italiano. REQUISITO OBBLIGATORIO: LUNGHEZZA CIRCA 20-30 LETTERE. Stile: Ruota della fortuna italiana. Restituisci SOLO un JSON valido (senza markdown) con: "phrase" (maiuscolo, solo lettere/spazi) e "hint".';
 
     let lastError = null;
     // Retry up to 3 times if phrase is too short or invalid
