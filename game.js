@@ -1,117 +1,120 @@
-// ===== Sound Manager (Audio Synthesis) =====
+// ===== Sound Manager =====
 const soundManager = {
     audioCtx: null,
-
     init() {
         if (!this.audioCtx) {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) {
-                this.audioCtx = new AudioContext();
-            }
+            if (AudioContext) this.audioCtx = new AudioContext();
         }
-        // Resume context if suspended (browser policy)
-        if (this.audioCtx && this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume();
-        }
+        if (this.audioCtx?.state === 'suspended') this.audioCtx.resume();
     },
-
     playTone(freq, type, duration, vol = 0.1) {
         if (!this.audioCtx) this.init();
         if (!this.audioCtx) return;
-
         const osc = this.audioCtx.createOscillator();
         const gain = this.audioCtx.createGain();
-
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
-
         gain.gain.setValueAtTime(vol, this.audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + duration);
-
         osc.connect(gain);
         gain.connect(this.audioCtx.destination);
-
         osc.start();
         osc.stop(this.audioCtx.currentTime + duration);
     },
-
-    playCorrect() {
-        // Coin sound: Two high sine waves in quick succession
-        this.playTone(987, 'sine', 0.08, 0.1); // B5
-        setTimeout(() => this.playTone(1318, 'sine', 0.2, 0.1), 50); // E6
-    },
-
-    playError() {
-        // Error sound: Low triangle wave, boosted volume
-        this.playTone(80, 'triangle', 0.4, 0.4);
-    },
-
-    playReveal() {
-        this.playTone(800, 'sine', 0.1, 0.05);
-    },
-
-    playClick() {
-        this.playTone(400, 'triangle', 0.05, 0.05);
-    },
-
+    playCorrect() { this.playTone(987, 'sine', 0.08, 0.1); setTimeout(() => this.playTone(1318, 'sine', 0.2, 0.1), 50); },
+    playError() { this.playTone(80, 'triangle', 0.4, 0.4); },
+    playClick() { this.playTone(400, 'triangle', 0.05, 0.05); },
     playWin() {
-        // Victory fanfare
-        const now = 0;
-        this.playTone(523, 'square', 0.1); // C5
-        setTimeout(() => this.playTone(659, 'square', 0.1), 150); // E5
-        setTimeout(() => this.playTone(783, 'square', 0.1), 300); // G5
-        setTimeout(() => this.playTone(1046, 'square', 0.6), 450); // C6
-    }
+        this.playTone(523, 'square', 0.1);
+        setTimeout(() => this.playTone(659, 'square', 0.1), 150);
+        setTimeout(() => this.playTone(783, 'square', 0.1), 300);
+        setTimeout(() => this.playTone(1046, 'square', 0.6), 450);
+    },
+    playSpin() { this.playTone(300, 'sawtooth', 0.1, 0.05); }
 };
+
+// ===== Wheel Segments (24 segments like the real wheel) =====
+const WHEEL_SEGMENTS = [
+    { value: 500, color: '#f39c12', label: '€500' },
+    { value: 300, color: '#3498db', label: '€300' },
+    { value: 200, color: '#e74c3c', label: '€200' },
+    { value: 100, color: '#27ae60', label: '€100' },
+    { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
+    { value: 350, color: '#9b59b6', label: '€350' },
+    { value: 150, color: '#1abc9c', label: '€150' },
+    { value: 400, color: '#e67e22', label: '€400' },
+    { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
+    { value: 250, color: '#f1c40f', label: '€250' },
+    { value: 500, color: '#e74c3c', label: '€500' },
+    { value: 100, color: '#3498db', label: '€100' },
+    { value: 300, color: '#27ae60', label: '€300' },
+    { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
+    { value: 200, color: '#9b59b6', label: '€200' },
+    { value: 1000, color: '#f39c12', label: '€1000' },
+    { value: 150, color: '#1abc9c', label: '€150' },
+    { value: 400, color: '#e67e22', label: '€400' },
+    { value: 100, color: '#e74c3c', label: '€100' },
+    { value: 250, color: '#f1c40f', label: '€250' },
+    { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
+    { value: 350, color: '#3498db', label: '€350' },
+    { value: 200, color: '#27ae60', label: '€200' },
+    { value: 500, color: '#9b59b6', label: '€500' }
+];
+
+const VOWELS = ['A', 'E', 'I', 'O', 'U'];
+const VOWEL_COST = 500;
+const TOTAL_MANCHES = 2;
 
 // ===== Game State =====
 const gameState = {
     phrase: '',
+    hint: '',
     normalizedPhrase: '',
     revealedLetters: new Set(),
     usedLetters: new Set(),
-    attempts: 0,
-    errors: 0,
-    currentLevel: 0,
-    isSpecialMode: false,
-    isSpecialMode: false,
-    selectedLetters: [],
-    maxExtraLetters: 5,
-    extraLettersCount: 0
+    players: [],
+    currentPlayerIndex: 0,
+    currentManche: 1,
+    partialScores: {},
+    totalScores: {},
+    pendingWheelValue: null,
+    wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
+    allConsonantsRevealed: false,
+    wheelRotation: 0
 };
 
 // ===== DOM Elements =====
 const elements = {
-    // Screens
     setupScreen: document.getElementById('setup-screen'),
     gameScreen: document.getElementById('game-screen'),
     winScreen: document.getElementById('win-screen'),
-    welcomeScreen: document.getElementById('welcome-screen'),
-    proceedToGiftBtn: document.getElementById('proceed-to-gift-btn'),
-
-    // Overlays
     modalOverlay: document.getElementById('modal-overlay'),
-    selectionModal: document.getElementById('selection-modal'),
     popupMessage: document.getElementById('popup-message'),
 
     // Setup
-    phraseInput: document.getElementById('phrase-input'),
-    // Removed initialLettersInput
+    playerCountInput: document.getElementById('player-count-input'),
+    playerNamesContainer: document.getElementById('player-names-container'),
+    setupStep1: document.getElementById('setup-step-1'),
+    setupStep2: document.getElementById('setup-step-2'),
+    nextStepBtn: document.getElementById('next-step-btn'),
+    backStepBtn: document.getElementById('back-step-btn'),
     startGameBtn: document.getElementById('start-game-btn'),
-    startSpecialBtn: document.getElementById('start-special-btn'),
-
-    // Selection Inputs
-    selectionInputs: document.querySelectorAll('.letter-select'),
-    confirmSelectionBtn: document.getElementById('confirm-selection-btn'),
-    selectionError: document.getElementById('selection-error'),
 
     // Game
+    mancheNumber: document.getElementById('manche-number'),
+    playersList: document.getElementById('players-list'),
+    hintText: document.getElementById('hint-text'),
     gameBoard: document.getElementById('game-board'),
-    letterInput: document.getElementById('letter-input'),
-    guessBtn: document.getElementById('guess-btn'),
-    guessBtn: document.getElementById('guess-btn'),
+    currentWheelValue: document.getElementById('current-wheel-value'),
+    wheelCanvas: document.getElementById('wheel-canvas'),
+    spinBtn: document.getElementById('spin-btn'),
+    consonantInput: document.getElementById('consonant-input'),
+    consonantBtn: document.getElementById('consonant-btn'),
+    vowelInput: document.getElementById('vowel-input'),
+    vowelBtn: document.getElementById('vowel-btn'),
     solutionInput: document.getElementById('solution-input'),
-    trySolutionBtn: document.getElementById('try-solution-btn'),
+    solveBtn: document.getElementById('solve-btn'),
     messageDisplay: document.getElementById('message-display'),
     newGameBtn: document.getElementById('new-game-btn'),
 
@@ -119,63 +122,8 @@ const elements = {
     winTitle: document.getElementById('win-title'),
     winPhrase: document.getElementById('win-phrase'),
     winMessage: document.getElementById('win-message'),
-    finalImageContainer: document.getElementById('final-image-container'),
-    finalImage: document.getElementById('final-image'),
-    nextLevelBtn: document.getElementById('next-level-btn'),
-    playAgainBtn: document.getElementById('play-again-btn'),
-
-    // Hint
-    hintDisplay: document.getElementById('hint-display'),
-    hintText: document.getElementById('hint-text'),
-
-    // Intro Button
-    // Intro Button
-    startGiftHuntBtn: document.getElementById('start-gift-hunt-btn'),
-
-    // Reveal HUD
-    revealHud: document.getElementById('reveal-hud'),
-    revealLettersContainer: document.getElementById('reveal-letters-container'),
-    remainingLetters: document.getElementById('remaining-letters')
+    nextLevelBtn: document.getElementById('next-level-btn')
 };
-
-const welcomeAudio = new Audio('welcomegift.mp3');
-const winAudio = new Audio('fraseindovinata.mp3');
-const christmasAudio = new Audio('jinglebells.mp3');
-
-// ===== Gift Levels =====
-// ===== Gift Levels =====
-const GIFT_LEVELS = [
-    { phrase: "FAMOSO GELATO CONFEZIONATO", hint: "Al supermercato" },
-    { phrase: "UN REGALO NON MATERIALE", hint: "Da scartare" },
-    { phrase: "PRENDERE UN AEREO INSIEME", hint: "Dopo sei anni" }
-];
-
-// ... (SoundManager update)
-
-// ===== Event Listeners =====
-if (elements.startGameBtn) elements.startGameBtn.addEventListener('click', () => startGame('free'));
-
-// Wire up Special Mode flow (Welcome -> Intro -> Game)
-if (elements.startSpecialBtn) {
-    elements.startSpecialBtn.addEventListener('click', () => {
-        openWelcomeScreen();
-    });
-}
-
-if (elements.proceedToGiftBtn) {
-    elements.proceedToGiftBtn.addEventListener('click', () => {
-        proceedFromWelcome();
-    });
-}
-
-if (elements.startGiftHuntBtn) {
-    elements.startGiftHuntBtn.addEventListener('click', () => {
-        // Start the actual game from the intro screen
-        startGame('special');
-    });
-}
-
-const VIENNA_IMAGE_PATH = "file:///Users/valeriopadovano/.gemini/antigravity/brain/0b4517b4-62a4-4c3a-ac9a-1848ee4b37c9/uploaded_image_1765810461415.jpg";
 
 // ===== Utility Functions =====
 function normalizeChar(char) {
@@ -183,126 +131,22 @@ function normalizeChar(char) {
 }
 
 function normalizePhrase(phrase) {
-    return phrase.split('').map(char => {
-        if (/[a-zA-ZÀ-ÿ]/.test(char)) return normalizeChar(char);
-        return char;
-    }).join('');
+    return phrase.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-function getUniqueLetters(phrase) {
-    const letters = new Set();
-    for (const char of phrase) {
-        if (/[A-Z]/.test(normalizeChar(char))) letters.add(normalizeChar(char));
-    }
-    return Array.from(letters);
+function isVowel(letter) {
+    return VOWELS.includes(normalizeChar(letter));
 }
 
-// ===== Screen Management =====
+function isConsonant(letter) {
+    return /[A-Z]/.test(normalizeChar(letter)) && !isVowel(letter);
+}
+
 function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
-    document.getElementById(screenId).classList.add('active');
-
-    // Manage 'game-mode' class for layout adjustments
-    const container = document.querySelector('.game-container');
-    if (screenId === 'game-screen') {
-        container.classList.add('game-mode');
-    } else {
-        container.classList.remove('game-mode');
-    }
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId)?.classList.add('active');
 }
 
-// ===== Game Board Functions =====
-function createBoard() {
-    elements.gameBoard.innerHTML = '';
-    const words = gameState.phrase.split(' ');
-    const BOARD_ROWS = 4;
-    const ROWS_CONFIG = [12, 14, 14, 12];
-    const MAX_ROW_LENGTH = 12;
-    let currentRow = [];
-    const contentRows = [];
-
-    words.forEach((word) => {
-        const spaceNeeded = currentRow.length > 0 ? 1 : 0;
-        if (currentRow.length + spaceNeeded + word.length <= MAX_ROW_LENGTH) {
-            if (currentRow.length > 0) currentRow.push({ type: 'space', char: ' ' });
-            for (const char of word) currentRow.push({ type: 'letter', char: char });
-        } else {
-            if (currentRow.length > 0) contentRows.push(currentRow);
-            currentRow = [];
-            for (const char of word) currentRow.push({ type: 'letter', char: char });
-        }
-    });
-    if (currentRow.length > 0) contentRows.push(currentRow);
-
-    const verticalOffset = Math.floor((BOARD_ROWS - contentRows.length) / 2);
-
-    for (let row = 0; row < BOARD_ROWS; row++) {
-        const rowElement = document.createElement('div');
-        rowElement.className = 'board-row';
-        const rowCapacity = ROWS_CONFIG[row];
-        const contentRowIndex = row - verticalOffset;
-        const contentRow = contentRows[contentRowIndex] || null;
-        const horizontalOffset = contentRow ? Math.floor((rowCapacity - contentRow.length) / 2) : 0;
-
-        for (let col = 0; col < rowCapacity; col++) {
-            const tileElement = document.createElement('div');
-            tileElement.className = 'tile';
-            const contentIndex = col - horizontalOffset;
-            const content = contentRow && contentIndex >= 0 && contentIndex < contentRow.length ? contentRow[contentIndex] : null;
-
-            if (content && content.type === 'letter') {
-                tileElement.classList.add('letter');
-                tileElement.dataset.letter = normalizeChar(content.char);
-                tileElement.textContent = content.char.toUpperCase();
-            } else {
-                tileElement.classList.add('empty');
-            }
-            rowElement.appendChild(tileElement);
-        }
-        elements.gameBoard.appendChild(rowElement);
-    }
-}
-
-function revealLetter(letter, animate = true) {
-    const normalizedLetter = normalizeChar(letter);
-    const tiles = document.querySelectorAll(`.tile.letter[data-letter="${normalizedLetter}"]`);
-    let count = 0;
-    tiles.forEach((tile, index) => {
-        if (!tile.classList.contains('revealed')) {
-            count++;
-            if (animate) {
-                setTimeout(() => {
-                    tile.classList.add('revealed', 'just-revealed');
-                    setTimeout(() => tile.classList.remove('just-revealed'), 1100);
-                }, index * 100);
-            } else {
-                tile.classList.add('revealed');
-            }
-        }
-    });
-    gameState.revealedLetters.add(normalizedLetter);
-    return count;
-}
-
-function revealAllLetters() {
-    const uniqueLetters = getUniqueLetters(gameState.phrase);
-    uniqueLetters.forEach(letter => {
-        if (!gameState.revealedLetters.has(letter)) revealLetter(letter, true);
-    });
-}
-
-function countLetterOccurrences(phrase, letter) {
-    const normalizedLetter = normalizeChar(letter);
-    let count = 0;
-    for (const char of phrase) {
-        if (normalizeChar(char) === normalizedLetter) count++;
-    }
-    return count;
-}
-
-// Standard message (Toast Style)
 function showMessage(text, type = 'info') {
     elements.messageDisplay.textContent = text;
     elements.messageDisplay.className = `message-display ${type}`;
@@ -314,437 +158,727 @@ function showMessage(text, type = 'info') {
     }, 3000);
 }
 
-// Popup message (Overlay)
-function showPopupMessage(text, duration = 2000, type = 'bottom') {
+function showPopup(html, duration = 2000) {
     elements.modalOverlay.style.display = 'flex';
-
-    elements.popupMessage.className = 'popup-message'; // Reset
-
-    // logic to keep modal visible if we are in "reveal" mode (transparent overlay)
-    // AND if the message is NOT the "Center" type (which should probably cover everything or be distinct)
-    if (!elements.modalOverlay.classList.contains('transparent')) {
-        elements.selectionModal.style.display = 'none';
-    } else {
-        elements.selectionModal.style.display = 'block';
-    }
-
-    if (type === 'center') {
-        elements.popupMessage.classList.add('center-screen');
-    }
-
     elements.popupMessage.style.display = 'block';
-    elements.popupMessage.innerHTML = text; // Allow HTML for bigger styling if needed
-
+    elements.popupMessage.innerHTML = html;
     if (duration > 0) {
         setTimeout(() => {
             elements.popupMessage.style.display = 'none';
-            if (elements.modalOverlay.classList.contains('transparent') && type === 'center') {
-                // specific cleanup if needed, but usually handled by caller
-            } else {
-                elements.modalOverlay.style.display = 'none';
-            }
+            elements.modalOverlay.style.display = 'none';
         }, duration);
     }
 }
 
-function checkWin() {
-    const totalRevealed = document.querySelectorAll('.tile.letter.revealed').length;
-    const totalLetterTiles = document.querySelectorAll('.tile.letter').length;
-    if (totalRevealed === totalLetterTiles) {
-        soundManager.playWin();
+// ===== Board Creation =====
+// ===== Board Creation =====
+const BOARD_LAYOUT = [12, 14, 14, 12];
 
-        if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
-            // Final Level: Play Christmas Audio immediately to ensure it works (user gesture)
-            winAudio.pause();
-            christmasAudio.currentTime = 0;
-            christmasAudio.play().catch(e => console.warn("Christmas Audio play blocked", e));
+function createBoard() {
+    elements.gameBoard.innerHTML = '';
+    const words = gameState.phrase.split(' ');
+
+    // Simple word wrapping logic to distribute words across lines
+    const rows = ['', '', '', ''];
+    let currentRow = 0; // Start comfortably in the middle-ish if possible, but 0 for now
+
+    // Try to center vertically: if phrase fits in 2 lines, use rows 1 and 2.
+    // Heuristic: estimate total length vs capacity.
+    // For simplicity, just fill generally. Improved logic:
+
+    let tempLines = [];
+    let currentLine = [];
+    let currentLen = 0;
+
+    // Layout words into lines respecting row widths (approximated to 14 for wrapping calc)
+    words.forEach(word => {
+        if (currentLen + word.length + (currentLine.length > 0 ? 1 : 0) <= 14) {
+            if (currentLine.length > 0) {
+                currentLine.push(' ');
+                currentLen += 1;
+            }
+            currentLine.push(word);
+            currentLen += word.length;
         } else {
-            playWinAudio(); // Standard win audio
+            tempLines.push(currentLine.join(''));
+            currentLine = [word];
+            currentLen = word.length;
         }
-
-        setTimeout(showWinScreen, 1500);
-        return true;
-    }
-    return false;
-}
-
-
-function showWinScreen() {
-    elements.winPhrase.textContent = gameState.phrase.toUpperCase();
-
-    if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
-        elements.winTitle.textContent = "Ora puoi scartare il regalo Amore ❤️";
-
-        // Audio already started in checkWin/trySolution to ensure playback
-
-        elements.winMessage.textContent = "";
-        elements.finalImageContainer.style.display = 'block';
-        elements.finalImage.src = VIENNA_IMAGE_PATH; // Set image
-        elements.nextLevelBtn.textContent = "GIOCA ANCORA 🎮";
-        elements.nextLevelBtn.onclick = () => {
-            soundManager.playClick();
-            gameState.currentLevel = 0;
-            newGame();
-        };
-    } else if (gameState.isSpecialMode) {
-        elements.winTitle.textContent = "BRAVISSIMO! 🎉";
-        elements.winMessage.textContent = "Livello completato!";
-        elements.finalImageContainer.style.display = 'none';
-        elements.nextLevelBtn.textContent = "Prossimo Livello ➡️";
-        elements.nextLevelBtn.onclick = () => {
-            soundManager.playClick();
-            nextLevel();
-        };
-    } else {
-        elements.winTitle.textContent = "HAI VINTO! 🎉";
-        elements.winMessage.textContent = "";
-        elements.finalImageContainer.style.display = 'none';
-        elements.nextLevelBtn.textContent = "Nuova Partita ➡️";
-        elements.nextLevelBtn.onclick = () => {
-            soundManager.playClick();
-            newGame();
-        };
-    }
-
-    showScreen('win-screen');
-}
-
-// ===== Letters Selection Observer =====
-
-function showLetterSelectionObserver() {
-    showScreen('game-screen');
-    elements.modalOverlay.style.display = 'flex';
-    elements.selectionModal.style.display = 'block';
-    elements.popupMessage.style.display = 'none';
-
-    elements.selectionInputs.forEach(input => input.value = '');
-    elements.selectionInputs[0].focus();
-    elements.selectionError.textContent = '';
-
-    elements.selectionInputs.forEach((input, index) => {
-        input.oninput = (e) => {
-            soundManager.playClick();
-            e.target.value = e.target.value.toUpperCase();
-            if (e.target.value && index < elements.selectionInputs.length - 1) {
-                elements.selectionInputs[index + 1].focus();
-            }
-        };
-        input.onkeydown = (e) => {
-            if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                elements.selectionInputs[index - 1].focus();
-            }
-        };
     });
-}
+    if (currentLine.length > 0) tempLines.push(currentLine.join(''));
 
-function confirmSelection() {
-    soundManager.playClick();
-    const selected = [];
-    let valid = true;
-    const vowels = ['A', 'E', 'I', 'O', 'U'];
+    // Assign tempLines to actual board rows creating vertical centering
+    let startRowIndex = 0;
+    if (tempLines.length === 1) startRowIndex = 1; // Center single line on row 2 (0-indexed)
+    else if (tempLines.length === 2) startRowIndex = 1;
+    else if (tempLines.length === 3) startRowIndex = 0;
 
-    elements.selectionInputs.forEach((input, index) => {
-        const val = input.value.toUpperCase();
-        if (!val || !/^[A-Z]$/.test(val)) {
-            valid = false;
+    for (let i = 0; i < tempLines.length; i++) {
+        if (startRowIndex + i < 4) {
+            rows[startRowIndex + i] = tempLines[i];
         }
-        if (index < 3 && vowels.includes(val)) {
-            elements.selectionError.textContent = "Le prime 3 devono essere consonanti!";
-            valid = false;
-            return;
-        }
-        if (index === 3 && !vowels.includes(val) && val) {
-            elements.selectionError.textContent = "L'ultima deve essere una vocale!";
-            valid = false;
-        }
-        selected.push(val);
-    });
-
-    if (!valid && !elements.selectionError.textContent) {
-        elements.selectionError.textContent = "Riempi tutti i campi!";
-        soundManager.playError();
     }
 
-    if (valid) {
-        gameState.selectedLetters = selected;
-        elements.selectionModal.style.display = 'none'; // Hide modal immediately
+    // Render the grid
+    BOARD_LAYOUT.forEach((cols, rowIndex) => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'board-row';
 
-        // Show HUD
-        elements.revealHud.style.display = 'flex';
-        elements.revealLettersContainer.innerHTML = '';
+        const text = rows[rowIndex] || '';
+        // Center text horizontally in the row
+        const padding = Math.floor((cols - text.length) / 2);
 
-        // Create HUD tiles
-        gameState.selectedLetters.forEach(letter => {
+        for (let i = 0; i < cols; i++) {
             const tile = document.createElement('div');
-            tile.className = 'reveal-tile';
-            tile.textContent = letter;
-            elements.revealLettersContainer.appendChild(tile);
-        });
 
-        startWithLetters();
-    }
+            // Determine if this cell has a character
+            const charIndex = i - padding;
+            const char = text[charIndex];
+
+            if (charIndex >= 0 && charIndex < text.length && char !== ' ') {
+                if (/[A-ZÀ-ÿ]/i.test(char)) {
+                    tile.className = 'tile letter';
+                    tile.dataset.letter = char.toUpperCase();
+                    tile.dataset.normalized = normalizeChar(char);
+                } else {
+                    // Special char logic if needed, treating as empty for now or display directly
+                    tile.className = 'tile letter revealed'; // Show punctuation immediately
+                    tile.textContent = char;
+                }
+            } else {
+                tile.className = 'tile empty';
+            }
+            rowDiv.appendChild(tile);
+        }
+        elements.gameBoard.appendChild(rowDiv);
+    });
 }
 
-function startWithLetters() {
-    elements.letterInput.disabled = true;
-    elements.guessBtn.disabled = true;
-    elements.solutionInput.disabled = true;
+function revealLetter(letter) {
+    const normalizedLetter = normalizeChar(letter);
+    let count = 0;
+    document.querySelectorAll('.tile.letter').forEach(tile => {
+        if (tile.dataset.normalized === normalizedLetter && !tile.classList.contains('revealed')) {
+            tile.textContent = tile.dataset.letter;
+            tile.classList.add('revealed');
+            count++;
+        }
+    });
+    gameState.revealedLetters.add(normalizedLetter);
+    return count;
+}
 
-    // Make overlay transparent to see the board
-    elements.modalOverlay.classList.add('transparent');
+function countLetterOccurrences(letter) {
+    const normalizedLetter = normalizeChar(letter);
+    let count = 0;
+    for (const char of gameState.phrase) {
+        if (normalizeChar(char) === normalizedLetter) count++;
+    }
+    return count;
+}
 
-    // showPopupMessage("Sveliamo le lettere...", 0); // Removed initial message too
+function checkAllConsonantsRevealed() {
+    for (const char of gameState.phrase) {
+        if (/[A-ZÀ-ÿ]/i.test(char) && isConsonant(char)) {
+            if (!gameState.revealedLetters.has(normalizeChar(char))) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
-    let delay = 1000;
+function checkWin() {
+    const revealed = document.querySelectorAll('.tile.letter.revealed').length;
+    const total = document.querySelectorAll('.tile.letter').length;
+    return revealed === total;
+}
 
-    const hudTiles = document.querySelectorAll('.reveal-tile');
+// ===== Players =====
+function renderPlayersList() {
+    elements.playersList.innerHTML = '';
+    gameState.players.forEach((player, index) => {
+        const li = document.createElement('li');
+        li.className = index === gameState.currentPlayerIndex ? 'active' : '';
+        li.innerHTML = `
+            <span class="player-name">${player.name}</span>
+            <span class="player-score">€${gameState.partialScores[player.name]}</span>
+        `;
+        elements.playersList.appendChild(li);
+    });
+}
 
-    gameState.selectedLetters.forEach((letter, index) => {
-        setTimeout(() => {
-            const currentTile = hudTiles[index];
-            if (currentTile) currentTile.classList.add('active');
+function getCurrentPlayer() {
+    return gameState.players[gameState.currentPlayerIndex];
+}
 
-            const count = countLetterOccurrences(gameState.phrase, letter);
-            gameState.usedLetters.add(normalizeChar(letter));
+function passTurn() {
+    gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+    gameState.pendingWheelValue = null;
+    gameState.wheelPhase = 'idle';
+    updateUI();
 
-            setTimeout(() => {
-                if (count > 0) {
-                    soundManager.playCorrect();
-                    revealLetter(letter, true);
-                    if (currentTile) currentTile.classList.add('success');
-                } else {
-                    soundManager.playError();
-                    if (currentTile) currentTile.classList.add('error');
-                }
-                if (currentTile) currentTile.classList.remove('active');
-            }, 500); // Small delay for "checking" animation feel
+    const nextPlayer = getCurrentPlayer();
+    showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2000);
+}
 
-        }, delay);
-        delay += 2500;
+// ===== Wheel Drawing =====
+function drawWheel(rotation = 0) {
+    const canvas = elements.wheelCanvas;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 5;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const segmentAngle = (2 * Math.PI) / WHEEL_SEGMENTS.length;
+    const rotationRad = (rotation * Math.PI) / 180;
+
+    // Draw each segment
+    WHEEL_SEGMENTS.forEach((segment, i) => {
+        const startAngle = i * segmentAngle + rotationRad;
+        const endAngle = startAngle + segmentAngle;
+
+        // Draw segment
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = segment.color;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw text
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + segmentAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = segment.value === 'BANCAROTTA' ? '#fff' : '#000';
+        ctx.font = 'bold 11px Outfit, sans-serif';
+        ctx.fillText(segment.label, radius - 10, 4);
+        ctx.restore();
     });
 
-    setTimeout(() => {
-        // Hide HUD
-        elements.revealHud.style.display = 'none';
-
-        soundManager.playClick();
-
-        // Cleanup transparency
-        elements.modalOverlay.classList.remove('transparent');
-
-        // Center "Tocca a te"
-        showPopupMessage("TOCCA A TE", 2000, 'center');
-
-        elements.letterInput.disabled = false;
-        elements.guessBtn.disabled = false;
-        elements.solutionInput.disabled = false;
-        elements.letterInput.focus();
-    }, delay);
+    // Draw center circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+    ctx.fillStyle = '#2c3e50';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
 }
 
+// ===== Wheel Spinning =====
+let wheelAnimationId = null;
 
+function spinWheel() {
+    if (gameState.wheelPhase !== 'idle' && gameState.wheelPhase !== 'choose_action') return;
 
+    soundManager.init();
+    gameState.wheelPhase = 'spinning';
+    elements.spinBtn.disabled = true;
 
+    // Random target segment
+    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+    const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+    const resultFragment = WHEEL_SEGMENTS[randomSegmentIndex];
 
-function stopExternalAudio() {
-    welcomeAudio.pause();
-    welcomeAudio.currentTime = 0;
+    // Calculate precise target rotation
+    // We want the center of the selected segment to end up at 270 degrees (Top)
+    // Segment Center relative to 0 rotation = index * angle + angle/2
+    const segmentCenter = randomSegmentIndex * segmentAngle + segmentAngle / 2;
 
-    winAudio.pause();
-    winAudio.currentTime = 0;
+    // Required rotation to bring segmentCenter to 270:
+    // TargetPos (270) = CurrentPos (segmentCenter) + Rotation
+    // Rotation = 270 - segmentCenter
+    let targetRotationDelta = 270 - segmentCenter;
 
-    christmasAudio.pause();
-    christmasAudio.currentTime = 0;
-}
+    // Normalize delta to be positive [0, 360) for clockwise rotation logic consistency
+    targetRotationDelta = (targetRotationDelta % 360 + 360) % 360;
 
-function playWinAudio() {
-    winAudio.currentTime = 0;
-    winAudio.play().catch(e => console.warn("Win Audio play blocked", e));
-}
+    // We want to add at least 5 full spins
+    const minSpins = 5;
+    const currentRotation = gameState.wheelRotation;
 
-function openWelcomeScreen() {
-    soundManager.playClick();
-    showScreen('welcome-screen');
-    welcomeAudio.currentTime = 0;
-    welcomeAudio.volume = 1.0;
-    welcomeAudio.play().catch(e => console.warn("Audio play blocked", e));
-}
+    // Calculate current position within the 0-360 cycle
+    const currentMod = currentRotation % 360;
 
-function proceedFromWelcome() {
-    soundManager.playClick();
-    welcomeAudio.pause();
-    welcomeAudio.currentTime = 0;
-    // Skip intro screen, start game directly
-    startGame('special');
-}
+    // Calculate distance to target from current position
+    // We want to go from currentMod to targetRotationDelta in clockwise direction
+    let distance = targetRotationDelta - currentMod;
 
-// ===== Game Actions =====
-function startGame(mode = 'free') {
-    soundManager.init(); // Init audio context on user gesture
-    soundManager.playClick();
-    stopExternalAudio(); // Stop any lingering audio
+    // If distance is negative (target is behind current), add 360 to go forward
+    if (distance < 0) distance += 360;
 
-    let phrase = '';
-    let hint = '';
+    // Total target rotation
+    const targetRotation = currentRotation + distance + (minSpins * 360);
 
-    gameState.isSpecialMode = (mode === 'special');
+    const startRotation = currentRotation;
+    const totalRotation = targetRotation - startRotation;
+    const duration = 5000; // Slower, more suspenseful spin
+    const startTime = performance.now();
 
-    if (mode === 'special') {
-        const levelData = GIFT_LEVELS[gameState.currentLevel];
-        phrase = levelData.phrase;
-        hint = levelData.hint;
-    } else {
-        gameState.currentLevel = 0;
-        phrase = elements.phraseInput.value.trim();
-        hint = "Indovina la frase segreta!";
+    // Play tick sounds during spin
+    let lastTickSegment = -1;
 
-        if (!phrase) { showMessage('Inserisci una frase!', 'error'); soundManager.playError(); return; }
-        const filteredPhrase = phrase.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
-        if (filteredPhrase.length < 3) { showMessage('La frase deve contenere almeno 3 lettere!', 'error'); soundManager.playError(); return; }
-        phrase = filteredPhrase;
+    function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Easing function for realistic deceleration (cubic ease out)
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentRotation = startRotation + totalRotation * easeOut;
+
+        gameState.wheelRotation = currentRotation;
+        drawWheel(currentRotation);
+
+        // Play tick sound when passing segments
+        // Pointer is at 270 degrees. We check what segment is currently under 270.
+        // Segment at 270 = (270 - rotation) normalized
+        const pointerAngle = 270;
+        const angleUnderPointer = (pointerAngle - currentRotation) % 360;
+        const normalizedAngle = (angleUnderPointer + 360) % 360;
+        const currentSegment = Math.floor(normalizedAngle / segmentAngle);
+
+        if (currentSegment !== lastTickSegment) {
+            soundManager.playClick();
+            lastTickSegment = currentSegment;
+        }
+
+        if (progress < 1) {
+            wheelAnimationId = requestAnimationFrame(animate);
+        } else {
+            gameState.wheelRotation = targetRotation;
+            drawWheel(targetRotation);
+            onWheelStop(resultFragment);
+        }
     }
 
-    gameState.phrase = phrase;
-    gameState.normalizedPhrase = normalizePhrase(phrase);
-    gameState.revealedLetters = new Set();
-    gameState.usedLetters = new Set();
-    gameState.attempts = 0;
-    gameState.errors = 0;
-    gameState.extraLettersCount = 0;
-    if (elements.remainingLetters) elements.remainingLetters.textContent = gameState.maxExtraLetters;
-
-    elements.messageDisplay.textContent = '';
-    elements.messageDisplay.className = 'message-display';
-    elements.messageDisplay.className = 'message-display';
-    elements.letterInput.value = '';
-    elements.solutionInput.value = '';
-
-    elements.hintDisplay.style.display = 'block';
-    elements.hintText.textContent = hint;
-
-    createBoard();
-    showLetterSelectionObserver();
+    wheelAnimationId = requestAnimationFrame(animate);
 }
 
-function nextLevel() {
-    gameState.currentLevel++;
-    stopExternalAudio();
-    startGame('special');
+function onWheelStop(result) {
+    const player = getCurrentPlayer();
+
+    if (result.value === 'PASSA') {
+        soundManager.playError();
+        elements.currentWheelValue.textContent = 'PASSA';
+        elements.currentWheelValue.className = 'wheel-value passa';
+        showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+    } else if (result.value === 'BANCAROTTA') {
+        soundManager.playError();
+        elements.currentWheelValue.textContent = 'BANCAROTTA';
+        elements.currentWheelValue.className = 'wheel-value bancarotta';
+        gameState.partialScores[player.name] = 0;
+        renderPlayersList();
+        showPopup(`<div class="popup-bancarotta">BANCAROTTA!<br>Perdi tutto!</div>`, 2500);
+        setTimeout(passTurn, 3000);
+    } else {
+        soundManager.playClick();
+        gameState.pendingWheelValue = result.value;
+        elements.currentWheelValue.textContent = `€${result.value}`;
+        elements.currentWheelValue.className = 'wheel-value';
+        gameState.wheelPhase = 'call_consonant';
+        updateUI();
+        showMessage(`Chiama una consonante (vale €${result.value})`, 'info');
+    }
 }
 
-function guessLetter() {
-    const letter = elements.letterInput.value.trim().toUpperCase();
-    elements.letterInput.value = '';
+// ===== Letter Actions =====
+function callConsonant() {
+    const letter = elements.consonantInput.value.trim().toUpperCase();
+    elements.consonantInput.value = '';
 
     if (!letter || !/^[A-ZÀ-ÿ]$/.test(letter)) {
         showMessage('Inserisci una lettera valida!', 'error');
-        elements.letterInput.focus();
         soundManager.playError();
         return;
     }
 
-    const normalizedLetter = normalizeChar(letter);
-    if (gameState.usedLetters.has(normalizedLetter)) {
-        showMessage(`Hai già provato la lettera "${letter}"!`, 'info');
-        elements.letterInput.focus();
-        soundManager.playClick(); // just a click for info
+    if (isVowel(letter)) {
+        soundManager.playError();
+        showMessage('Devi chiamare una CONSONANTE, non una vocale!', 'error');
+        showPopup(`<div class="popup-error">HAI CHIAMATO UNA VOCALE!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
         return;
     }
 
-    gameState.usedLetters.add(normalizedLetter);
+    const normalized = normalizeChar(letter);
+    if (gameState.usedLetters.has(normalized)) {
+        soundManager.playError();
+        showMessage(`La lettera "${letter}" è già stata chiamata!`, 'error');
+        showPopup(`<div class="popup-error">LETTERA GIÀ CHIAMATA!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+        return;
+    }
 
-    // Decrement allowed extra letters
-    gameState.extraLettersCount++;
-    const remaining = gameState.maxExtraLetters - gameState.extraLettersCount;
-    if (elements.remainingLetters) elements.remainingLetters.textContent = remaining;
-
-    const occurrences = countLetterOccurrences(gameState.phrase, letter);
+    gameState.usedLetters.add(normalized);
+    const occurrences = countLetterOccurrences(letter);
 
     if (occurrences > 0) {
+        const earnings = gameState.pendingWheelValue * occurrences;
+        gameState.partialScores[getCurrentPlayer().name] += earnings;
         soundManager.playCorrect();
-        revealLetter(letter, true);
-        showMessage(`🎉 "${letter}" trovata! (${occurrences})`, 'success');
-        setTimeout(() => checkWin(), occurrences * 100 + 300);
+        revealLetter(letter);
+        renderPlayersList();
+        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (+€${earnings})`, 'success');
+
+        if (checkWin()) {
+            setTimeout(endManche, 1500);
+        } else {
+            gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
+            gameState.wheelPhase = 'choose_action';
+            gameState.pendingWheelValue = null;
+            elements.currentWheelValue.textContent = '-';
+            updateUI();
+        }
     } else {
         soundManager.playError();
-        showMessage(`❌ "${letter}" non c'è.`, 'error');
-    }
-
-    if (remaining <= 0) {
-        elements.letterInput.disabled = true;
-        elements.guessBtn.disabled = true;
-        showPopupMessage("HAI FINITO LE LETTERE DISPONIBILI! <br> Ora prova a indovinare la frase!", 4000, 'center');
-    } else {
-        elements.letterInput.focus();
+        showMessage(`❌ "${letter}" non c'è nella frase.`, 'error');
+        showPopup(`<div class="popup-error">LETTERA ASSENTE!<br><span class="popup-name">${gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length].name}</span> tocca a te</div>`, 2000);
+        setTimeout(passTurn, 2500);
     }
 }
 
-function trySolution() {
+function buyVowel() {
+    const letter = elements.vowelInput.value.trim().toUpperCase();
+    elements.vowelInput.value = '';
+    const player = getCurrentPlayer();
+
+    if (!letter || !/^[AEIOUÀÈÌÒÙàèìòù]$/i.test(letter)) {
+        showMessage('Inserisci una vocale valida (A, E, I, O, U)!', 'error');
+        soundManager.playError();
+        return;
+    }
+
+    if (!isVowel(letter)) {
+        showMessage('Devi inserire una VOCALE!', 'error');
+        soundManager.playError();
+        return;
+    }
+
+    if (gameState.partialScores[player.name] < VOWEL_COST) {
+        showMessage(`Non hai abbastanza soldi! Servono €${VOWEL_COST}`, 'error');
+        soundManager.playError();
+        return;
+    }
+
+    const normalized = normalizeChar(letter);
+    if (gameState.usedLetters.has(normalized)) {
+        showMessage(`La vocale "${letter}" è già stata chiamata!`, 'error');
+        soundManager.playError();
+        showPopup(`<div class="popup-error">VOCALE GIÀ CHIAMATA!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+        return;
+    }
+
+    // Deduct cost
+    gameState.partialScores[player.name] -= VOWEL_COST;
+    gameState.usedLetters.add(normalized);
+    renderPlayersList();
+
+    const occurrences = countLetterOccurrences(letter);
+
+    if (occurrences > 0) {
+        soundManager.playCorrect();
+        revealLetter(letter);
+        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e!`, 'success');
+
+        if (checkWin()) {
+            setTimeout(endManche, 1500);
+        } else {
+            gameState.wheelPhase = 'choose_action';
+            updateUI();
+        }
+    } else {
+        soundManager.playError();
+        showMessage(`❌ "${letter}" non c'è nella frase. (-€${VOWEL_COST})`, 'error');
+        showPopup(`<div class="popup-error">VOCALE ASSENTE!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+    }
+}
+
+function trySolve() {
     const guess = elements.solutionInput.value.trim().toUpperCase();
-    if (!guess) return;
+    elements.solutionInput.value = '';
+
+    if (!guess) {
+        showMessage('Scrivi la soluzione!', 'error');
+        return;
+    }
 
     if (normalizePhrase(guess) === gameState.normalizedPhrase) {
         soundManager.playWin();
-
-        if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
-            winAudio.pause();
-            christmasAudio.currentTime = 0;
-            christmasAudio.play().catch(e => console.warn("Christmas Audio play blocked", e));
-        } else {
-            playWinAudio();
-        }
-
         showMessage('🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉', 'success');
-        revealAllLetters();
-        setTimeout(showWinScreen, 1500);
+        // Reveal all letters
+        document.querySelectorAll('.tile.letter').forEach(tile => {
+            tile.textContent = tile.dataset.letter;
+            tile.classList.add('revealed');
+        });
+        setTimeout(endManche, 1500);
     } else {
         soundManager.playError();
-        gameState.errors++;
-        gameState.attempts++;
-        showMessage('❌ Risposta errata! Riprova.', 'error');
-        elements.solutionInput.value = '';
-        elements.solutionInput.focus();
+        showMessage('❌ Soluzione errata!', 'error');
+        showPopup(`<div class="popup-error">SOLUZIONE SBAGLIATA!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
     }
+}
+
+// ===== Manche & Game Flow =====
+function endManche() {
+    const winner = getCurrentPlayer();
+    const winnings = gameState.partialScores[winner.name];
+    gameState.totalScores[winner.name] += winnings;
+
+    showPopup(`<div class="popup-win">
+        <div class="popup-title">MANCHE ${gameState.currentManche} VINTA!</div>
+        <div class="popup-winner">${winner.name}</div>
+        <div class="popup-earnings">+€${winnings}</div>
+    </div>`, 0);
+
+    setTimeout(() => {
+        elements.popupMessage.style.display = 'none';
+        elements.modalOverlay.style.display = 'none';
+
+        if (gameState.currentManche >= TOTAL_MANCHES) {
+            showFinalResults();
+        } else {
+            // Reset for next manche
+            gameState.currentManche++;
+            startNextManche();
+        }
+    }, 3000);
+}
+
+async function startNextManche() {
+    // Reset state
+    gameState.revealedLetters = new Set();
+    gameState.usedLetters = new Set();
+    gameState.pendingWheelValue = null;
+    gameState.wheelPhase = 'idle';
+    gameState.allConsonantsRevealed = false;
+
+    // Reset partial scores
+    gameState.players.forEach(p => gameState.partialScores[p.name] = 0);
+
+    // Random starting player
+    gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
+
+    // Get new phrase from AI
+    showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
+
+    try {
+        const data = await fetchPuzzleFromAI();
+        gameState.phrase = data.phrase.toUpperCase();
+        gameState.hint = data.hint;
+    } catch (e) {
+        console.error(e);
+        gameState.phrase = 'ERRORE DI CONNESSIONE';
+        gameState.hint = 'Riprova';
+    }
+
+    gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+
+    elements.popupMessage.style.display = 'none';
+    elements.modalOverlay.style.display = 'none';
+
+    elements.mancheNumber.textContent = gameState.currentManche;
+    elements.hintText.textContent = gameState.hint;
+    createBoard();
+    drawWheel(0);
+    renderPlayersList();
+    updateUI();
+
+    showPopup(`<div class="popup-turn">MANCHE ${gameState.currentManche}<br>INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>`, 2500);
+}
+
+function showFinalResults() {
+    // Find winner
+    let maxScore = -1;
+    let winner = null;
+    gameState.players.forEach(p => {
+        if (gameState.totalScores[p.name] > maxScore) {
+            maxScore = gameState.totalScores[p.name];
+            winner = p;
+        }
+    });
+
+    let resultsHtml = '<div class="results-list">';
+    gameState.players
+        .sort((a, b) => gameState.totalScores[b.name] - gameState.totalScores[a.name])
+        .forEach((p, i) => {
+            resultsHtml += `<div class="result-row ${i === 0 ? 'winner' : ''}">${i + 1}. ${p.name}: €${gameState.totalScores[p.name]}</div>`;
+        });
+    resultsHtml += '</div>';
+
+    elements.winTitle.textContent = `🏆 ${winner.name} VINCE! 🏆`;
+    elements.winPhrase.innerHTML = resultsHtml;
+    elements.winMessage.textContent = `Montepremi finale: €${maxScore}`;
+    elements.nextLevelBtn.textContent = 'NUOVA PARTITA';
+    elements.nextLevelBtn.onclick = newGame;
+
+    showScreen('win-screen');
+    soundManager.playWin();
+}
+
+// ===== UI Updates =====
+function updateUI() {
+    const phase = gameState.wheelPhase;
+    const allConsRevealed = gameState.allConsonantsRevealed;
+
+    // Spin button
+    // Enable spin if idle OR if player has control (choose_action)
+    elements.spinBtn.disabled = !(phase === 'idle' || phase === 'choose_action') || allConsRevealed;
+
+    // Consonant input
+    const canCallConsonant = phase === 'call_consonant' && !allConsRevealed;
+    elements.consonantInput.disabled = !canCallConsonant;
+    elements.consonantBtn.disabled = !canCallConsonant;
+
+    // Vowel input (available in choose_action if player has money)
+    const player = getCurrentPlayer();
+    const canBuyVowel = (phase === 'choose_action') && (gameState.partialScores[player?.name] >= VOWEL_COST);
+    elements.vowelInput.disabled = !canBuyVowel;
+    elements.vowelBtn.disabled = !canBuyVowel;
+
+    // Solve is always available
+
+    renderPlayersList();
+}
+
+// ===== AI Fetch =====
+async function fetchPuzzleFromAI() {
+    const API_KEY = 'AIzaSyAq2P04FaQP5cJAO5n0FdAYV5jmFV0hd9k';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+    const prompt = 'Genera una frase breve per il gioco "La Ruota della Fortuna" in italiano (massimo 4-5 parole, tipo proverbi, modi di dire, titoli di film). Restituisci SOLO un JSON valido con due campi: "phrase" (la frase in maiuscolo, solo lettere e spazi) e "hint" (la categoria, es. "Proverbio", "Film", "Modo di dire"). Esempio: {"phrase": "LA DOLCE VITA", "hint": "Film"}';
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+
+    const data = await response.json();
+    const text = data.candidates[0].content.parts[0].text;
+    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(jsonStr);
+}
+
+// ===== Game Start =====
+async function startGame() {
+    soundManager.init();
+    soundManager.playClick();
+
+    // Collect players
+    const nameInputs = document.querySelectorAll('.player-name-input');
+    gameState.players = [];
+    nameInputs.forEach((input, index) => {
+        const name = input.value.trim() || `Giocatore ${index + 1}`;
+        gameState.players.push({ name });
+        gameState.partialScores[name] = 0;
+        gameState.totalScores[name] = 0;
+    });
+
+    // Random starting player
+    gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
+    gameState.currentManche = 1;
+
+    // Get phrase from AI
+    showScreen('game-screen');
+    showPopup(`<div class="popup-loading">L'AI sta generando la frase...</div>`, 0);
+
+    try {
+        const data = await fetchPuzzleFromAI();
+        gameState.phrase = data.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
+        gameState.hint = data.hint;
+    } catch (e) {
+        console.error(e);
+        gameState.phrase = 'CHI TROVA UN AMICO TROVA UN TESORO';
+        gameState.hint = 'Proverbio';
+    }
+
+    gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+    gameState.revealedLetters = new Set();
+    gameState.usedLetters = new Set();
+    gameState.wheelPhase = 'idle';
+    gameState.pendingWheelValue = null;
+
+    elements.popupMessage.style.display = 'none';
+    elements.modalOverlay.style.display = 'none';
+
+    elements.mancheNumber.textContent = '1';
+    elements.hintText.textContent = gameState.hint;
+    elements.currentWheelValue.textContent = '-';
+
+    createBoard();
+    drawWheel(0);
+    renderPlayersList();
+    updateUI();
+
+    showPopup(`<div class="popup-turn">MANCHE 1<br>INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>`, 3000);
 }
 
 function newGame() {
     soundManager.playClick();
-    stopExternalAudio();
     showScreen('setup-screen');
-    elements.phraseInput.value = '';
-    elements.phraseInput.focus();
-    elements.modalOverlay.style.display = 'none';
+    elements.setupStep1.style.display = 'block';
+    elements.setupStep2.style.display = 'none';
 }
 
 // ===== Event Listeners =====
-if (elements.startGameBtn) elements.startGameBtn.addEventListener('click', () => startGame('free'));
-// if (elements.startSpecialBtn) elements.startSpecialBtn.addEventListener('click', () => startGame('special'));
+elements.nextStepBtn?.addEventListener('click', () => {
+    soundManager.playClick();
+    const count = parseInt(elements.playerCountInput.value) || 2;
+    const playerCount = Math.max(1, Math.min(10, count));
 
-if (elements.confirmSelectionBtn) elements.confirmSelectionBtn.addEventListener('click', confirmSelection);
+    elements.playerNamesContainer.innerHTML = '';
+    for (let i = 0; i < playerCount; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'player-name-input';
+        input.placeholder = `Giocatore ${i + 1}`;
+        elements.playerNamesContainer.appendChild(input);
+    }
 
-if (elements.guessBtn) elements.guessBtn.addEventListener('click', guessLetter);
-if (elements.trySolutionBtn) elements.trySolutionBtn.addEventListener('click', trySolution);
+    elements.setupStep1.style.display = 'none';
+    elements.setupStep2.style.display = 'block';
+});
 
-if (elements.letterInput) {
-    elements.letterInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') guessLetter();
-    });
-    elements.letterInput.addEventListener('input', (e) => {
-        e.target.value = e.target.value.toUpperCase();
-    });
-}
+elements.backStepBtn?.addEventListener('click', () => {
+    soundManager.playClick();
+    elements.setupStep2.style.display = 'none';
+    elements.setupStep1.style.display = 'block';
+});
 
-if (elements.solutionInput) {
-    elements.solutionInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') trySolution();
-    });
-}
+elements.startGameBtn?.addEventListener('click', startGame);
+elements.spinBtn?.addEventListener('click', spinWheel);
+elements.consonantBtn?.addEventListener('click', callConsonant);
+elements.vowelBtn?.addEventListener('click', buyVowel);
+elements.solveBtn?.addEventListener('click', trySolve);
+elements.newGameBtn?.addEventListener('click', newGame);
 
-if (elements.newGameBtn) elements.newGameBtn.addEventListener('click', newGame);
-if (elements.playAgainBtn) elements.playAgainBtn.addEventListener('click', newGame);
+elements.consonantInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') callConsonant();
+});
+elements.consonantInput?.addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase();
+});
 
-if (elements.phraseInput) {
-    elements.phraseInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') startGame('free');
-    });
-}
+elements.vowelInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') buyVowel();
+});
+elements.vowelInput?.addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase();
+});
+
+elements.solutionInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') trySolve();
+});
