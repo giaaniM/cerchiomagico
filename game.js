@@ -26,44 +26,42 @@ const soundManager = {
     playError() { this.playTone(80, 'triangle', 0.4, 0.4); },
     playClick() { this.playTone(400, 'triangle', 0.05, 0.05); },
     playWin() {
-        this.playTone(523, 'square', 0.1);
-        setTimeout(() => this.playTone(659, 'square', 0.1), 150);
-        setTimeout(() => this.playTone(783, 'square', 0.1), 300);
-        setTimeout(() => this.playTone(1046, 'square', 0.6), 450);
+        const audio = new Audio('fraseindovinata.mp3');
+        audio.play().catch(e => console.error("Audio play failed", e));
     },
     playSpin() { this.playTone(300, 'sawtooth', 0.1, 0.05); }
 };
 
 // ===== Wheel Segments (24 segments like the real wheel) =====
 const WHEEL_SEGMENTS = [
-    { value: 500, color: '#f39c12', label: '€500' },
-    { value: 300, color: '#3498db', label: '€300' },
-    { value: 200, color: '#e74c3c', label: '€200' },
-    { value: 100, color: '#27ae60', label: '€100' },
-    { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
-    { value: 350, color: '#9b59b6', label: '€350' },
-    { value: 150, color: '#1abc9c', label: '€150' },
-    { value: 400, color: '#e67e22', label: '€400' },
-    { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
-    { value: 250, color: '#f1c40f', label: '€250' },
-    { value: 500, color: '#e74c3c', label: '€500' },
-    { value: 100, color: '#3498db', label: '€100' },
+    { value: 1000, color: '#f39c12', label: '€1000' },
+    { value: 500, color: '#3498db', label: '€500' },
+    { value: 5000, color: '#000000', label: '€5000', glowing: true }, /* Special 5000 */
     { value: 300, color: '#27ae60', label: '€300' },
     { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
-    { value: 200, color: '#9b59b6', label: '€200' },
-    { value: 1000, color: '#f39c12', label: '€1000' },
-    { value: 150, color: '#1abc9c', label: '€150' },
-    { value: 400, color: '#e67e22', label: '€400' },
-    { value: 100, color: '#e74c3c', label: '€100' },
-    { value: 250, color: '#f1c40f', label: '€250' },
+    { value: 750, color: '#9b59b6', label: '€750' },
+    { value: 400, color: '#1abc9c', label: '€400' },
+    { value: 800, color: '#e67e22', label: '€800' },
     { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
-    { value: 350, color: '#3498db', label: '€350' },
-    { value: 200, color: '#27ae60', label: '€200' },
-    { value: 500, color: '#9b59b6', label: '€500' }
+    { value: 600, color: '#f1c40f', label: '€600' },
+    { value: 1500, color: '#e74c3c', label: '€1500' },
+    { value: 300, color: '#3498db', label: '€300' },
+    { value: 500, color: '#27ae60', label: '€500' },
+    { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
+    { value: 450, color: '#9b59b6', label: '€450' },
+    { value: 2000, color: '#f39c12', label: '€2000' },
+    { value: 350, color: '#1abc9c', label: '€350' },
+    { value: 900, color: '#e67e22', label: '€900' },
+    { value: 250, color: '#e74c3c', label: '€250' },
+    { value: 550, color: '#f1c40f', label: '€550' },
+    { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
+    { value: 700, color: '#3498db', label: '€700' },
+    { value: 400, color: '#27ae60', label: '€400' },
+    { value: 1200, color: '#9b59b6', label: '€1200' }
 ];
 
 const VOWELS = ['A', 'E', 'I', 'O', 'U'];
-const VOWEL_COST = 500;
+const VOWEL_COST = 1000;
 const TOTAL_MANCHES = 2;
 
 // ===== Game State =====
@@ -84,6 +82,24 @@ const gameState = {
     wheelRotation: 0
 };
 
+// ===== Offline Phrases Database (Updated for Length) =====
+const OFFLINE_PHRASES = [
+    { phrase: "CHI DORME NON PIGLIA PESCI", hint: "Proverbio" }, // 22
+    { phrase: "NON DIRE GATTO SE NON CE L HAI NEL SACCO", hint: "Proverbio" }, // 29
+    { phrase: "LA RUOTA DELLA FORTUNA GIRA PER TUTTI", hint: "Modo di dire" }, // 30
+    { phrase: "NON TUTTO QUEL CHE LUCCICA E ORO", hint: "Proverbio" }, // 26
+    { phrase: "CHI TROVA UN AMICO TROVA UN TESORO", hint: "Proverbio" }, // 26
+    { phrase: "FINCHE LA BARCA VA LASCIALA ANDARE", hint: "Canzone" }, // 28
+    { phrase: "CANTARE SOTTO LA PIOGGIA BATTENTE", hint: "Film (Titolo lungo)" }, // 28
+    { phrase: "L IMPORTANTE NON E VINCERE MA PARTECIPARE", hint: "Citazione Sportiva" }, // 35
+    { phrase: "ROSSO DI SERA BEL TEMPO SI SPERA", hint: "Proverbio" }, // 24
+    { phrase: "A CAVAL DONATO NON SI GUARDA IN BOCCA", hint: "Proverbio" }, // 29
+    { phrase: "BALLA COI LUPI NELLA FORESTA", hint: "Film (Esteso)" }, // 23
+    { phrase: "L APPETITO VIEN MANGIANDO E BEVENDO", hint: "Modo di dire" }, // 30
+    { phrase: "MOGLIE E BUOI DEI PAESI TUOI", hint: "Proverbio" }, // 22
+    { phrase: "IL MATTINO HA L ORO IN BOCCA", hint: "Proverbio" }, // 21
+    { phrase: "TUTTE LE STRADE PORTANO A ROMA", hint: "Proverbio" } // 24
+];
 // ===== DOM Elements =====
 const elements = {
     setupScreen: document.getElementById('setup-screen'),
@@ -329,7 +345,8 @@ function drawWheel(rotation = 0) {
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 5;
+    const radius = Math.min(centerX, centerY) - 10;
+    const scale = canvas.width / 300; // Base scale on original 300px width
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -347,10 +364,21 @@ function drawWheel(rotation = 0) {
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
         ctx.closePath();
-        ctx.fillStyle = segment.color;
+
+        // Glow effect for special segments
+        if (segment.glowing) {
+            ctx.shadowColor = '#fbbf24'; // Gold glow
+            ctx.shadowBlur = 30 * scale;
+            ctx.fillStyle = '#000'; // Dark background for contrast
+        } else {
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = segment.color;
+        }
+
         ctx.fill();
+        ctx.shadowBlur = 0; // Reset shadow for stroke
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 * scale;
         ctx.stroke();
 
         // Draw text
@@ -358,19 +386,19 @@ function drawWheel(rotation = 0) {
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + segmentAngle / 2);
         ctx.textAlign = 'right';
-        ctx.fillStyle = segment.value === 'BANCAROTTA' ? '#fff' : '#000';
-        ctx.font = 'bold 11px Outfit, sans-serif';
-        ctx.fillText(segment.label, radius - 10, 4);
+        ctx.fillStyle = (segment.value === 'BANCAROTTA' || segment.glowing) ? '#fff' : '#000';
+        ctx.font = `bold ${14 * scale}px Outfit, sans-serif`; // Scled font
+        ctx.fillText(segment.label, radius - (15 * scale), 5 * scale);
         ctx.restore();
     });
 
     // Draw center circle
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, 25 * scale, 0, 2 * Math.PI);
     ctx.fillStyle = '#2c3e50';
     ctx.fill();
     ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4 * scale;
     ctx.stroke();
 }
 
@@ -383,6 +411,10 @@ function spinWheel() {
     soundManager.init();
     gameState.wheelPhase = 'spinning';
     elements.spinBtn.disabled = true;
+
+    // Show Overlay
+    const overlay = document.getElementById('wheel-overlay');
+    if (overlay) overlay.classList.add('active');
 
     // Random target segment
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
@@ -457,6 +489,12 @@ function spinWheel() {
             gameState.wheelRotation = targetRotation;
             drawWheel(targetRotation);
             onWheelStop(resultFragment);
+
+            // Hide Overlay after spin
+            setTimeout(() => {
+                const overlay = document.getElementById('wheel-overlay');
+                if (overlay) overlay.classList.remove('active');
+            }, 1000);
         }
     }
 
@@ -671,17 +709,20 @@ async function startNextManche() {
     // Random starting player
     gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
 
-    // Get new phrase from AI
     showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
 
+    // AI Logic with Offline Fallback
     try {
         const data = await fetchPuzzleFromAI();
-        gameState.phrase = data.phrase.toUpperCase();
+        gameState.phrase = data.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
         gameState.hint = data.hint;
     } catch (e) {
-        console.error(e);
-        gameState.phrase = 'ERRORE DI CONNESSIONE';
-        gameState.hint = 'Riprova';
+        console.error("AI Generation failed, using offline DB", e);
+        // Fallback
+        const randomIndex = Math.floor(Math.random() * OFFLINE_PHRASES.length);
+        const selected = OFFLINE_PHRASES[randomIndex];
+        gameState.phrase = selected.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
+        gameState.hint = selected.hint;
     }
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
@@ -749,27 +790,60 @@ function updateUI() {
     elements.vowelBtn.disabled = !canBuyVowel;
 
     // Solve is always available
-
     renderPlayersList();
 }
 
 // ===== AI Fetch =====
+// ===== AI Fetch =====
 async function fetchPuzzleFromAI() {
     const API_KEY = 'AIzaSyAq2P04FaQP5cJAO5n0FdAYV5jmFV0hd9k';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
+    // Force prompt to be very explicit
+    const prompt = 'Genera una frase per il gioco "La Ruota della Fortuna" in italiano. REQUISITO OBBLIGATORIO: MINIMO 25 LETTERE (esclusi spazi). Categorie: Proverbi lunghi, Citazioni, Titoli estesi. Restituisci SOLO un JSON valido (senza markdown) con: "phrase" (maiuscolo, solo lettere/spazi) e "hint". Esempio: {"phrase": "CHI TROVA UN AMICO TROVA UN TESORO", "hint": "Proverbio"}';
 
-    const prompt = 'Genera una frase breve per il gioco "La Ruota della Fortuna" in italiano (massimo 4-5 parole, tipo proverbi, modi di dire, titoli di film). Restituisci SOLO un JSON valido con due campi: "phrase" (la frase in maiuscolo, solo lettere e spazi) e "hint" (la categoria, es. "Proverbio", "Film", "Modo di dire"). Esempio: {"phrase": "LA DOLCE VITA", "hint": "Film"}';
+    let lastError = null;
+    // Retry up to 3 times if phrase is too short or invalid
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            console.log(`AI Attempt ${attempt}/3...`);
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': API_KEY },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
 
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API Error ${response.status}: ${errorText}`);
+            }
 
-    const data = await response.json();
-    const text = data.candidates[0].content.parts[0].text;
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(jsonStr);
+            const data = await response.json();
+            if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                throw new Error("Invalid AI structure");
+            }
+
+            const text = data.candidates[0].content.parts[0].text;
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("No JSON found");
+
+            const result = JSON.parse(jsonMatch[0]);
+
+            // Validate length (count letters)
+            const count = result.phrase.replace(/\s/g, '').length;
+            if (count < 20) {
+                console.warn(`AI phrase too short (${count} chars), retrying...`);
+                continue; // Retry
+            }
+
+            return result; // Success!
+
+        } catch (e) {
+            console.warn(`Attempt ${attempt} failed:`, e.message);
+            lastError = e;
+        }
+    }
+
+    throw lastError || new Error("All AI attempts failed");
 }
 
 // ===== Game Start =====
@@ -795,14 +869,18 @@ async function startGame() {
     showScreen('game-screen');
     showPopup(`<div class="popup-loading">L'AI sta generando la frase...</div>`, 0);
 
+    // AI Logic with Offline Fallback
     try {
         const data = await fetchPuzzleFromAI();
         gameState.phrase = data.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
         gameState.hint = data.hint;
     } catch (e) {
-        console.error(e);
-        gameState.phrase = 'CHI TROVA UN AMICO TROVA UN TESORO';
-        gameState.hint = 'Proverbio';
+        console.warn("AI Generation failed (using offline fallback):", e.message);
+        // SILENT FALLBACK: No popup, immediate start with offline phrase
+        const randomIndex = Math.floor(Math.random() * OFFLINE_PHRASES.length);
+        const selected = OFFLINE_PHRASES[randomIndex];
+        gameState.phrase = selected.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
+        gameState.hint = selected.hint;
     }
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);

@@ -113,10 +113,7 @@
                 <div class="wheel-letters-row">
                     <!-- Wheel -->
                     <div class="wheel-area">
-                        <div class="wheel-container">
-                            <canvas id="wheel-canvas" width="300" height="300"></canvas>
-                            <div class="wheel-pointer">▼</div>
-                        </div>
+                        <!-- Wheel Container removed from here -->
                         <button id="spin-btn" class="btn-spin">🎡 GIRA LA RUOTA</button>
                     </div>
 
@@ -182,6 +179,14 @@
                 <button id="next-level-btn" class="btn-primary">
                     Prossimo Livello ➡️
                 </button>
+            </div>
+        </div>
+
+        <!-- Wheel Full Screen Overlay -->
+        <div id="wheel-overlay" class="wheel-overlay">
+            <div class="wheel-container">
+                <canvas id="wheel-canvas" width="1200" height="1200"></canvas>
+                <div class="wheel-pointer">▼</div>
             </div>
         </div>
     </div>

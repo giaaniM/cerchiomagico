@@ -69,8 +69,8 @@ body {
 
 /* ===== Game Container ===== */
 .game-container {
-    width: 100%;
-    max-width: 1100px;
+    width: 98%;
+    max-width: 1600px;
     /* Increased to allow wider board */
     display: flex;
     flex-direction: column;
@@ -448,21 +448,22 @@ body {
 
 /* ===== Tiles (Classic Style) ===== */
 .tile {
-    width: 45px;
-    height: 65px;
+    width: 50px;
+    /* Reduced from 60px */
+    height: 75px;
+    /* Reduced from 85px */
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.8rem;
-    /* Larger font */
+    font-size: 2.0rem;
+    /* Reduced from 2.5rem */
     font-weight: 800;
     font-family: 'Arial', sans-serif;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: all 0.4s ease;
     border: 3px solid #000;
     position: relative;
-    margin: 1px;
-    /* Minimal margin */
+    margin: 2px;
 }
 
 /* Empty/background tiles - ORANGE GRID */
@@ -885,6 +886,7 @@ body {
     position: fixed;
     /* Ensure fixed positioning relative to viewport */
     top: 50%;
+    /* Perfect center */
     left: 50%;
     transform: translate(-50%, -50%);
     width: 90%;
@@ -1437,14 +1439,15 @@ body {
 /* Main Game Layout */
 .game-main-layout {
     display: grid;
-    /* Reduced sidebar width to ensure fit on smaller screens */
-    grid-template-columns: 160px 1fr 160px;
-    gap: 10px;
+    /* Increased sidebar width to 250px */
+    grid-template-columns: 250px 1fr 250px;
+    gap: 20px;
     width: 100%;
-    max-width: 1200px;
-    /* Reduced max width to keep things tighter */
+    max-width: 1600px;
+    /* Increased from 1200px to fit big board */
     margin: 0 auto;
     align-items: start;
+    justify-content: center;
 }
 
 /* Players Sidebar */
@@ -1767,5 +1770,90 @@ body {
     .wheel-container {
         width: 280px;
         height: 280px;
+    }
+}
+
+/* ===== Popup Content Centering & Focus ===== */
+.popup-error,
+.popup-turn,
+.popup-win,
+.popup-loading {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.popup-name {
+    display: block;
+    margin-top: 15px;
+    font-size: 5rem;
+    /* Huge font for name */
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
+    animation: pulseName 2s infinite ease-in-out;
+    line-height: 1.1;
+}
+
+@keyframes pulseName {
+
+    0%,
+    100% {
+        transform: scale(1);
+        text-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
+    }
+
+    50% {
+        transform: scale(1.05);
+        text-shadow: 0 0 60px rgba(251, 191, 36, 1);
+    }
+}
+
+/* Ensure error popups are also centered and nice */
+.popup-message.error .popup-name {
+    color: #fff;
+    /* White name on red error background */
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== Wheel Full Screen Overlay ===== */
+.wheel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    /* Top level */
+    display: none;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.wheel-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* Scale up the wheel significantly in the overlay */
+.wheel-overlay .wheel-container {
+    transform: scale(1.5);
+    /* Big wheel */
+    box-shadow: 0 0 100px rgba(251, 191, 36, 0.2);
+    /* Golden ambient glow */
+    border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+    .wheel-overlay .wheel-container {
+        transform: scale(1.0);
+        /* Normal scale on mobile */
     }
 }
