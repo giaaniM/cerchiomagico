@@ -74,7 +74,10 @@ const gameState = {
     errors: 0,
     currentLevel: 0,
     isSpecialMode: false,
-    selectedLetters: []
+    isSpecialMode: false,
+    selectedLetters: [],
+    maxExtraLetters: 5,
+    extraLettersCount: 0
 };
 
 // ===== DOM Elements =====
@@ -131,7 +134,8 @@ const elements = {
 
     // Reveal HUD
     revealHud: document.getElementById('reveal-hud'),
-    revealLettersContainer: document.getElementById('reveal-letters-container')
+    revealLettersContainer: document.getElementById('reveal-letters-container'),
+    remainingLetters: document.getElementById('remaining-letters')
 };
 
 const welcomeAudio = new Audio('welcomegift.mp3');
@@ -606,6 +610,8 @@ function startGame(mode = 'free') {
     gameState.usedLetters = new Set();
     gameState.attempts = 0;
     gameState.errors = 0;
+    gameState.extraLettersCount = 0;
+    if (elements.remainingLetters) elements.remainingLetters.textContent = gameState.maxExtraLetters;
 
     elements.messageDisplay.textContent = '';
     elements.messageDisplay.className = 'message-display';
@@ -646,6 +652,12 @@ function guessLetter() {
     }
 
     gameState.usedLetters.add(normalizedLetter);
+
+    // Decrement allowed extra letters
+    gameState.extraLettersCount++;
+    const remaining = gameState.maxExtraLetters - gameState.extraLettersCount;
+    if (elements.remainingLetters) elements.remainingLetters.textContent = remaining;
+
     const occurrences = countLetterOccurrences(gameState.phrase, letter);
 
     if (occurrences > 0) {
@@ -657,7 +669,14 @@ function guessLetter() {
         soundManager.playError();
         showMessage(`❌ "${letter}" non c'è.`, 'error');
     }
-    elements.letterInput.focus();
+
+    if (remaining <= 0) {
+        elements.letterInput.disabled = true;
+        elements.guessBtn.disabled = true;
+        showPopupMessage("HAI FINITO LE LETTERE DISPONIBILI! <br> Ora prova a indovinare la frase!", 4000, 'center');
+    } else {
+        elements.letterInput.focus();
+    }
 }
 
 function trySolution() {

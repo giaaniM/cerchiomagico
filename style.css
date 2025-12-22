@@ -1205,3 +1205,13 @@ body {
         opacity: 1;
     }
 }
+
+/* Remaining Letters Counter */
+#remaining-letters {
+    font-weight: 800;
+    color: var(--accent-red);
+    font-size: 1.1rem;
+    padding: 0 5px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
