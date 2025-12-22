@@ -136,6 +136,10 @@ body {
     align-items: stretch;
 }
 
+.setup-layout.single-mode {
+    max-width: 500px;
+}
+
 .mode-card {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);

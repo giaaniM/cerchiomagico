@@ -95,9 +95,7 @@ const elements = {
     popupMessage: document.getElementById('popup-message'),
 
     // Setup
-    phraseInput: document.getElementById('phrase-input'),
     // Removed initialLettersInput
-    startGameBtn: document.getElementById('start-game-btn'),
     startSpecialBtn: document.getElementById('start-special-btn'),
 
     // Selection Inputs
@@ -153,7 +151,6 @@ const GIFT_LEVELS = [
 // ... (SoundManager update)
 
 // ===== Event Listeners =====
-if (elements.startGameBtn) elements.startGameBtn.addEventListener('click', () => startGame('free'));
 
 // Wire up Special Mode flow (Welcome -> Intro -> Game)
 if (elements.startSpecialBtn) {
@@ -589,19 +586,16 @@ function startGame(mode = 'free') {
 
     gameState.isSpecialMode = (mode === 'special');
 
-    if (mode === 'special') {
+    if (mode === 'special' || mode === 'gift') {
         const levelData = GIFT_LEVELS[gameState.currentLevel];
         phrase = levelData.phrase;
         hint = levelData.hint;
     } else {
+        // Fallback to gift mode if somehow called without specified mode
         gameState.currentLevel = 0;
-        phrase = elements.phraseInput.value.trim();
-        hint = "Indovina la frase segreta!";
-
-        if (!phrase) { showMessage('Inserisci una frase!', 'error'); soundManager.playError(); return; }
-        const filteredPhrase = phrase.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').replace(/\s+/g, ' ').trim();
-        if (filteredPhrase.length < 3) { showMessage('La frase deve contenere almeno 3 lettere!', 'error'); soundManager.playError(); return; }
-        phrase = filteredPhrase;
+        const levelData = GIFT_LEVELS[0];
+        phrase = levelData.phrase;
+        hint = levelData.hint;
     }
 
     gameState.phrase = phrase;
@@ -711,13 +705,10 @@ function newGame() {
     soundManager.playClick();
     stopExternalAudio();
     showScreen('setup-screen');
-    elements.phraseInput.value = '';
-    elements.phraseInput.focus();
     elements.modalOverlay.style.display = 'none';
 }
 
 // ===== Event Listeners =====
-if (elements.startGameBtn) elements.startGameBtn.addEventListener('click', () => startGame('free'));
 // if (elements.startSpecialBtn) elements.startSpecialBtn.addEventListener('click', () => startGame('special'));
 
 if (elements.confirmSelectionBtn) elements.confirmSelectionBtn.addEventListener('click', confirmSelection);
@@ -743,8 +734,3 @@ if (elements.solutionInput) {
 if (elements.newGameBtn) elements.newGameBtn.addEventListener('click', newGame);
 if (elements.playAgainBtn) elements.playAgainBtn.addEventListener('click', newGame);
 
-if (elements.phraseInput) {
-    elements.phraseInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') startGame('free');
-    });
-}
