@@ -150,6 +150,19 @@ function normalizePhrase(phrase) {
     return phrase.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+function sanitizePhrase(p) {
+    if (!p) return "";
+    const map = { 'A': 'À', 'E': 'È', 'I': 'Ì', 'O': 'Ò', 'U': 'Ù' };
+    return p.toUpperCase()
+        // Convert substitutes like E' or A' to real accented characters
+        .replace(/\b([AEIOU])['’](\b|\s|$)/g, (match, char, boundary) => (map[char] || char) + boundary)
+        .replace(/([AEIOU])['’]\b/g, (match, char) => map[char] || match)
+        // Clean characters but keep apostrophes that might be needed
+        .replace(/[^A-ZÀ-ÿ\s'’]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 function isVowel(letter) {
     return VOWELS.includes(normalizeChar(letter));
 }
@@ -188,6 +201,7 @@ function showPopup(html, duration = 2000) {
 
 // ===== Board Creation =====
 // ===== Board Creation =====
+const SAFE_WRAP_WIDTH = 12; // Min width among all rows to prevent truncation
 const BOARD_LAYOUT = [12, 14, 14, 12];
 
 function createBoard() {
@@ -206,9 +220,9 @@ function createBoard() {
     let currentLine = [];
     let currentLen = 0;
 
-    // Layout words into lines respecting row widths (approximated to 14 for wrapping calc)
+    // Layout words into lines respecting row widths (using safe limit of 12 to prevent truncation on rows 0/3)
     words.forEach(word => {
-        if (currentLen + word.length + (currentLine.length > 0 ? 1 : 0) <= 14) {
+        if (currentLen + word.length + (currentLine.length > 0 ? 1 : 0) <= SAFE_WRAP_WIDTH) {
             if (currentLine.length > 0) {
                 currentLine.push(' ');
                 currentLen += 1;
@@ -335,6 +349,8 @@ function passTurn() {
     gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
     gameState.pendingWheelValue = null;
     gameState.wheelPhase = 'idle';
+    elements.currentWheelValue.textContent = '-';
+    elements.currentWheelValue.className = 'wheel-value';
     updateUI();
 
     const nextPlayer = getCurrentPlayer();
@@ -583,6 +599,8 @@ function callConsonant() {
     } else {
         soundManager.playError();
         showMessage(`❌ "${letter}" non c'è nella frase.`, 'error');
+        gameState.pendingWheelValue = null; // Clear value
+        elements.currentWheelValue.textContent = '-';
         showPopup(`<div class="popup-error">LETTERA ASSENTE!<br><span class="popup-name">${gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length].name}</span> tocca a te</div>`, 2000);
         setTimeout(passTurn, 2500);
     }
@@ -717,14 +735,14 @@ async function startNextManche() {
     // AI Logic with Offline Fallback
     try {
         const data = await fetchPuzzleFromAI();
-        gameState.phrase = data.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
+        gameState.phrase = sanitizePhrase(data.phrase);
         gameState.hint = data.hint;
     } catch (e) {
         console.error("AI Generation failed, using offline DB", e);
         // Fallback
         const randomIndex = Math.floor(Math.random() * OFFLINE_PHRASES.length);
         const selected = OFFLINE_PHRASES[randomIndex];
-        gameState.phrase = selected.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
+        gameState.phrase = sanitizePhrase(selected.phrase);
         gameState.hint = selected.hint;
     }
 
@@ -786,9 +804,9 @@ function updateUI() {
     elements.consonantInput.disabled = !canCallConsonant;
     elements.consonantBtn.disabled = !canCallConsonant;
 
-    // Vowel input (available in choose_action if player has money)
+    // Vowel input (available if player has money and it's their turn to choose)
     const player = getCurrentPlayer();
-    const canBuyVowel = (phase === 'choose_action') && (gameState.partialScores[player?.name] >= VOWEL_COST);
+    const canBuyVowel = (phase === 'choose_action' || phase === 'idle') && (gameState.partialScores[player?.name] >= VOWEL_COST);
     elements.vowelInput.disabled = !canBuyVowel;
     elements.vowelBtn.disabled = !canBuyVowel;
 
@@ -802,7 +820,7 @@ async function fetchPuzzleFromAI() {
     const API_KEY = 'AIzaSyAq2P04FaQP5cJAO5n0FdAYV5jmFV0hd9k';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
     // Force prompt to be very explicit
-    const prompt = 'Genera una frase per il gioco "La Ruota della Fortuna" in italiano. REQUISITO OBBLIGATORIO: LUNGHEZZA CIRCA 20-30 LETTERE. Stile: Ruota della fortuna italiana. Restituisci SOLO un JSON valido (senza markdown) con: "phrase" (maiuscolo, solo lettere/spazi) e "hint".';
+    const prompt = 'Genera una frase per il gioco "La Ruota della Fortuna" in italiano. REQUISITO OBBLIGATORIO: LUNGHEZZA CIRCA 20-30 LETTERE. Stile: Ruota della fortuna italiana. Restituisci SOLO un JSON valido (senza markdown) con: "phrase" (maiuscolo, usa gli accenti corretti come È, À, etc. - NON usare l\'apostrofo come E\') e "hint".';
 
     let lastError = null;
     // Retry up to 3 times if phrase is too short or invalid
@@ -875,14 +893,14 @@ async function startGame() {
     // AI Logic with Offline Fallback
     try {
         const data = await fetchPuzzleFromAI();
-        gameState.phrase = data.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
+        gameState.phrase = sanitizePhrase(data.phrase);
         gameState.hint = data.hint;
     } catch (e) {
         console.warn("AI Generation failed (using offline fallback):", e.message);
         // SILENT FALLBACK: No popup, immediate start with offline phrase
         const randomIndex = Math.floor(Math.random() * OFFLINE_PHRASES.length);
         const selected = OFFLINE_PHRASES[randomIndex];
-        gameState.phrase = selected.phrase.toUpperCase().replace(/[^A-ZÀ-ÿ\s]/g, '');
+        gameState.phrase = sanitizePhrase(selected.phrase);
         gameState.hint = selected.hint;
     }
 

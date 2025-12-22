@@ -131,7 +131,8 @@ body {
     width: 100%;
     max-width: 500px;
     justify-content: center;
-    align-items: stretch;
+    align-items: center;
+    flex-direction: column;
 }
 
 .mode-card {
@@ -161,6 +162,17 @@ body {
     box-shadow: 0 0 30px rgba(236, 72, 153, 0.2);
     position: relative;
     overflow: hidden;
+}
+
+.host-photo {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 15px;
+    border: 3px solid var(--accent-gold);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
 }
 
 .decoration-stars {
@@ -885,8 +897,8 @@ body {
 .popup-message.center-screen {
     position: fixed;
     /* Ensure fixed positioning relative to viewport */
-    top: 50%;
-    /* Perfect center */
+    top: 35%;
+    /* Moved higher up from 50% */
     left: 50%;
     transform: translate(-50%, -50%);
     width: 90%;
@@ -1844,11 +1856,22 @@ body {
 
 /* Scale up the wheel significantly in the overlay */
 .wheel-overlay .wheel-container {
-    transform: scale(1.5);
-    /* Big wheel */
-    box-shadow: 0 0 100px rgba(251, 191, 36, 0.2);
-    /* Golden ambient glow */
+    width: 80vmin;
+    height: 80vmin;
+    transform: none;
     border-radius: 50%;
+    /* Ensure container is round */
+    overflow: visible;
+    /* Allow pointer/shadows to extend */
+    box-shadow: 0 0 150px rgba(251, 191, 36, 0.3);
+    /* Enhanced golden ambient glow */
+}
+
+.wheel-overlay .wheel-pointer {
+    font-size: 6rem;
+    top: -40px;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
 }
 
 @media (max-width: 768px) {
