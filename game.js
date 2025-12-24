@@ -238,23 +238,36 @@ function createBoard() {
     for (let row = 0; row < BOARD_ROWS; row++) {
         const rowElement = document.createElement('div');
         rowElement.className = 'board-row';
-        const rowCapacity = ROWS_CONFIG[row];
+        const FIXED_CAPACITY = 14;
+        const rowCapacity = ROWS_CONFIG[row]; // 12 or 14
+
         const contentRowIndex = row - verticalOffset;
         const contentRow = contentRows[contentRowIndex] || null;
-        const horizontalOffset = contentRow ? Math.floor((rowCapacity - contentRow.length) / 2) : 0;
 
-        for (let col = 0; col < rowCapacity; col++) {
+        // Calculate offset within the row'S capacity
+        const innerOffset = contentRow ? Math.floor((rowCapacity - contentRow.length) / 2) : 0;
+        // Total offset from the start of the 14-tile grid
+        const gridOffset = (FIXED_CAPACITY - rowCapacity) / 2 + innerOffset;
+
+        for (let col = 0; col < FIXED_CAPACITY; col++) {
             const tileElement = document.createElement('div');
             tileElement.className = 'tile';
-            const contentIndex = col - horizontalOffset;
-            const content = contentRow && contentIndex >= 0 && contentIndex < contentRow.length ? contentRow[contentIndex] : null;
 
-            if (content && content.type === 'letter') {
-                tileElement.classList.add('letter');
-                tileElement.dataset.letter = normalizeChar(content.char);
-                tileElement.textContent = content.char.toUpperCase();
+            // Handle row indentations (12 tiles centered in 14)
+            const isRowEdge = (row === 0 || row === 3) && (col === 0 || col === 13);
+            if (isRowEdge) {
+                tileElement.classList.add('invisible');
             } else {
-                tileElement.classList.add('empty');
+                const contentIndex = col - gridOffset;
+                const content = contentRow && contentIndex >= 0 && contentIndex < contentRow.length ? contentRow[contentIndex] : null;
+
+                if (content && content.type === 'letter') {
+                    tileElement.classList.add('letter');
+                    tileElement.dataset.letter = normalizeChar(content.char);
+                    tileElement.textContent = content.char.toUpperCase();
+                } else {
+                    tileElement.classList.add('empty');
+                }
             }
             rowElement.appendChild(tileElement);
         }
@@ -530,7 +543,7 @@ function startWithLetters() {
         elements.modalOverlay.classList.remove('transparent');
 
         // Center "Tocca a te"
-        showPopupMessage("TOCCA A TE", 2000, 'center');
+        showPopupMessage("TOCCA A TE AMORE", 2000, 'center');
 
         elements.letterInput.disabled = false;
         elements.guessBtn.disabled = false;

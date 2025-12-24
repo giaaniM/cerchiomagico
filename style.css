@@ -11,7 +11,9 @@
     /* Colors - Wheel of Fortune Theme */
     --bg-primary: #0a0a1a;
     --bg-secondary: #12122a;
-    --bg-gradient: linear-gradient(135deg, #1a1a3e 0%, #0d0d2b 50%, #1a0a2e 100%);
+    --bg-gradient: linear-gradient(135deg, #131336 0%, #201340 100%);
+    /* Slightly lighter than before */
+    /* Unified dark background */
 
     --accent-blue: #00d4ff;
     --accent-purple: #8b5cf6;
@@ -59,16 +61,17 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 20px;
+    align-items: flex-start;
+    /* Changed from center to prevent top cutoff */
+    padding: 40px 20px;
     overflow-x: hidden;
 }
 
 /* ===== Game Container ===== */
 .game-container {
     width: 100%;
-    max-width: 1100px;
-    /* Increased to allow wider board */
+    max-width: 1400px;
+    /* Expanded to prevent board squeezing */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -82,15 +85,29 @@ body {
 }
 
 .game-header h1 {
-    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    font-size: 3.5rem;
     font-weight: 800;
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-pink));
+    margin-top: 20px;
+    margin-bottom: 30px;
+    background: linear-gradient(to right, #fff, var(--accent-gold), #fff);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: none;
-    margin-top: 100px;
-    margin-bottom: 5px;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    letter-spacing: -1px;
+    animation: titleShine 4s infinite;
+}
+
+@keyframes titleShine {
+
+    0%,
+    100% {
+        background-position: -200% center;
+    }
+
+    50% {
+        background-position: 200% center;
+    }
 }
 
 .subtitle {
@@ -343,35 +360,64 @@ body {
     width: 100%;
     display: flex;
     justify-content: center;
+    padding: 20px 0;
+}
+
+/* Black oval with purple borders */
+.board-oval {
+    background: #000;
+    border-radius: 50% / 30%;
+    padding: 60px 80px;
+    /* Increased padding to give board more space */
+    border: 6px solid #a855f7;
+    box-shadow:
+        0 0 0 3px #000,
+        0 0 0 9px #7c3aed,
+        0 0 30px rgba(168, 85, 247, 0.4);
 }
 
 .board-frame {
-    /* Classic Board Frame Style */
-    background: #000;
-    border: 12px solid #fff;
-    border-radius: 40px;
-    padding: 25px;
-    box-shadow:
-        0 0 0 4px #000,
-        /* Outer black thin border */
-        0 10px 40px rgba(0, 0, 0, 0.6);
+    /* Italian Wheel of Fortune Style - Stepped Shape */
+    background: #fff;
+    /* This forms the white border */
+    padding: 10px;
+    /* Border thickness */
     position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, #111 0%, #333 100%);
+    clip-path: polygon(7.14% 0%, 92.86% 0%,
+            92.86% 25%, 100% 25%,
+            100% 75%, 92.86% 75%,
+            92.86% 100%, 7.14% 100%,
+            7.14% 75%, 0% 75%,
+            0% 25%, 7.14% 25%);
 }
 
-.board-frame::before {
-    /* Subtle metallic sheen */
+.game-board-inner {
+    background: linear-gradient(to right, #6d28d9 0%, #311361 50%, #6d28d9 100%);
+    /* Deeper purple, rich but not too dark */
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(7.14% 0%, 92.86% 0%,
+            92.86% 25%, 100% 25%,
+            100% 75%, 92.86% 75%,
+            92.86% 100%, 7.14% 100%,
+            7.14% 75%, 0% 75%,
+            0% 25%, 7.14% 25%);
+}
+
+.game-board-inner::before {
+    /* Subtle metallic sheen inside the board */
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.05) 50%, transparent 55%);
+    background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
     pointer-events: none;
-    animation: shine 4s infinite;
-    /* Slower shine */
+    animation: shine 5s infinite;
 }
 
 @keyframes shine {
@@ -402,18 +448,6 @@ body {
     z-index: 10;
 }
 
-.game-header h1 {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-bottom: 10px;
-    background: linear-gradient(to right, #fff, var(--accent-gold), #fff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-    letter-spacing: -1px;
-    animation: titleShine 3s infinite;
-}
 
 /* Intro Text Style */
 .intro-text {
@@ -437,37 +471,40 @@ body {
     display: flex;
     justify-content: center;
     gap: 4px;
-    /* Tight gap */
 }
 
-/* ===== Tiles (Classic Style) ===== */
+/* ===== Tiles (Italian Style) ===== */
 .tile {
-    width: 60px;
-    /* Significantly wider */
-    height: 80px;
-    /* Slightly taller to maintain proportion */
+    width: 54px;
+    /* Reduced from 62px */
+    height: 70px;
+    /* Reduced from 80px */
+    flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 2.4rem;
-    /* Larger font */
+    /* Reduced from 2.8rem to fit */
     font-weight: 800;
     font-family: 'Arial', sans-serif;
-    border-radius: 4px;
-    transition: all 0.4s ease;
+    border-radius: 3px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border: 3px solid #000;
+    background: transparent;
     position: relative;
-    margin: 1px;
-    /* Minimal margin */
 }
 
-/* Empty/background tiles - ORANGE GRID */
+.tile.invisible {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+
+/* Empty/background tiles - TRANSPARENT (show purple background) */
 .tile.empty {
-    background: linear-gradient(to bottom, #d97706, #b45309);
-    /* Orange/Gold Gradient */
-    border-color: #78350f;
-    /* Darker border */
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    background: transparent;
+    border: 3px solid #000;
 }
 
 .tile.empty::before {
@@ -476,12 +513,9 @@ body {
 
 /* Unrevealed letter tiles - WHITE */
 .tile.letter {
-    background: #fff;
+    background: #f5f5f4;
     border: 3px solid #000;
     color: transparent;
-    /* Text hidden */
-    /* Add subtle inner shadow for depth */
-    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Remove decorative pattern from letter tiles since they are now solid white */
@@ -533,15 +567,11 @@ body {
     width: 100%;
     max-width: 700px;
     padding: 15px 25px;
-    /* Compact padding */
     gap: 15px;
-    /* Compact gaps */
     transform: scale(0.95);
-    /* Slightly scale down visual weight */
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    background: transparent;
+    /* Removed background to unify with the rest of the app */
+    border: none;
 }
 
 .guess-section {
@@ -878,7 +908,8 @@ body {
 }
 
 .popup-message.center-screen {
-    top: 50%;
+    top: 75%;
+    /* Lowered even more to look like a banner */
     left: 50%;
     transform: translate(-50%, -50%);
     bottom: auto;
@@ -1131,10 +1162,8 @@ body {
 
 /* ===== Reveal HUD (New) ===== */
 .reveal-hud {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    margin: 40px auto 20px auto;
     background: rgba(20, 20, 20, 0.95);
     border: 2px solid var(--accent-gold);
     border-radius: 20px;
