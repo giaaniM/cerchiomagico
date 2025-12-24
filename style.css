@@ -11,7 +11,9 @@
     /* Colors - Wheel of Fortune Theme */
     --bg-primary: #0a0a1a;
     --bg-secondary: #12122a;
-    --bg-gradient: linear-gradient(135deg, #1a1a3e 0%, #0d0d2b 50%, #1a0a2e 100%);
+    --bg-gradient: linear-gradient(135deg, #131336 0%, #201340 100%);
+    /* Slightly lighter than before */
+    /* Unified dark background */
 
     --accent-blue: #00d4ff;
     --accent-purple: #8b5cf6;
@@ -58,20 +60,18 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
-    justify-content: flex-start;
-    /* Changed from center to allow scroll/top align */
-    flex-direction: column;
-    align-items: center;
-    padding: 10px;
-    /* Minimized padding */
+    justify-content: center;
+    align-items: flex-start;
+    /* Changed from center to prevent top cutoff */
+    padding: 40px 20px;
     overflow-x: hidden;
 }
 
 /* ===== Game Container ===== */
 .game-container {
-    width: 98%;
-    max-width: 1600px;
-    /* Increased to allow wider board */
+    width: 100%;
+    max-width: 1400px;
+    /* Expanded to prevent board squeezing */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -85,10 +85,29 @@ body {
 }
 
 .game-header h1 {
-    font-size: clamp(1.5rem, 4vw, 2rem);
-    /* Smaller header */
-    margin-top: 5px;
-    margin-bottom: 5px;
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    background: linear-gradient(to right, #fff, var(--accent-gold), #fff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    letter-spacing: -1px;
+    animation: titleShine 4s infinite;
+}
+
+@keyframes titleShine {
+
+    0%,
+    100% {
+        background-position: -200% center;
+    }
+
+    50% {
+        background-position: 200% center;
+    }
 }
 
 .subtitle {
@@ -129,10 +148,13 @@ body {
     display: flex;
     gap: 30px;
     width: 100%;
-    max-width: 500px;
+    max-width: 900px;
     justify-content: center;
-    align-items: center;
-    flex-direction: column;
+    align-items: stretch;
+}
+
+.setup-layout.single-mode {
+    max-width: 500px;
 }
 
 .mode-card {
@@ -140,13 +162,12 @@ body {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    padding: 20px;
+    padding: 30px;
     flex: 1;
-    max-width: 350px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 20px;
     text-align: center;
     transition: all 0.3s ease;
 }
@@ -162,17 +183,6 @@ body {
     box-shadow: 0 0 30px rgba(236, 72, 153, 0.2);
     position: relative;
     overflow: hidden;
-}
-
-.host-photo {
-    width: 100%;
-    max-width: 500px;
-    height: auto;
-    object-fit: contain;
-    border-radius: 15px;
-    border: 3px solid var(--accent-gold);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    margin-bottom: 20px;
 }
 
 .decoration-stars {
@@ -350,35 +360,64 @@ body {
     width: 100%;
     display: flex;
     justify-content: center;
+    padding: 20px 0;
+}
+
+/* Black oval with purple borders */
+.board-oval {
+    background: #000;
+    border-radius: 50% / 30%;
+    padding: 60px 80px;
+    /* Increased padding to give board more space */
+    border: 6px solid #a855f7;
+    box-shadow:
+        0 0 0 3px #000,
+        0 0 0 9px #7c3aed,
+        0 0 30px rgba(168, 85, 247, 0.4);
 }
 
 .board-frame {
-    /* Classic Board Frame Style */
-    background: #000;
-    border: 12px solid #fff;
-    border-radius: 40px;
-    padding: 25px;
-    box-shadow:
-        0 0 0 4px #000,
-        /* Outer black thin border */
-        0 10px 40px rgba(0, 0, 0, 0.6);
+    /* Italian Wheel of Fortune Style - Stepped Shape */
+    background: #fff;
+    /* This forms the white border */
+    padding: 10px;
+    /* Border thickness */
     position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, #111 0%, #333 100%);
+    clip-path: polygon(7.14% 0%, 92.86% 0%,
+            92.86% 25%, 100% 25%,
+            100% 75%, 92.86% 75%,
+            92.86% 100%, 7.14% 100%,
+            7.14% 75%, 0% 75%,
+            0% 25%, 7.14% 25%);
 }
 
-.board-frame::before {
-    /* Subtle metallic sheen */
+.game-board-inner {
+    background: linear-gradient(to right, #6d28d9 0%, #311361 50%, #6d28d9 100%);
+    /* Deeper purple, rich but not too dark */
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(7.14% 0%, 92.86% 0%,
+            92.86% 25%, 100% 25%,
+            100% 75%, 92.86% 75%,
+            92.86% 100%, 7.14% 100%,
+            7.14% 75%, 0% 75%,
+            0% 25%, 7.14% 25%);
+}
+
+.game-board-inner::before {
+    /* Subtle metallic sheen inside the board */
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.05) 50%, transparent 55%);
+    background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
     pointer-events: none;
-    animation: shine 4s infinite;
-    /* Slower shine */
+    animation: shine 5s infinite;
 }
 
 @keyframes shine {
@@ -409,18 +448,6 @@ body {
     z-index: 10;
 }
 
-.game-header h1 {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-bottom: 10px;
-    background: linear-gradient(to right, #fff, var(--accent-gold), #fff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-    letter-spacing: -1px;
-    animation: titleShine 3s infinite;
-}
 
 /* Intro Text Style */
 .intro-text {
@@ -434,57 +461,50 @@ body {
 .game-board {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
+    gap: 4px;
+    /* Tight gap */
     position: relative;
     z-index: 1;
-    width: 100%;
-}
-
-.word {
-    display: flex;
-    gap: 2px;
-}
-
-.word-spacer {
-    width: 20px;
 }
 
 .board-row {
     display: flex;
     justify-content: center;
-    gap: 2px;
-    margin-bottom: 2px;
+    gap: 4px;
 }
 
-/* ===== Tiles (Classic Style) ===== */
+/* ===== Tiles (Italian Style) ===== */
 .tile {
-    width: 50px;
-    /* Reduced from 60px */
-    height: 75px;
-    /* Reduced from 85px */
+    width: 54px;
+    /* Reduced from 62px */
+    height: 70px;
+    /* Reduced from 80px */
+    flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 2.0rem;
-    /* Reduced from 2.5rem */
+    font-size: 2.4rem;
+    /* Reduced from 2.8rem to fit */
     font-weight: 800;
     font-family: 'Arial', sans-serif;
-    border-radius: 4px;
-    transition: all 0.4s ease;
-    border: 3px solid transparent;
+    border-radius: 3px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 3px solid #000;
+    background: transparent;
     position: relative;
-    margin: 1px;
 }
 
-/* Empty/background tiles - ORANGE GRID */
+.tile.invisible {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+
+/* Empty/background tiles - TRANSPARENT (show purple background) */
 .tile.empty {
-    background: linear-gradient(to bottom, #d97706, #b45309);
-    /* Orange/Gold Gradient */
-    border-color: #d97706;
-    /* Matches gradient top */
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    background: transparent;
+    border: 3px solid #000;
 }
 
 .tile.empty::before {
@@ -493,12 +513,9 @@ body {
 
 /* Unrevealed letter tiles - WHITE */
 .tile.letter {
-    background: #fff;
-    border: 3px solid #fff;
+    background: #f5f5f4;
+    border: 3px solid #000;
     color: transparent;
-    /* Text hidden */
-    /* Add subtle inner shadow for depth */
-    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Remove decorative pattern from letter tiles since they are now solid white */
@@ -509,8 +526,8 @@ body {
 /* Revealed letter tiles - WHITE with BLACK TEXT */
 .tile.letter.revealed {
     background: #fff;
-    color: #000 !important;
-    border: 3px solid #fff;
+    color: #000;
+    border: 3px solid #000;
     animation: flipIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -550,15 +567,11 @@ body {
     width: 100%;
     max-width: 700px;
     padding: 15px 25px;
-    /* Compact padding */
     gap: 15px;
-    /* Compact gaps */
     transform: scale(0.95);
-    /* Slightly scale down visual weight */
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    background: transparent;
+    /* Removed background to unify with the rest of the app */
+    border: none;
 }
 
 .guess-section {
@@ -895,55 +908,26 @@ body {
 }
 
 .popup-message.center-screen {
-    position: fixed;
-    /* Ensure fixed positioning relative to viewport */
-    top: 35%;
-    /* Moved higher up from 50% */
+    top: 75%;
+    /* Lowered even more to look like a banner */
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 90%;
-    /* Responsive width */
-    max-width: 600px;
-    height: auto;
+    bottom: auto;
+    width: auto;
+    max-width: 80%;
 
-    display: flex;
-    /* Flex centering for content */
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-
-    font-size: 2.5rem;
-    font-weight: 800;
-    letter-spacing: 1px;
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    line-height: 1.2;
 
-    padding: 40px;
-    background: rgba(15, 23, 42, 0.98);
-    /* Darker, more opaque background */
-    border: 3px solid var(--accent-gold);
-    border-radius: 20px;
-    box-shadow: 0 0 100px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 191, 36, 0.3);
+    padding: 60px 80px;
+    background: rgba(10, 10, 10, 0.95);
+    border: 4px solid var(--accent-gold);
+    box-shadow: 0 0 80px rgba(255, 215, 0, 0.6);
 
-    animation: popCenter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: popCenter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 3000;
-}
-
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.7);
-    /* Dark overlay */
-    backdrop-filter: blur(5px);
-    z-index: 2999;
-    display: none;
-    /* Controlled by JS */
-    justify-content: center;
-    align-items: center;
 }
 
 @keyframes popCenter {
@@ -1178,10 +1162,8 @@ body {
 
 /* ===== Reveal HUD (New) ===== */
 .reveal-hud {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    margin: 40px auto 20px auto;
     background: rgba(20, 20, 20, 0.95);
     border: 2px solid var(--accent-gold);
     border-radius: 20px;
@@ -1265,618 +1247,4 @@ body {
     padding: 0 5px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
-}
-
-/* ===== Multiplayer Setup ===== */
-.player-count-selector {
-    display: flex;
-    gap: 10px;
-    margin-top: 5px;
-}
-
-.count-btn {
-    flex: 1;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.count-btn.active {
-    background: var(--accent-purple);
-    border-color: var(--accent-pink);
-    font-weight: bold;
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
-}
-
-.player-name-input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    border-radius: 6px;
-}
-
-/* Checkbox Style */
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    user-select: none;
-    font-size: 1rem;
-}
-
-.checkbox-container input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
-}
-
-.checkmark {
-    height: 24px;
-    width: 24px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.2s;
-}
-
-.checkbox-container:hover input~.checkmark {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-.checkbox-container input:checked~.checkmark {
-    background-color: var(--accent-green);
-    border-color: var(--accent-green);
-}
-
-.checkmark:after {
-    content: "";
-    position: absolute;
-    display: none;
-}
-
-.checkbox-container input:checked~.checkmark:after {
-    display: block;
-}
-
-.checkbox-container .checkmark:after {
-    left: 8px;
-    top: 4px;
-    width: 6px;
-    height: 12px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
-
-/* Turn Indicator */
-.turn-indicator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
-    padding: 15px 25px;
-    border-radius: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    margin-bottom: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.turn-label {
-    font-size: 0.8rem;
-    letter-spacing: 3px;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-}
-
-.current-player-badge {
-    font-weight: 800;
-    color: #fff;
-    background: linear-gradient(90deg, var(--accent-gold), #f59e0b);
-    padding: 8px 20px;
-    border-radius: 25px;
-    font-size: 1.3rem;
-    text-transform: uppercase;
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
-    animation: badgePulse 2s infinite;
-}
-
-@keyframes badgePulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
-    }
-
-    50% {
-        box-shadow: 0 0 25px rgba(251, 191, 36, 0.7);
-    }
-}
-
-/* 2-Step Setup */
-.setup-step {
-    width: 100%;
-}
-
-.player-count-input {
-    width: 80px;
-    padding: 12px;
-    font-size: 1.5rem;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid var(--accent-purple);
-    border-radius: 8px;
-    color: white;
-    margin: 10px 0;
-}
-
-.btn-small {
-    padding: 8px 15px;
-    font-size: 0.9rem;
-    margin-top: 10px;
-}
-
-/* ===== New Game Layout ===== */
-
-/* Manche Indicator */
-.manche-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
-    padding: 8px 20px;
-    border-radius: 25px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    letter-spacing: 2px;
-    margin-bottom: 10px;
-}
-
-.manche-number {
-    font-size: 1.2rem;
-    color: var(--accent-gold);
-}
-
-/* Main Game Layout */
-.game-main-layout {
-    display: grid;
-    /* Increased sidebar width to 250px */
-    grid-template-columns: 250px 1fr 250px;
-    gap: 20px;
-    width: 100%;
-    max-width: 1600px;
-    /* Increased from 1200px to fit big board */
-    margin: 0 auto;
-    align-items: start;
-    justify-content: center;
-}
-
-/* Players Sidebar */
-.players-sidebar {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    padding: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.players-sidebar h3 {
-    text-align: center;
-    font-size: 0.8rem;
-    letter-spacing: 2px;
-    color: var(--text-secondary);
-    margin-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
-}
-
-.players-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.players-list li {
-    padding: 10px 12px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    transition: all 0.3s ease;
-}
-
-.players-list li.active {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(236, 72, 153, 0.4));
-    border: 2px solid var(--accent-gold);
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
-}
-
-.player-name {
-    font-weight: 700;
-    font-size: 0.95rem;
-}
-
-.player-score {
-    font-size: 1.1rem;
-    color: var(--accent-gold);
-    font-weight: 800;
-}
-
-/* Board Area */
-.board-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Wheel Value Sidebar */
-.wheel-value-sidebar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.wheel-value-display {
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    min-width: 120px;
-}
-
-.value-label {
-    display: block;
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
-}
-
-.wheel-value {
-    display: block;
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--accent-gold);
-    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
-}
-
-.wheel-value.bancarotta {
-    color: var(--accent-red);
-    font-size: 1rem;
-}
-
-.wheel-value.passa {
-    color: var(--text-secondary);
-    font-size: 1.2rem;
-}
-
-/* Bottom Layout - New Structure */
-.bottom-interaction-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
-    margin-top: 20px;
-}
-
-.wheel-letters-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 60px;
-    /* Increased gap */
-    flex-wrap: wrap;
-    /* Responsive wrap */
-}
-
-.letters-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 25px;
-    /* Increased padding */
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    min-width: 350px;
-    /* Wider */
-}
-
-.solve-section-full {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding-top: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.input-group.full-width {
-    width: 100%;
-    max-width: 800px;
-    /* Much wider */
-    display: flex;
-    gap: 10px;
-}
-
-.input-group.full-width input {
-    flex: 1;
-    font-size: 1.2rem;
-    padding: 12px;
-    text-align: center;
-}
-
-.btn-solve {
-    padding: 12px 30px;
-    font-size: 1.1rem;
-    white-space: nowrap;
-}
-
-/* Hide old selectors if present or override */
-.game-bottom-layout {
-    display: none;
-    /* Deprecated in favor of bottom-interaction-container logic */
-}
-
-/* Wheel Area */
-.wheel-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-}
-
-.wheel-container {
-    position: relative;
-    width: 250px;
-    height: 250px;
-}
-
-#wheel-canvas {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 6px solid var(--accent-gold);
-    box-shadow: 0 0 30px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.wheel-pointer {
-    position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 2rem;
-    color: var(--accent-gold);
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-    z-index: 10;
-}
-
-.btn-spin {
-    padding: 15px 30px;
-    font-size: 1.1rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--accent-gold), #f59e0b);
-    color: #000;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
-}
-
-.btn-spin:hover:not(:disabled) {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6);
-}
-
-.btn-spin:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Action Controls */
-.action-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    max-width: 400px;
-}
-
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.control-group label {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-}
-
-.control-group .input-group {
-    display: flex;
-    gap: 10px;
-}
-
-.control-group input {
-    flex: 1;
-    padding: 12px 15px;
-    font-size: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    color: white;
-    text-transform: uppercase;
-}
-
-.control-group input:disabled {
-    opacity: 0.4;
-}
-
-.btn-action {
-    padding: 12px 20px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-action:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.btn-vowel {
-    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
-}
-
-/* Game Footer */
-.game-footer {
-    margin-top: 15px;
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-    .game-main-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .players-sidebar {
-        display: none;
-    }
-
-    .wheel-value-sidebar {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-    }
-
-    .game-bottom-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .wheel-container {
-        width: 280px;
-        height: 280px;
-    }
-}
-
-/* ===== Popup Content Centering & Focus ===== */
-.popup-error,
-.popup-turn,
-.popup-win,
-.popup-loading {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-.popup-name {
-    display: block;
-    margin-top: 15px;
-    font-size: 5rem;
-    /* Huge font for name */
-    font-weight: 900;
-    color: var(--accent-gold);
-    text-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
-    animation: pulseName 2s infinite ease-in-out;
-    line-height: 1.1;
-}
-
-@keyframes pulseName {
-
-    0%,
-    100% {
-        transform: scale(1);
-        text-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
-    }
-
-    50% {
-        transform: scale(1.05);
-        text-shadow: 0 0 60px rgba(251, 191, 36, 1);
-    }
-}
-
-/* Ensure error popups are also centered and nice */
-.popup-message.error .popup-name {
-    color: #fff;
-    /* White name on red error background */
-    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-/* ===== Wheel Full Screen Overlay ===== */
-.wheel-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 9999;
-    /* Top level */
-    display: none;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(8px);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.wheel-overlay.active {
-    display: flex;
-    opacity: 1;
-}
-
-/* Scale up the wheel significantly in the overlay */
-.wheel-overlay .wheel-container {
-    width: 80vmin;
-    height: 80vmin;
-    transform: none;
-    border-radius: 50%;
-    /* Ensure container is round */
-    overflow: visible;
-    /* Allow pointer/shadows to extend */
-    box-shadow: 0 0 150px rgba(251, 191, 36, 0.3);
-    /* Enhanced golden ambient glow */
-}
-
-.wheel-overlay .wheel-pointer {
-    font-size: 6rem;
-    top: -40px;
-    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
-    pointer-events: none;
-}
-
-@media (max-width: 768px) {
-    .wheel-overlay .wheel-container {
-        transform: scale(1.0);
-        /* Normal scale on mobile */
-    }
 }
