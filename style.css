@@ -11,9 +11,7 @@
     /* Colors - Wheel of Fortune Theme */
     --bg-primary: #0a0a1a;
     --bg-secondary: #12122a;
-    --bg-gradient: linear-gradient(135deg, #131336 0%, #201340 100%);
-    /* Slightly lighter than before */
-    /* Unified dark background */
+    --bg-gradient: linear-gradient(135deg, #1a1a3e 0%, #0d0d2b 50%, #1a0a2e 100%);
 
     --accent-blue: #00d4ff;
     --accent-purple: #8b5cf6;
@@ -60,18 +58,20 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    /* Changed from center to prevent top cutoff */
-    padding: 40px 20px;
+    justify-content: flex-start;
+    /* Changed from center to allow scroll/top align */
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    /* Minimized padding */
     overflow-x: hidden;
 }
 
 /* ===== Game Container ===== */
 .game-container {
-    width: 100%;
-    max-width: 1400px;
-    /* Expanded to prevent board squeezing */
+    width: 98%;
+    max-width: 1600px;
+    /* Increased to allow wider board */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -85,29 +85,16 @@ body {
 }
 
 .game-header h1 {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-top: 20px;
-    margin-bottom: 30px;
-    background: linear-gradient(to right, #fff, var(--accent-gold), #fff);
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background: radial-gradient(circle, #ffe681 0%, #d4af37 60%, #8a6e18 100%);
     -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     background-clip: text;
-    color: transparent;
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-    letter-spacing: -1px;
-    animation: titleShine 4s infinite;
-}
-
-@keyframes titleShine {
-
-    0%,
-    100% {
-        background-position: -200% center;
-    }
-
-    50% {
-        background-position: 200% center;
-    }
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 800;
+    letter-spacing: 1px;
 }
 
 .subtitle {
@@ -148,13 +135,10 @@ body {
     display: flex;
     gap: 30px;
     width: 100%;
-    max-width: 900px;
-    justify-content: center;
-    align-items: stretch;
-}
-
-.setup-layout.single-mode {
     max-width: 500px;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
 
 .mode-card {
@@ -162,12 +146,13 @@ body {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    padding: 30px;
+    padding: 20px;
     flex: 1;
+    max-width: 350px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 12px;
     text-align: center;
     transition: all 0.3s ease;
 }
@@ -183,6 +168,17 @@ body {
     box-shadow: 0 0 30px rgba(236, 72, 153, 0.2);
     position: relative;
     overflow: hidden;
+}
+
+.host-photo {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 15px;
+    border: 3px solid var(--accent-gold);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
 }
 
 .decoration-stars {
@@ -364,16 +360,10 @@ body {
 }
 
 /* Black oval with purple borders */
+/* Oval removed as per request */
 .board-oval {
-    background: #000;
-    border-radius: 50% / 30%;
-    padding: 60px 80px;
-    /* Increased padding to give board more space */
-    border: 6px solid #a855f7;
-    box-shadow:
-        0 0 0 3px #000,
-        0 0 0 9px #7c3aed,
-        0 0 30px rgba(168, 85, 247, 0.4);
+    padding: 20px;
+    /* Just simple padding wrapper now */
 }
 
 .board-frame {
@@ -565,13 +555,14 @@ body {
 /* ===== Controls ===== */
 .controls-container {
     width: 100%;
-    max-width: 700px;
-    padding: 15px 25px;
+    max-width: 1100px;
+    /* Further increased width for solution visibility */
+    padding: 20px 30px;
     gap: 15px;
-    transform: scale(0.95);
-    background: transparent;
-    /* Removed background to unify with the rest of the app */
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
 }
 
 .guess-section {
@@ -665,13 +656,16 @@ body {
 
 /* Hint Display */
 .hint-display {
-    width: 100%;
+    width: 60%;
+    /* Narrower */
+    min-width: 300px;
     text-align: center;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50px;
     margin-bottom: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .hint-label {
@@ -908,26 +902,55 @@ body {
 }
 
 .popup-message.center-screen {
-    top: 75%;
-    /* Lowered even more to look like a banner */
+    position: fixed;
+    /* Ensure fixed positioning relative to viewport */
+    top: 35%;
+    /* Moved higher up from 50% */
     left: 50%;
     transform: translate(-50%, -50%);
-    bottom: auto;
-    width: auto;
-    max-width: 80%;
+    width: 90%;
+    /* Responsive width */
+    max-width: 600px;
+    height: auto;
 
-    font-size: 3rem;
-    font-weight: 900;
-    letter-spacing: 2px;
+    display: flex;
+    /* Flex centering for content */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: 1px;
     text-transform: uppercase;
+    line-height: 1.2;
 
-    padding: 60px 80px;
-    background: rgba(10, 10, 10, 0.95);
-    border: 4px solid var(--accent-gold);
-    box-shadow: 0 0 80px rgba(255, 215, 0, 0.6);
+    padding: 40px;
+    background: rgba(15, 23, 42, 0.98);
+    /* Darker, more opaque background */
+    border: 3px solid var(--accent-gold);
+    border-radius: 20px;
+    box-shadow: 0 0 100px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 191, 36, 0.3);
 
-    animation: popCenter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: popCenter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 3000;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    /* Dark overlay */
+    backdrop-filter: blur(5px);
+    z-index: 2999;
+    display: none;
+    /* Controlled by JS */
+    justify-content: center;
+    align-items: center;
 }
 
 @keyframes popCenter {
@@ -1162,8 +1185,10 @@ body {
 
 /* ===== Reveal HUD (New) ===== */
 .reveal-hud {
-    position: relative;
-    margin: 40px auto 20px auto;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     background: rgba(20, 20, 20, 0.95);
     border: 2px solid var(--accent-gold);
     border-radius: 20px;
@@ -1247,4 +1272,660 @@ body {
     padding: 0 5px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
+}
+
+/* ===== Multiplayer Setup ===== */
+.player-count-selector {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.count-btn {
+    flex: 1;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.count-btn.active {
+    background: var(--accent-purple);
+    border-color: var(--accent-pink);
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+}
+
+.player-name-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 6px;
+}
+
+/* Checkbox Style */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 1rem;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    height: 24px;
+    width: 24px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s;
+}
+
+.checkbox-container:hover input~.checkmark {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.checkbox-container input:checked~.checkmark {
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked~.checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    left: 8px;
+    top: 4px;
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Turn Indicator */
+.turn-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
+    padding: 15px 25px;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.turn-label {
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.current-player-badge {
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(90deg, var(--accent-gold), #f59e0b);
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+    animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(251, 191, 36, 0.7);
+    }
+}
+
+/* 2-Step Setup */
+.setup-step {
+    width: 100%;
+}
+
+.player-count-input {
+    width: 80px;
+    padding: 12px;
+    font-size: 1.5rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--accent-purple);
+    border-radius: 8px;
+    color: white;
+    margin: 10px 0;
+}
+
+.btn-small {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+/* ===== New Game Layout ===== */
+
+/* Manche Indicator */
+.manche-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.manche-number {
+    font-size: 1.2rem;
+    color: var(--accent-gold);
+}
+
+/* Main Game Layout */
+/* Main Game Layout */
+.game-main-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    gap: 15px;
+    padding: 0 10px;
+    /* Ensure some breathing room */
+}
+
+/* Ensure Sidebars don't shrink too much */
+.players-sidebar,
+.wheel-value-sidebar {
+    flex: 0 0 220px;
+    /* Fixed basis, don't grow, don't shrink below this unless media query hits */
+    max-width: 250px;
+}
+
+.board-area {
+    flex: 1;
+    /* Take remaining space */
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+    /* Important for flex child to shrink properly */
+}
+
+/* Players Sidebar */
+.players-sidebar {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.players-sidebar h3 {
+    text-align: center;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.players-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.players-list li {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.3s ease;
+}
+
+.players-list li.active {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(236, 72, 153, 0.4));
+    border: 2px solid var(--accent-gold);
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+}
+
+.player-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.player-score {
+    font-size: 1.1rem;
+    color: var(--accent-gold);
+    font-weight: 800;
+}
+
+/* Board Area */
+.board-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Wheel Value Sidebar */
+.wheel-value-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.wheel-value-display {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    min-width: 120px;
+}
+
+.value-label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.wheel-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent-gold);
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+.wheel-value.bancarotta {
+    color: var(--accent-red);
+    font-size: 1rem;
+}
+
+.wheel-value.passa {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+}
+
+/* Bottom Layout - New Structure */
+.bottom-interaction-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 20px;
+}
+
+.wheel-letters-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 60px;
+    /* Increased gap */
+    flex-wrap: wrap;
+    /* Responsive wrap */
+}
+
+.letters-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 25px;
+    /* Increased padding */
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 350px;
+    /* Wider */
+}
+
+.solve-section-full {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.input-group.full-width {
+    width: 100%;
+    max-width: 800px;
+    /* Much wider */
+    display: flex;
+    gap: 10px;
+}
+
+.input-group.full-width input {
+    flex: 1;
+    font-size: 1.2rem;
+    padding: 12px;
+    text-align: center;
+}
+
+.btn-solve {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    white-space: nowrap;
+}
+
+/* Hide old selectors if present or override */
+.game-bottom-layout {
+    display: none;
+    /* Deprecated in favor of bottom-interaction-container logic */
+}
+
+/* Wheel Area */
+.wheel-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.wheel-container {
+    position: relative;
+    width: 250px;
+    height: 250px;
+}
+
+#wheel-canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 6px solid var(--accent-gold);
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.wheel-pointer {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    color: var(--accent-gold);
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+.btn-spin {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-gold), #f59e0b);
+    color: #000;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+}
+
+.btn-spin:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6);
+}
+
+.btn-spin:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Action Controls */
+.action-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: 400px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.control-group label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.control-group .input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.control-group input {
+    flex: 1;
+    padding: 12px 15px;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    text-transform: uppercase;
+}
+
+.control-group input:disabled {
+    opacity: 0.4;
+}
+
+.btn-action {
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-vowel {
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+}
+
+/* Game Footer */
+.game-footer {
+    margin-top: 15px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+
+    .players-sidebar,
+    .wheel-value-sidebar {
+        flex: 0 0 160px;
+        /* Slimmer sidebars */
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 900px) {
+    .game-main-layout {
+        flex-wrap: wrap;
+        /* Allow wrapping */
+        justify-content: center;
+    }
+
+    .players-sidebar,
+    .wheel-value-sidebar {
+        flex: 1 1 45%;
+        /* Share width below board */
+        order: 2;
+        /* Move to bottom */
+        margin-top: 20px;
+        max-width: none;
+    }
+
+    .board-area {
+        order: 1;
+        /* Keep board on top */
+        width: 100%;
+        flex: 0 0 100%;
+    }
+
+    .wheel-value-sidebar {
+        /* Reset any fixed positioning if it existed */
+        position: static;
+    }
+
+    .game-bottom-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .wheel-container {
+        width: 280px;
+        height: 280px;
+    }
+}
+
+/* ===== Popup Content Centering & Focus ===== */
+.popup-error,
+.popup-turn,
+.popup-win,
+.popup-loading {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.popup-name {
+    display: block;
+    margin-top: 15px;
+    font-size: 5rem;
+    /* Huge font for name */
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
+    animation: pulseName 2s infinite ease-in-out;
+    line-height: 1.1;
+}
+
+@keyframes pulseName {
+
+    0%,
+    100% {
+        transform: scale(1);
+        text-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
+    }
+
+    50% {
+        transform: scale(1.05);
+        text-shadow: 0 0 60px rgba(251, 191, 36, 1);
+    }
+}
+
+/* Ensure error popups are also centered and nice */
+.popup-message.error .popup-name {
+    color: #fff;
+    /* White name on red error background */
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== Wheel Full Screen Overlay ===== */
+.wheel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    /* Top level */
+    display: none;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.wheel-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* Scale up the wheel significantly in the overlay */
+.wheel-overlay .wheel-container {
+    width: 80vmin;
+    height: 80vmin;
+    transform: none;
+    border-radius: 50%;
+    /* Ensure container is round */
+    overflow: visible;
+    /* Allow pointer/shadows to extend */
+    box-shadow: 0 0 150px rgba(251, 191, 36, 0.3);
+    /* Enhanced golden ambient glow */
+}
+
+.wheel-overlay .wheel-pointer {
+    font-size: 6rem;
+    top: -40px;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    .wheel-overlay .wheel-container {
+        transform: scale(1.0);
+        /* Normal scale on mobile */
+    }
 }

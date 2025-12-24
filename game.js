@@ -1,4 +1,4 @@
-// ===== Sound Manager (Audio Synthesis) =====
+// ===== Sound Manager =====
 const soundManager = {
     audioCtx: null,
 
@@ -61,55 +61,112 @@ const soundManager = {
         setTimeout(() => this.playTone(659, 'square', 0.1), 150); // E5
         setTimeout(() => this.playTone(783, 'square', 0.1), 300); // G5
         setTimeout(() => this.playTone(1046, 'square', 0.6), 450); // C6
+    },
+
+    playSpin() {
+        this.playTone(300, 'sawtooth', 0.1, 0.05);
     }
 };
+
+// ===== Wheel Segments (24 segments like the real wheel) =====
+const WHEEL_SEGMENTS = [
+    { value: 1000, color: '#f39c12', label: '€1000' },
+    { value: 500, color: '#3498db', label: '€500' },
+    { value: 5000, color: '#000000', label: '€5000', glowing: true }, /* Special 5000 */
+    { value: 300, color: '#27ae60', label: '€300' },
+    { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
+    { value: 750, color: '#9b59b6', label: '€750' },
+    { value: 400, color: '#1abc9c', label: '€400' },
+    { value: 800, color: '#e67e22', label: '€800' },
+    { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
+    { value: 600, color: '#f1c40f', label: '€600' },
+    { value: 1500, color: '#e74c3c', label: '€1500' },
+    { value: 300, color: '#3498db', label: '€300' },
+    { value: 500, color: '#27ae60', label: '€500' },
+    { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
+    { value: 450, color: '#9b59b6', label: '€450' },
+    { value: 2000, color: '#f39c12', label: '€2000' },
+    { value: 350, color: '#1abc9c', label: '€350' },
+    { value: 900, color: '#e67e22', label: '€900' },
+    { value: 250, color: '#e74c3c', label: '€250' },
+    { value: 550, color: '#f1c40f', label: '€550' },
+    { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
+    { value: 700, color: '#3498db', label: '€700' },
+    { value: 400, color: '#27ae60', label: '€400' },
+    { value: 1200, color: '#9b59b6', label: '€1200' }
+];
+
+const VOWELS = ['A', 'E', 'I', 'O', 'U'];
+const VOWEL_COST = 1000;
+const TOTAL_MANCHES = 2;
 
 // ===== Game State =====
 const gameState = {
     phrase: '',
+    hint: '',
     normalizedPhrase: '',
     revealedLetters: new Set(),
     usedLetters: new Set(),
-    attempts: 0,
-    errors: 0,
-    currentLevel: 0,
-    isSpecialMode: false,
-    isSpecialMode: false,
-    selectedLetters: [],
-    maxExtraLetters: 5,
-    extraLettersCount: 0
+    players: [],
+    currentPlayerIndex: 0,
+    currentManche: 1,
+    partialScores: {},
+    totalScores: {},
+    pendingWheelValue: null,
+    wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
+    allConsonantsRevealed: false,
+    wheelRotation: 0
 };
 
+// ===== Offline Phrases Database (Updated for Length) =====
+const OFFLINE_PHRASES = [
+    { phrase: "CHI DORME NON PIGLIA PESCI", hint: "Proverbio" }, // 22
+    { phrase: "NON DIRE GATTO SE NON CE L HAI NEL SACCO", hint: "Proverbio" }, // 29
+    { phrase: "LA RUOTA DELLA FORTUNA GIRA PER TUTTI", hint: "Modo di dire" }, // 30
+    { phrase: "NON TUTTO QUEL CHE LUCCICA E ORO", hint: "Proverbio" }, // 26
+    { phrase: "CHI TROVA UN AMICO TROVA UN TESORO", hint: "Proverbio" }, // 26
+    { phrase: "FINCHE LA BARCA VA LASCIALA ANDARE", hint: "Canzone" }, // 28
+    { phrase: "CANTARE SOTTO LA PIOGGIA BATTENTE", hint: "Film (Titolo lungo)" }, // 28
+    { phrase: "L IMPORTANTE NON E VINCERE MA PARTECIPARE", hint: "Citazione Sportiva" }, // 35
+    { phrase: "ROSSO DI SERA BEL TEMPO SI SPERA", hint: "Proverbio" }, // 24
+    { phrase: "A CAVAL DONATO NON SI GUARDA IN BOCCA", hint: "Proverbio" }, // 29
+    { phrase: "BALLA COI LUPI NELLA FORESTA", hint: "Film (Esteso)" }, // 23
+    { phrase: "L APPETITO VIEN MANGIANDO E BEVENDO", hint: "Modo di dire" }, // 30
+    { phrase: "MOGLIE E BUOI DEI PAESI TUOI", hint: "Proverbio" }, // 22
+    { phrase: "IL MATTINO HA L ORO IN BOCCA", hint: "Proverbio" }, // 21
+    { phrase: "TUTTE LE STRADE PORTANO A ROMA", hint: "Proverbio" } // 24
+];
 // ===== DOM Elements =====
 const elements = {
-    // Screens
     setupScreen: document.getElementById('setup-screen'),
     gameScreen: document.getElementById('game-screen'),
     winScreen: document.getElementById('win-screen'),
-    welcomeScreen: document.getElementById('welcome-screen'),
-    proceedToGiftBtn: document.getElementById('proceed-to-gift-btn'),
-
-    // Overlays
     modalOverlay: document.getElementById('modal-overlay'),
-    selectionModal: document.getElementById('selection-modal'),
     popupMessage: document.getElementById('popup-message'),
 
     // Setup
-    // Removed initialLettersInput
-    startSpecialBtn: document.getElementById('start-special-btn'),
-
-    // Selection Inputs
-    selectionInputs: document.querySelectorAll('.letter-select'),
-    confirmSelectionBtn: document.getElementById('confirm-selection-btn'),
-    selectionError: document.getElementById('selection-error'),
+    playerCountInput: document.getElementById('player-count-input'),
+    playerNamesContainer: document.getElementById('player-names-container'),
+    setupStep1: document.getElementById('setup-step-1'),
+    setupStep2: document.getElementById('setup-step-2'),
+    nextStepBtn: document.getElementById('next-step-btn'),
+    backStepBtn: document.getElementById('back-step-btn'),
+    startGameBtn: document.getElementById('start-game-btn'),
 
     // Game
+    mancheNumber: document.getElementById('manche-number'),
+    playersList: document.getElementById('players-list'),
+    hintText: document.getElementById('hint-text'),
     gameBoard: document.getElementById('game-board'),
-    letterInput: document.getElementById('letter-input'),
-    guessBtn: document.getElementById('guess-btn'),
-    guessBtn: document.getElementById('guess-btn'),
+    currentWheelValue: document.getElementById('current-wheel-value'),
+    wheelCanvas: document.getElementById('wheel-canvas'),
+    spinBtn: document.getElementById('spin-btn'),
+    consonantInput: document.getElementById('consonant-input'),
+    consonantBtn: document.getElementById('consonant-btn'),
+    vowelInput: document.getElementById('vowel-input'),
+    vowelBtn: document.getElementById('vowel-btn'),
     solutionInput: document.getElementById('solution-input'),
-    trySolutionBtn: document.getElementById('try-solution-btn'),
+    solveBtn: document.getElementById('solve-btn'),
     messageDisplay: document.getElementById('message-display'),
     newGameBtn: document.getElementById('new-game-btn'),
 
@@ -117,62 +174,8 @@ const elements = {
     winTitle: document.getElementById('win-title'),
     winPhrase: document.getElementById('win-phrase'),
     winMessage: document.getElementById('win-message'),
-    finalImageContainer: document.getElementById('final-image-container'),
-    finalImage: document.getElementById('final-image'),
-    nextLevelBtn: document.getElementById('next-level-btn'),
-    playAgainBtn: document.getElementById('play-again-btn'),
-
-    // Hint
-    hintDisplay: document.getElementById('hint-display'),
-    hintText: document.getElementById('hint-text'),
-
-    // Intro Button
-    // Intro Button
-    startGiftHuntBtn: document.getElementById('start-gift-hunt-btn'),
-
-    // Reveal HUD
-    revealHud: document.getElementById('reveal-hud'),
-    revealLettersContainer: document.getElementById('reveal-letters-container'),
-    remainingLetters: document.getElementById('remaining-letters')
+    nextLevelBtn: document.getElementById('next-level-btn')
 };
-
-const welcomeAudio = new Audio('welcomegift.mp3');
-const winAudio = new Audio('fraseindovinata.mp3');
-const christmasAudio = new Audio('jinglebells.mp3');
-
-// ===== Gift Levels =====
-// ===== Gift Levels =====
-const GIFT_LEVELS = [
-    { phrase: "FAMOSO GELATO CONFEZIONATO", hint: "Al supermercato" },
-    { phrase: "UN REGALO NON MATERIALE", hint: "Da scartare" },
-    { phrase: "PRENDERE UN AEREO INSIEME", hint: "Dopo sei anni" }
-];
-
-// ... (SoundManager update)
-
-// ===== Event Listeners =====
-
-// Wire up Special Mode flow (Welcome -> Intro -> Game)
-if (elements.startSpecialBtn) {
-    elements.startSpecialBtn.addEventListener('click', () => {
-        openWelcomeScreen();
-    });
-}
-
-if (elements.proceedToGiftBtn) {
-    elements.proceedToGiftBtn.addEventListener('click', () => {
-        proceedFromWelcome();
-    });
-}
-
-if (elements.startGiftHuntBtn) {
-    elements.startGiftHuntBtn.addEventListener('click', () => {
-        // Start the actual game from the intro screen
-        startGame('special');
-    });
-}
-
-const VIENNA_IMAGE_PATH = "file:///Users/valeriopadovano/.gemini/antigravity/brain/0b4517b4-62a4-4c3a-ac9a-1848ee4b37c9/uploaded_image_1765810461415.jpg";
 
 // ===== Utility Functions =====
 function normalizeChar(char) {
@@ -180,10 +183,20 @@ function normalizeChar(char) {
 }
 
 function normalizePhrase(phrase) {
-    return phrase.split('').map(char => {
-        if (/[a-zA-ZÀ-ÿ]/.test(char)) return normalizeChar(char);
-        return char;
-    }).join('');
+    return phrase.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function sanitizePhrase(p) {
+    if (!p) return "";
+    const map = { 'A': 'À', 'E': 'È', 'I': 'Ì', 'O': 'Ò', 'U': 'Ù' };
+    return p.toUpperCase()
+        // Convert substitutes like E' or A' to real accented characters
+        .replace(/\b([AEIOU])['’](\b|\s|$)/g, (match, char, boundary) => (map[char] || char) + boundary)
+        .replace(/([AEIOU])['’]\b/g, (match, char) => map[char] || match)
+        // Clean characters but keep apostrophes that might be needed
+        .replace(/[^A-ZÀ-ÿ\s'’]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 function getUniqueLetters(phrase) {
@@ -194,23 +207,44 @@ function getUniqueLetters(phrase) {
     return Array.from(letters);
 }
 
-// ===== Screen Management =====
-function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
-    document.getElementById(screenId).classList.add('active');
+function isVowel(letter) {
+    return VOWELS.includes(normalizeChar(letter));
+}
 
-    // Manage 'game-mode' class for layout adjustments
-    const container = document.querySelector('.game-container');
-    if (screenId === 'game-screen') {
-        container.classList.add('game-mode');
-    } else {
-        container.classList.remove('game-mode');
+function isConsonant(letter) {
+    return /[A-Z]/.test(normalizeChar(letter)) && !isVowel(letter);
+}
+
+function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId)?.classList.add('active');
+}
+
+function showMessage(text, type = 'info') {
+    elements.messageDisplay.textContent = text;
+    elements.messageDisplay.className = `message-display ${type}`;
+    setTimeout(() => {
+        if (elements.messageDisplay.textContent === text) {
+            elements.messageDisplay.textContent = '';
+            elements.messageDisplay.className = 'message-display';
+        }
+    }, 3000);
+}
+
+function showPopup(html, duration = 2000) {
+    elements.modalOverlay.style.display = 'flex';
+    elements.popupMessage.style.display = 'block';
+    elements.popupMessage.innerHTML = html;
+    if (duration > 0) {
+        setTimeout(() => {
+            elements.popupMessage.style.display = 'none';
+            elements.modalOverlay.style.display = 'none';
+        }, duration);
     }
 }
 
-// ===== Game Board Functions =====
+// ===== Board Creation =====
+// ===== Board Creation =====
 function createBoard() {
     elements.gameBoard.innerHTML = '';
     const words = gameState.phrase.split(' ');
@@ -244,7 +278,7 @@ function createBoard() {
         const contentRowIndex = row - verticalOffset;
         const contentRow = contentRows[contentRowIndex] || null;
 
-        // Calculate offset within the row'S capacity
+        // Calculate offset within the row's capacity
         const innerOffset = contentRow ? Math.floor((rowCapacity - contentRow.length) / 2) : 0;
         // Total offset from the start of the 14-tile grid
         const gridOffset = (FIXED_CAPACITY - rowCapacity) / 2 + innerOffset;
@@ -303,447 +337,714 @@ function revealAllLetters() {
     });
 }
 
-function countLetterOccurrences(phrase, letter) {
+function countLetterOccurrences(letter) {
     const normalizedLetter = normalizeChar(letter);
     let count = 0;
-    for (const char of phrase) {
+    for (const char of gameState.phrase) {
         if (normalizeChar(char) === normalizedLetter) count++;
     }
     return count;
 }
 
-// Standard message (Toast Style)
-function showMessage(text, type = 'info') {
-    elements.messageDisplay.textContent = text;
-    elements.messageDisplay.className = `message-display ${type}`;
+function checkAllConsonantsRevealed() {
+    for (const char of gameState.phrase) {
+        if (/[A-ZÀ-ÿ]/i.test(char) && isConsonant(char)) {
+            if (!gameState.revealedLetters.has(normalizeChar(char))) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function checkWin() {
+    const revealed = document.querySelectorAll('.tile.letter.revealed').length;
+    const total = document.querySelectorAll('.tile.letter').length;
+    return revealed === total;
+}
+
+// ===== Players =====
+// ===== Players =====
+function renderPlayersList() {
+    elements.playersList.innerHTML = '';
+
+    // Create a list of players with their current index to preserve tracking
+    const playersWithIndex = gameState.players.map((player, index) => ({
+        player,
+        originalIndex: index,
+        score: gameState.partialScores[player.name] || 0
+    }));
+
+    // Sort by score descending (richest first)
+    playersWithIndex.sort((a, b) => b.score - a.score);
+
+    playersWithIndex.forEach((item) => {
+        const li = document.createElement('li');
+        // Check if this player is the current active player
+        li.className = item.originalIndex === gameState.currentPlayerIndex ? 'active' : '';
+        li.innerHTML = `
+            <span class="player-name">${item.player.name}</span>
+            <span class="player-score">€${item.score}</span>
+        `;
+        elements.playersList.appendChild(li);
+    });
+}
+
+function getCurrentPlayer() {
+    return gameState.players[gameState.currentPlayerIndex];
+}
+
+function passTurn() {
+    gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+    gameState.pendingWheelValue = null;
+    gameState.wheelPhase = 'idle';
+    elements.currentWheelValue.textContent = '-';
+    elements.currentWheelValue.className = 'wheel-value';
+    updateUI();
+
+    const nextPlayer = getCurrentPlayer();
+    showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2000);
+}
+
+// ===== Wheel Drawing =====
+function drawWheel(rotation = 0) {
+    const canvas = elements.wheelCanvas;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 10;
+    const scale = canvas.width / 300; // Base scale on original 300px width
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const segmentAngle = (2 * Math.PI) / WHEEL_SEGMENTS.length;
+    const rotationRad = (rotation * Math.PI) / 180;
+
+    // Draw each segment
+    WHEEL_SEGMENTS.forEach((segment, i) => {
+        const startAngle = i * segmentAngle + rotationRad;
+        const endAngle = startAngle + segmentAngle;
+
+        // Draw segment
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+
+        // Glow effect for special segments
+        if (segment.glowing) {
+            ctx.shadowColor = '#fbbf24'; // Gold glow
+            ctx.shadowBlur = 30 * scale;
+            ctx.fillStyle = '#000'; // Dark background for contrast
+        } else {
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = segment.color;
+        }
+
+        ctx.fill();
+        ctx.shadowBlur = 0; // Reset shadow for stroke
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2 * scale;
+        ctx.stroke();
+
+        // Draw text
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + segmentAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = (segment.value === 'BANCAROTTA' || segment.glowing) ? '#fff' : '#000';
+        ctx.font = `bold ${14 * scale}px Outfit, sans-serif`; // Scled font
+        ctx.fillText(segment.label, radius - (15 * scale), 5 * scale);
+        ctx.restore();
+    });
+
+    // Draw center circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 25 * scale, 0, 2 * Math.PI);
+    ctx.fillStyle = '#2c3e50';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 4 * scale;
+    ctx.stroke();
+}
+
+// ===== Wheel Spinning =====
+let wheelAnimationId = null;
+
+function spinWheel() {
+    if (gameState.wheelPhase !== 'idle' && gameState.wheelPhase !== 'choose_action') return;
+
+    soundManager.init();
+    gameState.wheelPhase = 'spinning';
+    elements.spinBtn.disabled = true;
+
+    // Show Overlay
+    const overlay = document.getElementById('wheel-overlay');
+    if (overlay) overlay.classList.add('active');
+
+    // Random target segment
+    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+    const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+    const resultFragment = WHEEL_SEGMENTS[randomSegmentIndex];
+
+    // Calculate precise target rotation
+    // We want the center of the selected segment to end up at 270 degrees (Top)
+    // Segment Center relative to 0 rotation = index * angle + angle/2
+    const segmentCenter = randomSegmentIndex * segmentAngle + segmentAngle / 2;
+
+    // Required rotation to bring segmentCenter to 270:
+    // TargetPos (270) = CurrentPos (segmentCenter) + Rotation
+    // Rotation = 270 - segmentCenter
+    let targetRotationDelta = 270 - segmentCenter;
+
+    // Normalize delta to be positive [0, 360) for clockwise rotation logic consistency
+    targetRotationDelta = (targetRotationDelta % 360 + 360) % 360;
+
+    // We want to add at least 5 full spins
+    const minSpins = 5;
+    const currentRotation = gameState.wheelRotation;
+
+    // Calculate current position within the 0-360 cycle
+    const currentMod = currentRotation % 360;
+
+    // Calculate distance to target from current position
+    // We want to go from currentMod to targetRotationDelta in clockwise direction
+    let distance = targetRotationDelta - currentMod;
+
+    // If distance is negative (target is behind current), add 360 to go forward
+    if (distance < 0) distance += 360;
+
+    // Total target rotation
+    const targetRotation = currentRotation + distance + (minSpins * 360);
+
+    const startRotation = currentRotation;
+    const totalRotation = targetRotation - startRotation;
+    const duration = 5000; // Slower, more suspenseful spin
+    const startTime = performance.now();
+
+    // Play tick sounds during spin
+    let lastTickSegment = -1;
+
+    function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Easing function for realistic deceleration (cubic ease out)
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentRotation = startRotation + totalRotation * easeOut;
+
+        gameState.wheelRotation = currentRotation;
+        drawWheel(currentRotation);
+
+        // Play tick sound when passing segments
+        // Pointer is at 270 degrees. We check what segment is currently under 270.
+        // Segment at 270 = (270 - rotation) normalized
+        const pointerAngle = 270;
+        const angleUnderPointer = (pointerAngle - currentRotation) % 360;
+        const normalizedAngle = (angleUnderPointer + 360) % 360;
+        const currentSegment = Math.floor(normalizedAngle / segmentAngle);
+
+        if (currentSegment !== lastTickSegment) {
+            soundManager.playClick();
+            lastTickSegment = currentSegment;
+        }
+
+        if (progress < 1) {
+            wheelAnimationId = requestAnimationFrame(animate);
+        } else {
+            gameState.wheelRotation = targetRotation;
+            drawWheel(targetRotation);
+            onWheelStop(resultFragment);
+
+            // Hide Overlay after spin
+            setTimeout(() => {
+                const overlay = document.getElementById('wheel-overlay');
+                if (overlay) overlay.classList.remove('active');
+            }, 1000);
+        }
+    }
+
+    wheelAnimationId = requestAnimationFrame(animate);
+}
+
+function onWheelStop(result) {
+    const player = getCurrentPlayer();
+
+    if (result.value === 'PASSA') {
+        soundManager.playError();
+        elements.currentWheelValue.textContent = 'PASSA';
+        elements.currentWheelValue.className = 'wheel-value passa';
+        showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+    } else if (result.value === 'BANCAROTTA') {
+        soundManager.playError();
+        elements.currentWheelValue.textContent = 'BANCAROTTA';
+        elements.currentWheelValue.className = 'wheel-value bancarotta';
+        gameState.partialScores[player.name] = 0;
+        renderPlayersList();
+        showPopup(`<div class="popup-bancarotta">BANCAROTTA!<br>Perdi tutto!</div>`, 2500);
+        setTimeout(passTurn, 3000);
+    } else {
+        soundManager.playClick();
+        gameState.pendingWheelValue = result.value;
+        elements.currentWheelValue.textContent = `€${result.value}`;
+        elements.currentWheelValue.className = 'wheel-value';
+        gameState.wheelPhase = 'call_consonant';
+        updateUI();
+        showMessage(`Chiama una consonante (vale €${result.value})`, 'info');
+    }
+}
+
+// ===== Letter Actions =====
+function callConsonant() {
+    const letter = elements.consonantInput.value.trim().toUpperCase();
+    elements.consonantInput.value = '';
+
+    if (!letter || !/^[A-ZÀ-ÿ]$/.test(letter)) {
+        showMessage('Inserisci una lettera valida!', 'error');
+        soundManager.playError();
+        return;
+    }
+
+    if (isVowel(letter)) {
+        soundManager.playError();
+        showMessage('Devi chiamare una CONSONANTE, non una vocale!', 'error');
+        showPopup(`<div class="popup-error">HAI CHIAMATO UNA VOCALE!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+        return;
+    }
+
+    const normalized = normalizeChar(letter);
+    if (gameState.usedLetters.has(normalized)) {
+        soundManager.playError();
+        showMessage(`La lettera "${letter}" è già stata chiamata!`, 'error');
+        showPopup(`<div class="popup-error">LETTERA GIÀ CHIAMATA!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+        return;
+    }
+
+    gameState.usedLetters.add(normalized);
+    const occurrences = countLetterOccurrences(letter);
+
+    if (occurrences > 0) {
+        const earnings = gameState.pendingWheelValue * occurrences;
+        gameState.partialScores[getCurrentPlayer().name] += earnings;
+        soundManager.playCorrect();
+        revealLetter(letter);
+        renderPlayersList();
+        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (+€${earnings})`, 'success');
+
+        if (checkWin()) {
+            setTimeout(endManche, 1500);
+        } else {
+            gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
+            gameState.wheelPhase = 'choose_action';
+            gameState.pendingWheelValue = null;
+            elements.currentWheelValue.textContent = '-';
+            updateUI();
+        }
+    } else {
+        soundManager.playError();
+        showMessage(`❌ "${letter}" non c'è nella frase.`, 'error');
+        gameState.pendingWheelValue = null; // Clear value
+        elements.currentWheelValue.textContent = '-';
+        showPopup(`<div class="popup-error">LETTERA ASSENTE!<br><span class="popup-name">${gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length].name}</span> tocca a te</div>`, 2000);
+        setTimeout(passTurn, 2500);
+    }
+}
+
+function buyVowel() {
+    const letter = elements.vowelInput.value.trim().toUpperCase();
+    elements.vowelInput.value = '';
+    const player = getCurrentPlayer();
+
+    if (!letter || !/^[AEIOUÀÈÌÒÙàèìòù]$/i.test(letter)) {
+        showMessage('Inserisci una vocale valida (A, E, I, O, U)!', 'error');
+        soundManager.playError();
+        return;
+    }
+
+    if (!isVowel(letter)) {
+        showMessage('Devi inserire una VOCALE!', 'error');
+        soundManager.playError();
+        return;
+    }
+
+    if (gameState.partialScores[player.name] < VOWEL_COST) {
+        showMessage(`Non hai abbastanza soldi! Servono €${VOWEL_COST}`, 'error');
+        soundManager.playError();
+        return;
+    }
+
+    const normalized = normalizeChar(letter);
+    if (gameState.usedLetters.has(normalized)) {
+        showMessage(`La vocale "${letter}" è già stata chiamata!`, 'error');
+        soundManager.playError();
+        showPopup(`<div class="popup-error">VOCALE GIÀ CHIAMATA!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+        return;
+    }
+
+    // Deduct cost
+    gameState.partialScores[player.name] -= VOWEL_COST;
+    gameState.usedLetters.add(normalized);
+    renderPlayersList();
+
+    const occurrences = countLetterOccurrences(letter);
+
+    if (occurrences > 0) {
+        soundManager.playCorrect();
+        revealLetter(letter);
+        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e!`, 'success');
+
+        if (checkWin()) {
+            setTimeout(endManche, 1500);
+        } else {
+            gameState.wheelPhase = 'choose_action';
+            updateUI();
+        }
+    } else {
+        soundManager.playError();
+        showMessage(`❌ "${letter}" non c'è nella frase. (-€${VOWEL_COST})`, 'error');
+        showPopup(`<div class="popup-error">VOCALE ASSENTE!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+    }
+}
+
+function trySolve() {
+    const guess = elements.solutionInput.value.trim().toUpperCase();
+    elements.solutionInput.value = '';
+
+    if (!guess) {
+        showMessage('Scrivi la soluzione!', 'error');
+        return;
+    }
+
+    if (normalizePhrase(guess) === gameState.normalizedPhrase) {
+        soundManager.playWin();
+        showMessage('🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉', 'success');
+        // Reveal all letters
+        document.querySelectorAll('.tile.letter').forEach(tile => {
+            tile.textContent = tile.dataset.letter;
+            tile.classList.add('revealed');
+        });
+        setTimeout(endManche, 1500);
+    } else {
+        soundManager.playError();
+        showMessage('❌ Soluzione errata!', 'error');
+        showPopup(`<div class="popup-error">SOLUZIONE SBAGLIATA!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+    }
+}
+
+// ===== Manche & Game Flow =====
+function endManche() {
+    const winner = getCurrentPlayer();
+    const winnings = gameState.partialScores[winner.name];
+    gameState.totalScores[winner.name] += winnings;
+
+    showPopup(`<div class="popup-win">
+        <div class="popup-title">MANCHE ${gameState.currentManche} VINTA!</div>
+        <div class="popup-winner">${winner.name}</div>
+        <div class="popup-earnings">+€${winnings}</div>
+    </div>`, 0);
+
     setTimeout(() => {
-        if (elements.messageDisplay.textContent === text) {
-            elements.messageDisplay.textContent = '';
-            elements.messageDisplay.className = 'message-display';
+        elements.popupMessage.style.display = 'none';
+        elements.modalOverlay.style.display = 'none';
+
+        if (gameState.currentManche >= TOTAL_MANCHES) {
+            showFinalResults();
+        } else {
+            // Reset for next manche
+            gameState.currentManche++;
+            startNextManche();
         }
     }, 3000);
 }
 
-// Popup message (Overlay)
-function showPopupMessage(text, duration = 2000, type = 'bottom') {
-    elements.modalOverlay.style.display = 'flex';
-
-    elements.popupMessage.className = 'popup-message'; // Reset
-
-    // logic to keep modal visible if we are in "reveal" mode (transparent overlay)
-    // AND if the message is NOT the "Center" type (which should probably cover everything or be distinct)
-    if (!elements.modalOverlay.classList.contains('transparent')) {
-        elements.selectionModal.style.display = 'none';
-    } else {
-        elements.selectionModal.style.display = 'block';
-    }
-
-    if (type === 'center') {
-        elements.popupMessage.classList.add('center-screen');
-    }
-
-    elements.popupMessage.style.display = 'block';
-    elements.popupMessage.innerHTML = text; // Allow HTML for bigger styling if needed
-
-    if (duration > 0) {
-        setTimeout(() => {
-            elements.popupMessage.style.display = 'none';
-            if (elements.modalOverlay.classList.contains('transparent') && type === 'center') {
-                // specific cleanup if needed, but usually handled by caller
-            } else {
-                elements.modalOverlay.style.display = 'none';
-            }
-        }, duration);
-    }
-}
-
-function checkWin() {
-    const totalRevealed = document.querySelectorAll('.tile.letter.revealed').length;
-    const totalLetterTiles = document.querySelectorAll('.tile.letter').length;
-    if (totalRevealed === totalLetterTiles) {
-        soundManager.playWin();
-
-        if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
-            // Final Level: Play Christmas Audio immediately to ensure it works (user gesture)
-            winAudio.pause();
-            christmasAudio.currentTime = 0;
-            christmasAudio.play().catch(e => console.warn("Christmas Audio play blocked", e));
-        } else {
-            playWinAudio(); // Standard win audio
-        }
-
-        setTimeout(showWinScreen, 1500);
-        return true;
-    }
-    return false;
-}
-
-
-function showWinScreen() {
-    elements.winPhrase.textContent = gameState.phrase.toUpperCase();
-
-    if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
-        elements.winTitle.textContent = "Ora puoi scartare il regalo Amore ❤️";
-
-        // Audio already started in checkWin/trySolution to ensure playback
-
-        elements.winMessage.textContent = "";
-        elements.finalImageContainer.style.display = 'block';
-        elements.finalImage.src = VIENNA_IMAGE_PATH; // Set image
-        elements.nextLevelBtn.textContent = "GIOCA ANCORA 🎮";
-        elements.nextLevelBtn.onclick = () => {
-            soundManager.playClick();
-            gameState.currentLevel = 0;
-            newGame();
-        };
-    } else if (gameState.isSpecialMode) {
-        elements.winTitle.textContent = "BRAVISSIMO! 🎉";
-        elements.winMessage.textContent = "Livello completato!";
-        elements.finalImageContainer.style.display = 'none';
-        elements.nextLevelBtn.textContent = "Prossimo Livello ➡️";
-        elements.nextLevelBtn.onclick = () => {
-            soundManager.playClick();
-            nextLevel();
-        };
-    } else {
-        elements.winTitle.textContent = "HAI VINTO! 🎉";
-        elements.winMessage.textContent = "";
-        elements.finalImageContainer.style.display = 'none';
-        elements.nextLevelBtn.textContent = "Nuova Partita ➡️";
-        elements.nextLevelBtn.onclick = () => {
-            soundManager.playClick();
-            newGame();
-        };
-    }
-
-    showScreen('win-screen');
-}
-
-// ===== Letters Selection Observer =====
-
-function showLetterSelectionObserver() {
-    showScreen('game-screen');
-    elements.modalOverlay.style.display = 'flex';
-    elements.selectionModal.style.display = 'block';
-    elements.popupMessage.style.display = 'none';
-
-    elements.selectionInputs.forEach(input => input.value = '');
-    elements.selectionInputs[0].focus();
-    elements.selectionError.textContent = '';
-
-    elements.selectionInputs.forEach((input, index) => {
-        input.oninput = (e) => {
-            soundManager.playClick();
-            e.target.value = e.target.value.toUpperCase();
-            if (e.target.value && index < elements.selectionInputs.length - 1) {
-                elements.selectionInputs[index + 1].focus();
-            }
-        };
-        input.onkeydown = (e) => {
-            if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                elements.selectionInputs[index - 1].focus();
-            }
-        };
-    });
-}
-
-function confirmSelection() {
-    soundManager.playClick();
-    const selected = [];
-    let valid = true;
-    const vowels = ['A', 'E', 'I', 'O', 'U'];
-
-    elements.selectionInputs.forEach((input, index) => {
-        const val = input.value.toUpperCase();
-        if (!val || !/^[A-Z]$/.test(val)) {
-            valid = false;
-        }
-        if (index < 3 && vowels.includes(val)) {
-            elements.selectionError.textContent = "Le prime 3 devono essere consonanti!";
-            valid = false;
-            return;
-        }
-        if (index === 3 && !vowels.includes(val) && val) {
-            elements.selectionError.textContent = "L'ultima deve essere una vocale!";
-            valid = false;
-        }
-        selected.push(val);
-    });
-
-    if (!valid && !elements.selectionError.textContent) {
-        elements.selectionError.textContent = "Riempi tutti i campi!";
-        soundManager.playError();
-    }
-
-    if (valid) {
-        gameState.selectedLetters = selected;
-        elements.selectionModal.style.display = 'none'; // Hide modal immediately
-
-        // Show HUD
-        elements.revealHud.style.display = 'flex';
-        elements.revealLettersContainer.innerHTML = '';
-
-        // Create HUD tiles
-        gameState.selectedLetters.forEach(letter => {
-            const tile = document.createElement('div');
-            tile.className = 'reveal-tile';
-            tile.textContent = letter;
-            elements.revealLettersContainer.appendChild(tile);
-        });
-
-        startWithLetters();
-    }
-}
-
-function startWithLetters() {
-    elements.letterInput.disabled = true;
-    elements.guessBtn.disabled = true;
-    elements.solutionInput.disabled = true;
-
-    // Make overlay transparent to see the board
-    elements.modalOverlay.classList.add('transparent');
-
-    // showPopupMessage("Sveliamo le lettere...", 0); // Removed initial message too
-
-    let delay = 1000;
-
-    const hudTiles = document.querySelectorAll('.reveal-tile');
-
-    gameState.selectedLetters.forEach((letter, index) => {
-        setTimeout(() => {
-            const currentTile = hudTiles[index];
-            if (currentTile) currentTile.classList.add('active');
-
-            const count = countLetterOccurrences(gameState.phrase, letter);
-            gameState.usedLetters.add(normalizeChar(letter));
-
-            setTimeout(() => {
-                if (count > 0) {
-                    soundManager.playCorrect();
-                    revealLetter(letter, true);
-                    if (currentTile) currentTile.classList.add('success');
-                } else {
-                    soundManager.playError();
-                    if (currentTile) currentTile.classList.add('error');
-                }
-                if (currentTile) currentTile.classList.remove('active');
-            }, 500); // Small delay for "checking" animation feel
-
-        }, delay);
-        delay += 2500;
-    });
-
-    setTimeout(() => {
-        // Hide HUD
-        elements.revealHud.style.display = 'none';
-
-        soundManager.playClick();
-
-        // Cleanup transparency
-        elements.modalOverlay.classList.remove('transparent');
-
-        // Center "Tocca a te"
-        showPopupMessage("TOCCA A TE AMORE", 2000, 'center');
-
-        elements.letterInput.disabled = false;
-        elements.guessBtn.disabled = false;
-        elements.solutionInput.disabled = false;
-        elements.letterInput.focus();
-    }, delay);
-}
-
-
-
-
-
-function stopExternalAudio() {
-    welcomeAudio.pause();
-    welcomeAudio.currentTime = 0;
-
-    winAudio.pause();
-    winAudio.currentTime = 0;
-
-    christmasAudio.pause();
-    christmasAudio.currentTime = 0;
-}
-
-function playWinAudio() {
-    winAudio.currentTime = 0;
-    winAudio.play().catch(e => console.warn("Win Audio play blocked", e));
-}
-
-function openWelcomeScreen() {
-    soundManager.playClick();
-    showScreen('welcome-screen');
-    welcomeAudio.currentTime = 0;
-    welcomeAudio.volume = 1.0;
-    welcomeAudio.play().catch(e => console.warn("Audio play blocked", e));
-}
-
-function proceedFromWelcome() {
-    soundManager.playClick();
-    welcomeAudio.pause();
-    welcomeAudio.currentTime = 0;
-    // Skip intro screen, start game directly
-    startGame('special');
-}
-
-// ===== Game Actions =====
-function startGame(mode = 'free') {
-    soundManager.init(); // Init audio context on user gesture
-    soundManager.playClick();
-    stopExternalAudio(); // Stop any lingering audio
-
-    let phrase = '';
-    let hint = '';
-
-    gameState.isSpecialMode = (mode === 'special');
-
-    if (mode === 'special' || mode === 'gift') {
-        const levelData = GIFT_LEVELS[gameState.currentLevel];
-        phrase = levelData.phrase;
-        hint = levelData.hint;
-    } else {
-        // Fallback to gift mode if somehow called without specified mode
-        gameState.currentLevel = 0;
-        const levelData = GIFT_LEVELS[0];
-        phrase = levelData.phrase;
-        hint = levelData.hint;
-    }
-
-    gameState.phrase = phrase;
-    gameState.normalizedPhrase = normalizePhrase(phrase);
+async function startNextManche() {
+    // Reset state
     gameState.revealedLetters = new Set();
     gameState.usedLetters = new Set();
-    gameState.attempts = 0;
-    gameState.errors = 0;
-    gameState.extraLettersCount = 0;
-    if (elements.remainingLetters) elements.remainingLetters.textContent = gameState.maxExtraLetters;
+    gameState.pendingWheelValue = null;
+    gameState.wheelPhase = 'idle';
+    gameState.allConsonantsRevealed = false;
 
-    elements.messageDisplay.textContent = '';
-    elements.messageDisplay.className = 'message-display';
-    elements.messageDisplay.className = 'message-display';
-    elements.letterInput.value = '';
-    elements.solutionInput.value = '';
+    // Reset partial scores
+    gameState.players.forEach(p => gameState.partialScores[p.name] = 0);
 
-    elements.hintDisplay.style.display = 'block';
-    elements.hintText.textContent = hint;
+    // Random starting player
+    gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
+
+    showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
+
+    // AI Logic with Offline Fallback
+    try {
+        const data = await fetchPuzzleFromAI();
+        gameState.phrase = sanitizePhrase(data.phrase);
+        gameState.hint = data.hint;
+    } catch (e) {
+        console.error("AI Generation failed, using offline DB", e);
+        // Fallback
+        const randomIndex = Math.floor(Math.random() * OFFLINE_PHRASES.length);
+        const selected = OFFLINE_PHRASES[randomIndex];
+        gameState.phrase = sanitizePhrase(selected.phrase);
+        gameState.hint = selected.hint;
+    }
+
+    gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+
+    elements.popupMessage.style.display = 'none';
+    elements.modalOverlay.style.display = 'none';
+
+    elements.mancheNumber.textContent = gameState.currentManche;
+    elements.hintText.textContent = gameState.hint;
+    createBoard();
+    drawWheel(0);
+    renderPlayersList();
+    updateUI();
+
+    showPopup(`<div class="popup-turn">MANCHE ${gameState.currentManche}<br>INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>`, 2500);
+}
+
+function showFinalResults() {
+    // Find winner
+    let maxScore = -1;
+    let winner = null;
+    gameState.players.forEach(p => {
+        if (gameState.totalScores[p.name] > maxScore) {
+            maxScore = gameState.totalScores[p.name];
+            winner = p;
+        }
+    });
+
+    let resultsHtml = '<div class="results-list">';
+    gameState.players
+        .sort((a, b) => gameState.totalScores[b.name] - gameState.totalScores[a.name])
+        .forEach((p, i) => {
+            resultsHtml += `<div class="result-row ${i === 0 ? 'winner' : ''}">${i + 1}. ${p.name}: €${gameState.totalScores[p.name]}</div>`;
+        });
+    resultsHtml += '</div>';
+
+    elements.winTitle.textContent = `🏆 ${winner.name} VINCE! 🏆`;
+    elements.winPhrase.innerHTML = resultsHtml;
+    elements.winMessage.textContent = `Montepremi finale: €${maxScore}`;
+    elements.nextLevelBtn.textContent = 'NUOVA PARTITA';
+    elements.nextLevelBtn.onclick = newGame;
+
+    showScreen('win-screen');
+    soundManager.playWin();
+}
+
+// ===== UI Updates =====
+function updateUI() {
+    const phase = gameState.wheelPhase;
+    const allConsRevealed = gameState.allConsonantsRevealed;
+
+    // Spin button
+    // Enable spin if idle OR if player has control (choose_action)
+    elements.spinBtn.disabled = !(phase === 'idle' || phase === 'choose_action') || allConsRevealed;
+
+    // Consonant input
+    const canCallConsonant = phase === 'call_consonant' && !allConsRevealed;
+    elements.consonantInput.disabled = !canCallConsonant;
+    elements.consonantBtn.disabled = !canCallConsonant;
+
+    // Vowel input (available if player has money and it's their turn to choose)
+    const player = getCurrentPlayer();
+    const canBuyVowel = (phase === 'choose_action' || phase === 'idle') && (gameState.partialScores[player?.name] >= VOWEL_COST);
+    elements.vowelInput.disabled = !canBuyVowel;
+    elements.vowelBtn.disabled = !canBuyVowel;
+
+    // Solve is always available
+    renderPlayersList();
+}
+
+// ===== AI Fetch =====
+// ===== AI Fetch =====
+async function fetchPuzzleFromAI() {
+    const API_KEY = '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';
+    const url = 'https://api.groq.com/openai/v1/chat/completions';
+
+    // Using high temperature and a unique seed-like string to force variety
+    const prompt = `Genera una FRASE LUNGA per il gioco "La Ruota della Fortuna" in italiano. 
+    REQUISITI DI FERRO:
+    1. LUNGHEZZA: La frase deve avere tra le 20 e le 30 LETTERE (escludendo gli spazi).
+    2. NO CLICHÉ CORTI: Non usare "La vita è bella", "Una casa grande" o frasi fatte brevi. Devi essere creativo.
+    3. ESEMPI DI LUNGHEZZA CORRETTA (NON COPIARLI): 
+       - "IL MATTINO HA L'ORO IN BOCCA" (21 lettere)
+       - "SOTTO LA PANCA LA CAPRA CREPA" (23 lettere)
+       - "NON CI RESTA CHE PIANGERE" (21 lettere)
+    4. PULIZIA: NO punteggiatura, NO apostrofi (es: usa È invece di E'). Solo lettere e spazi.
+    
+    Seme casuale per la generazione: ${Date.now()}
+    Restituisci SOLO un JSON valido: {"phrase": "FRASE LUNGA", "hint": "Categoria"}
+    Restituisci solo il JSON.`;
+
+    let lastError = null;
+    for (let attempt = 1; attempt <= 5; attempt++) {
+        try {
+            console.log(`Groq Attempt ${attempt}/5 (Temp: 1.2)...`);
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        { role: "system", content: "Sei un autore televisivo creativo. Generi frasi lunghe (20-30 lettere), originali, senza punteggiatura o apostrofi." },
+                        { role: "user", content: prompt }
+                    ],
+                    temperature: 1.2, // Higher randomness to break cliches
+                    response_format: { type: "json_object" }
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Groq API Error ${response.status}: ${errorText}`);
+            }
+
+            const data = await response.json();
+            const result = JSON.parse(data.choices[0].message.content);
+            const phrase = result.phrase.toUpperCase();
+
+            // Validate length (excluding spaces)
+            const letterCount = phrase.replace(/\s/g, '').length;
+            const hasPunctuation = /[^A-ZÀ-ÿ\s]/.test(phrase);
+
+            if (letterCount < 20 || letterCount > 30 || hasPunctuation) {
+                console.warn(`Scartata: "${phrase}" (${letterCount} lettere). Troppo ${letterCount < 20 ? 'corta' : 'lunga'} o invalida.`);
+                continue;
+            }
+
+            console.log("Frase valida ricevuta:", phrase, `(${letterCount} lettere)`);
+            return { phrase, hint: result.hint };
+
+        } catch (e) {
+            console.error(`Attempt ${attempt} failed:`, e.message);
+            lastError = e;
+        }
+    }
+    throw lastError || new Error("Impossibile generare una frase valida dopo 5 tentativi");
+}
+
+// ===== Game Start =====
+async function startGame() {
+    soundManager.init();
+    soundManager.playClick();
+
+    // Collect players
+    const nameInputs = document.querySelectorAll('.player-name-input');
+    gameState.players = [];
+    nameInputs.forEach((input, index) => {
+        const name = input.value.trim() || `Giocatore ${index + 1}`;
+        gameState.players.push({ name });
+        gameState.partialScores[name] = 0;
+        gameState.totalScores[name] = 0;
+    });
+
+    // Random starting player
+    gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
+    gameState.currentManche = 1;
+
+    // Get phrase from AI
+    showScreen('game-screen');
+    showPopup(`<div class="popup-loading">L'AI sta generando la frase...</div>`, 0);
+
+    // AI Logic with Offline Fallback
+    try {
+        const data = await fetchPuzzleFromAI();
+        gameState.phrase = sanitizePhrase(data.phrase);
+        gameState.hint = data.hint;
+    } catch (e) {
+        console.warn("AI Generation failed (using offline fallback):", e.message);
+        // SILENT FALLBACK: No popup, immediate start with offline phrase
+        const randomIndex = Math.floor(Math.random() * OFFLINE_PHRASES.length);
+        const selected = OFFLINE_PHRASES[randomIndex];
+        gameState.phrase = sanitizePhrase(selected.phrase);
+        gameState.hint = selected.hint;
+    }
+
+    gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+    gameState.revealedLetters = new Set();
+    gameState.usedLetters = new Set();
+    gameState.wheelPhase = 'idle';
+    gameState.pendingWheelValue = null;
+
+    elements.popupMessage.style.display = 'none';
+    elements.modalOverlay.style.display = 'none';
+
+    elements.mancheNumber.textContent = '1';
+    elements.hintText.textContent = gameState.hint;
+    elements.currentWheelValue.textContent = '-';
 
     createBoard();
-    showLetterSelectionObserver();
-}
+    drawWheel(0);
+    renderPlayersList();
+    updateUI();
 
-function nextLevel() {
-    gameState.currentLevel++;
-    stopExternalAudio();
-    startGame('special');
-}
-
-function guessLetter() {
-    const letter = elements.letterInput.value.trim().toUpperCase();
-    elements.letterInput.value = '';
-
-    if (!letter || !/^[A-ZÀ-ÿ]$/.test(letter)) {
-        showMessage('Inserisci una lettera valida!', 'error');
-        elements.letterInput.focus();
-        soundManager.playError();
-        return;
-    }
-
-    const normalizedLetter = normalizeChar(letter);
-    if (gameState.usedLetters.has(normalizedLetter)) {
-        showMessage(`Hai già provato la lettera "${letter}"!`, 'info');
-        elements.letterInput.focus();
-        soundManager.playClick(); // just a click for info
-        return;
-    }
-
-    gameState.usedLetters.add(normalizedLetter);
-
-    // Decrement allowed extra letters
-    gameState.extraLettersCount++;
-    const remaining = gameState.maxExtraLetters - gameState.extraLettersCount;
-    if (elements.remainingLetters) elements.remainingLetters.textContent = remaining;
-
-    const occurrences = countLetterOccurrences(gameState.phrase, letter);
-
-    if (occurrences > 0) {
-        soundManager.playCorrect();
-        revealLetter(letter, true);
-        showMessage(`🎉 "${letter}" trovata! (${occurrences})`, 'success');
-        setTimeout(() => checkWin(), occurrences * 100 + 300);
-    } else {
-        soundManager.playError();
-        showMessage(`❌ "${letter}" non c'è.`, 'error');
-    }
-
-    if (remaining <= 0) {
-        elements.letterInput.disabled = true;
-        elements.guessBtn.disabled = true;
-        showPopupMessage("HAI FINITO LE LETTERE DISPONIBILI! <br> Ora prova a indovinare la frase!", 4000, 'center');
-    } else {
-        elements.letterInput.focus();
-    }
-}
-
-function trySolution() {
-    const guess = elements.solutionInput.value.trim().toUpperCase();
-    if (!guess) return;
-
-    if (normalizePhrase(guess) === gameState.normalizedPhrase) {
-        soundManager.playWin();
-
-        if (gameState.isSpecialMode && gameState.currentLevel === GIFT_LEVELS.length - 1) {
-            winAudio.pause();
-            christmasAudio.currentTime = 0;
-            christmasAudio.play().catch(e => console.warn("Christmas Audio play blocked", e));
-        } else {
-            playWinAudio();
-        }
-
-        showMessage('🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉', 'success');
-        revealAllLetters();
-        setTimeout(showWinScreen, 1500);
-    } else {
-        soundManager.playError();
-        gameState.errors++;
-        gameState.attempts++;
-        showMessage('❌ Risposta errata! Riprova.', 'error');
-        elements.solutionInput.value = '';
-        elements.solutionInput.focus();
-    }
+    showPopup(`<div class="popup-turn">MANCHE 1<br>INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>`, 3000);
 }
 
 function newGame() {
     soundManager.playClick();
-    stopExternalAudio();
     showScreen('setup-screen');
-    elements.modalOverlay.style.display = 'none';
+    elements.setupStep1.style.display = 'block';
+    elements.setupStep2.style.display = 'none';
 }
 
 // ===== Event Listeners =====
-// if (elements.startSpecialBtn) elements.startSpecialBtn.addEventListener('click', () => startGame('special'));
+elements.nextStepBtn?.addEventListener('click', () => {
+    soundManager.playClick();
+    const count = parseInt(elements.playerCountInput.value) || 2;
+    const playerCount = Math.max(1, Math.min(10, count));
 
-if (elements.confirmSelectionBtn) elements.confirmSelectionBtn.addEventListener('click', confirmSelection);
+    elements.playerNamesContainer.innerHTML = '';
+    for (let i = 0; i < playerCount; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'player-name-input';
+        input.placeholder = `Giocatore ${i + 1}`;
+        elements.playerNamesContainer.appendChild(input);
+    }
 
-if (elements.guessBtn) elements.guessBtn.addEventListener('click', guessLetter);
-if (elements.trySolutionBtn) elements.trySolutionBtn.addEventListener('click', trySolution);
+    elements.setupStep1.style.display = 'none';
+    elements.setupStep2.style.display = 'block';
+});
 
-if (elements.letterInput) {
-    elements.letterInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') guessLetter();
-    });
-    elements.letterInput.addEventListener('input', (e) => {
-        e.target.value = e.target.value.toUpperCase();
-    });
-}
+elements.backStepBtn?.addEventListener('click', () => {
+    soundManager.playClick();
+    elements.setupStep2.style.display = 'none';
+    elements.setupStep1.style.display = 'block';
+});
 
-if (elements.solutionInput) {
-    elements.solutionInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') trySolution();
-    });
-}
+elements.startGameBtn?.addEventListener('click', startGame);
+elements.spinBtn?.addEventListener('click', spinWheel);
+elements.consonantBtn?.addEventListener('click', callConsonant);
+elements.vowelBtn?.addEventListener('click', buyVowel);
+elements.solveBtn?.addEventListener('click', trySolve);
+elements.newGameBtn?.addEventListener('click', newGame);
 
-if (elements.newGameBtn) elements.newGameBtn.addEventListener('click', newGame);
-if (elements.playAgainBtn) elements.playAgainBtn.addEventListener('click', newGame);
+elements.consonantInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') callConsonant();
+});
+elements.consonantInput?.addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase();
+});
 
+elements.vowelInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') buyVowel();
+});
+elements.vowelInput?.addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase();
+});
+
+elements.solutionInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') trySolve();
+});
