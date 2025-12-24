@@ -817,54 +817,72 @@ function updateUI() {
 // ===== AI Fetch =====
 // ===== AI Fetch =====
 async function fetchPuzzleFromAI() {
-    const API_KEY = 'AIzaSyAq2P04FaQP5cJAO5n0FdAYV5jmFV0hd9k';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
-    // Force prompt to be very explicit
-    const prompt = 'Genera una frase per il gioco "La Ruota della Fortuna" in italiano. REQUISITO OBBLIGATORIO: LUNGHEZZA CIRCA 20-30 LETTERE. Stile: Ruota della fortuna italiana. Restituisci SOLO un JSON valido (senza markdown) con: "phrase" (maiuscolo, usa gli accenti corretti come È, À, etc. - NON usare l\'apostrofo come E\') e "hint".';
+    const API_KEY = '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';
+    const url = 'https://api.groq.com/openai/v1/chat/completions';
+
+    // Using high temperature and a unique seed-like string to force variety
+    const prompt = `Genera una FRASE LUNGA per il gioco "La Ruota della Fortuna" in italiano. 
+    REQUISITI DI FERRO:
+    1. LUNGHEZZA: La frase deve avere tra le 20 e le 30 LETTERE (escludendo gli spazi).
+    2. NO CLICHÉ CORTI: Non usare "La vita è bella", "Una casa grande" o frasi fatte brevi. Devi essere creativo.
+    3. ESEMPI DI LUNGHEZZA CORRETTA (NON COPIARLI): 
+       - "IL MATTINO HA L'ORO IN BOCCA" (21 lettere)
+       - "SOTTO LA PANCA LA CAPRA CREPA" (23 lettere)
+       - "NON CI RESTA CHE PIANGERE" (21 lettere)
+    4. PULIZIA: NO punteggiatura, NO apostrofi (es: usa È invece di E'). Solo lettere e spazi.
+    
+    Seme casuale per la generazione: ${Date.now()}
+    Restituisci SOLO un JSON valido: {"phrase": "FRASE LUNGA", "hint": "Categoria"}
+    Restituisci solo il JSON.`;
 
     let lastError = null;
-    // Retry up to 3 times if phrase is too short or invalid
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= 5; attempt++) {
         try {
-            console.log(`AI Attempt ${attempt}/3...`);
+            console.log(`Groq Attempt ${attempt}/5 (Temp: 1.2)...`);
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': API_KEY },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        { role: "system", content: "Sei un autore televisivo creativo. Generi frasi lunghe (20-30 lettere), originali, senza punteggiatura o apostrofi." },
+                        { role: "user", content: prompt }
+                    ],
+                    temperature: 1.2, // Higher randomness to break cliches
+                    response_format: { type: "json_object" }
+                })
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`API Error ${response.status}: ${errorText}`);
+                throw new Error(`Groq API Error ${response.status}: ${errorText}`);
             }
 
             const data = await response.json();
-            if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-                throw new Error("Invalid AI structure");
+            const result = JSON.parse(data.choices[0].message.content);
+            const phrase = result.phrase.toUpperCase();
+
+            // Validate length (excluding spaces)
+            const letterCount = phrase.replace(/\s/g, '').length;
+            const hasPunctuation = /[^A-ZÀ-ÿ\s]/.test(phrase);
+
+            if (letterCount < 20 || letterCount > 30 || hasPunctuation) {
+                console.warn(`Scartata: "${phrase}" (${letterCount} lettere). Troppo ${letterCount < 20 ? 'corta' : 'lunga'} o invalida.`);
+                continue;
             }
 
-            const text = data.candidates[0].content.parts[0].text;
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("No JSON found");
-
-            const result = JSON.parse(jsonMatch[0]);
-
-            // Validate length (count letters)
-            const count = result.phrase.replace(/\s/g, '').length;
-            if (count < 20) {
-                console.warn(`AI phrase too short (${count} chars), retrying...`);
-                continue; // Retry
-            }
-
-            return result; // Success!
+            console.log("Frase valida ricevuta:", phrase, `(${letterCount} lettere)`);
+            return { phrase, hint: result.hint };
 
         } catch (e) {
-            console.warn(`Attempt ${attempt} failed:`, e.message);
+            console.error(`Attempt ${attempt} failed:`, e.message);
             lastError = e;
         }
     }
-
-    throw lastError || new Error("All AI attempts failed");
+    throw lastError || new Error("Impossibile generare una frase valida dopo 5 tentativi");
 }
 
 // ===== Game Start =====
