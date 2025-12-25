@@ -249,51 +249,54 @@ function createBoard() {
     elements.gameBoard.innerHTML = '';
     const words = gameState.phrase.split(' ');
     const BOARD_ROWS = 4;
-    const ROWS_CONFIG = [12, 14, 14, 12];
-    const MAX_ROW_LENGTH = 12;
-    let currentRow = [];
-    const contentRows = [];
+    const FIXED_CAPACITY = 14;
 
-    words.forEach((word) => {
-        const spaceNeeded = currentRow.length > 0 ? 1 : 0;
-        if (currentRow.length + spaceNeeded + word.length <= MAX_ROW_LENGTH) {
-            if (currentRow.length > 0) currentRow.push({ type: 'space', char: ' ' });
-            for (const char of word) currentRow.push({ type: 'letter', char: char });
-        } else {
-            if (currentRow.length > 0) contentRows.push(currentRow);
-            currentRow = [];
-            for (const char of word) currentRow.push({ type: 'letter', char: char });
-        }
-    });
-    if (currentRow.length > 0) contentRows.push(currentRow);
+    // Tentativo 1: Area ristretta (per mantenere la forma a scalino 12-10-10-12)
+    let contentRows = splitPhraseIntoRows(words, [12, 10, 10, 12]);
+    let mode = 'restricted';
+
+    // Tentativo 2: Area estesa (se non ci sta in quella ristretta)
+    if (!contentRows) {
+        contentRows = splitPhraseIntoRows(words, [12, 14, 14, 12]);
+        mode = 'extended';
+    }
+
+    if (!contentRows) {
+        console.error("Frase troppo lunga per il tabellone!");
+        return;
+    }
 
     const verticalOffset = Math.floor((BOARD_ROWS - contentRows.length) / 2);
 
     for (let row = 0; row < BOARD_ROWS; row++) {
         const rowElement = document.createElement('div');
         rowElement.className = 'board-row';
-        const FIXED_CAPACITY = 14;
-        const rowCapacity = ROWS_CONFIG[row]; // 12 or 14
 
         const contentRowIndex = row - verticalOffset;
-        const contentRow = contentRows[contentRowIndex] || null;
+        const contentRow = (contentRowIndex >= 0 && contentRowIndex < contentRows.length) ? contentRows[contentRowIndex] : null;
 
-        // Calculate offset within the row's capacity
-        const innerOffset = contentRow ? Math.floor((rowCapacity - contentRow.length) / 2) : 0;
-        // Total offset from the start of the 14-tile grid
-        const gridOffset = (FIXED_CAPACITY - rowCapacity) / 2 + innerOffset;
+        // Offset di partenza dinamico:
+        // Righe 0 e 3: sempre 1 (centrate 12 in 14)
+        // Righe 1 e 2: partono dalla 2ª casella (index 1) se il contenuto <= 12, altrimenti da 0
+        let startCol;
+        if (row === 0 || row === 3) {
+            startCol = 1;
+        } else {
+            startCol = (contentRow && contentRow.length <= 12) ? 1 : 0;
+        }
 
         for (let col = 0; col < FIXED_CAPACITY; col++) {
             const tileElement = document.createElement('div');
             tileElement.className = 'tile';
 
-            // Handle row indentations (12 tiles centered in 14)
+            // Celle fisicamente non esistenti per la forma a scalino
             const isRowEdge = (row === 0 || row === 3) && (col === 0 || col === 13);
+
             if (isRowEdge) {
                 tileElement.classList.add('invisible');
             } else {
-                const contentIndex = col - gridOffset;
-                const content = contentRow && contentIndex >= 0 && contentIndex < contentRow.length ? contentRow[contentIndex] : null;
+                const charIndex = col - startCol;
+                const content = (contentRow && charIndex >= 0 && charIndex < contentRow.length) ? contentRow[charIndex] : null;
 
                 if (content && content.type === 'letter') {
                     tileElement.classList.add('letter');
@@ -307,6 +310,49 @@ function createBoard() {
         }
         elements.gameBoard.appendChild(rowElement);
     }
+}
+
+// Funzione helper per dividere la frase in righe rispettando i limiti forniti
+function splitPhraseIntoRows(words, rowLimits) {
+    const rows = [];
+    let currentRow = [];
+    let currentLen = 0;
+
+    for (const word of words) {
+        const spaceNeeded = currentRow.length > 0 ? 1 : 0;
+        const wordLen = word.length;
+
+        // Controlla se il limite della riga corrente è superato
+        if (currentLen + spaceNeeded + wordLen <= rowLimits[rows.length]) {
+            if (spaceNeeded) {
+                currentRow.push({ type: 'space', char: ' ' });
+                currentLen += 1;
+            }
+            for (const char of word) {
+                currentRow.push({ type: 'letter', char: char });
+                currentLen += 1;
+            }
+        } else {
+            // Vai alla riga successiva
+            rows.push(currentRow);
+            currentRow = [];
+            currentLen = 0;
+
+            if (rows.length >= rowLimits.length) return null; // Non ci sta
+
+            // Inserisci la parola nella nuova riga
+            if (wordLen <= rowLimits[rows.length]) {
+                for (const char of word) {
+                    currentRow.push({ type: 'letter', char: char });
+                    currentLen += 1;
+                }
+            } else {
+                return null; // Parola singola più lunga del limite riga
+            }
+        }
+    }
+    if (currentRow.length > 0) rows.push(currentRow);
+    return rows.length <= rowLimits.length ? rows : null;
 }
 
 function revealLetter(letter, animate = true) {
@@ -863,29 +909,33 @@ function updateUI() {
     renderPlayersList();
 }
 
-// ===== AI Fetch =====
-// ===== AI Fetch =====
+// ===== AI Fetch (DATABASE STATICO PRIMARIO) =====
 async function fetchPuzzleFromAI() {
+    // Pesca un enigma casuale dal database statico fornito dall'utente
+    if (typeof PUZZLE_DATABASE !== 'undefined' && PUZZLE_DATABASE.length > 0) {
+        const randomIndex = Math.floor(Math.random() * PUZZLE_DATABASE.length);
+        const puzzle = PUZZLE_DATABASE[randomIndex];
+        console.log("Enigma caricato dal database statico:", puzzle.phrase);
+        return {
+            phrase: puzzle.phrase.toUpperCase(),
+            hint: puzzle.hint.toUpperCase()
+        };
+    }
+
+    /* 
+    // LOGICA AI (DISATTIVATA TEMPORANEAMENTE)
     const API_KEY = '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';
     const url = 'https://api.groq.com/openai/v1/chat/completions';
 
-    // Using high temperature and a unique seed-like string to force variety
-    const prompt = `Genera una FRASE LUNGA per il gioco "La Ruota della Fortuna" in italiano. 
-    REQUISITI DI FERRO:
-    1. LUNGHEZZA: La frase deve avere tra le 20 e le 30 LETTERE (escludendo gli spazi).
-    2. NO CLICHÉ CORTI: Non usare "La vita è bella", "Una casa grande" o frasi fatte brevi. Devi essere creativo.
-    3. ESEMPI DI LUNGHEZZA CORRETTA (NON COPIARLI): 
-       - "SOTTO LA PANCA LA CAPRA CREPA" (23 lettere)
-       - "NON CI RESTA CHE PIANGERE" (21 lettere)
-       - "CHI SEMINA VENTO RACCOGLIE TEMPESTA" (29 lettere)
-    4. PULIZIA: NO punteggiatura, NO apostrofi. Se devi usare il verbo essere, scrivi È (maiuscola accentata).
-    
-    Restituisci il risultato in formato JSON: {"phrase": "FRASE LUNGA", "hint": "Categoria"}`;
+    const categories = ["CINEMA", "MUSICA", "STORIA", "GEOGRAFIA", "LETTERATURA", "SCIENZA", "ARTE", "CURIOSITÀ", "CUCINA", "SPORT", "NATURA", "NATALE", "TRADIZIONI", "VITA QUOTIDIANA"];
 
     let lastError = null;
-    for (let attempt = 1; attempt <= 5; attempt++) {
+    for (let attempt = 1; attempt <= 10; attempt++) {
+        const chosenCategory = categories[Math.floor(Math.random() * categories.length)];
+        const randomSeed = Math.random().toString(36).substring(7);
+
         try {
-            console.log(`Groq Attempt ${attempt}/5 (Temp: 1.2)...`);
+            console.log(`Groq Attempt ${attempt}/10 (Category: ${chosenCategory}, Seed: ${randomSeed})...`);
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -895,10 +945,32 @@ async function fetchPuzzleFromAI() {
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { role: "system", content: "Sei un autore televisivo della Ruota della Fortuna. Generi frasi lunghe (20-30 lettere), originali e variegate. Usa un italiano moderno e corretto. REGOLE: 1. Distingui tra E (congiunzione) ed È (verbo). 2. NO punteggiatura, NO apostrofi." },
-                        { role: "user", content: prompt + "\nAssicurati che la frase sia naturale e non forzata." }
+                        {
+                            role: "system",
+                            content: `Sei il Capo Autore della Ruota della Fortuna (edizione italiana). Sei un esperto linguista.
+REGOLE INTEGRATIVE:
+1. SOLO ITALIANO: Vietato l'uso di parole straniere.
+2. NO APOSTROFI: Non usare MAI l'apostrofo. Riformula sempre.
+3. NO PUNTEGGIATURA: Solo lettere e spazi. Niente virgole o punti.
+4. QUALITÀ "CAPO AUTORE": Evita frasi infantili o elementari (es. NO "IL RISO È BIANCO"). 
+   Crea enigmi stimolanti, citazioni, proverbi o fatti curiosi.
+5. LUNGHEZZA: Mira a circa 28 lettere (range accettato 25-30). Sii conciso ma elegante.
+
+ESEMPI DI QUALITÀ (circa 28 lettere):
+- VITA QUOTIDIANA: PANDORO E TORRONE IN FAMIGLIA (25 lettere)
+- GEOGRAFIA: IL TEVERE BAGNA LA CITTÀ ETERNA (28 lettere)
+- CURIOSITÀ: IL CUORE DELLA BALENA È MOLTO GRANDE (29 lettere)
+- PROVERBI: IL LUPO PERDE IL PELO MA NON IL VIZIO (29 lettere)
+
+FORMATO: JSON {"phrase": "FRASE IN MAIUSCOLO", "hint": "CATEGORIA IN MAIUSCOLO"}`
+                        },
+                        {
+                            role: "user",
+                            content: `Genera un enigma di spessore culturale per la categoria ${chosenCategory}. Seme: ${randomSeed}. Target: 28 lettere.`
+                        }
                     ],
-                    temperature: 1.2,
+                    temperature: 0.85,
+                    top_p: 0.9,
                     response_format: { type: "json_object" }
                 })
             });
@@ -916,8 +988,10 @@ async function fetchPuzzleFromAI() {
             const letterCount = phrase.replace(/\s/g, '').length;
             const hasPunctuation = /[^A-ZÀ-ÿ\s]/.test(phrase);
 
-            if (letterCount < 20 || letterCount > 30 || hasPunctuation) {
-                console.warn(`Scartata: "${phrase}" (${letterCount} lettere). Troppo ${letterCount < 20 ? 'corta' : 'lunga'} o invalida.`);
+            // Slightly more flexible range in code (22-33) to avoid "failed attempts" 
+            // but the prompt asks for 25-30 (target 28).
+            if (letterCount < 22 || letterCount > 33 || hasPunctuation) {
+                console.warn(`Scartata: "${phrase}" (${letterCount} lettere). Fuori dal range di sicurezza 22-33.`);
                 continue;
             }
 
@@ -929,7 +1003,9 @@ async function fetchPuzzleFromAI() {
             lastError = e;
         }
     }
-    throw lastError || new Error("Impossibile generare una frase valida dopo 5 tentativi");
+    */
+
+    throw new Error("Database enigmi non trovato e logica AI disattivata.");
 }
 
 // ===== Game Start =====
