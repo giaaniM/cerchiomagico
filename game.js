@@ -875,14 +875,12 @@ async function fetchPuzzleFromAI() {
     1. LUNGHEZZA: La frase deve avere tra le 20 e le 30 LETTERE (escludendo gli spazi).
     2. NO CLICHÉ CORTI: Non usare "La vita è bella", "Una casa grande" o frasi fatte brevi. Devi essere creativo.
     3. ESEMPI DI LUNGHEZZA CORRETTA (NON COPIARLI): 
-       - "IL MATTINO HA L'ORO IN BOCCA" (21 lettere)
        - "SOTTO LA PANCA LA CAPRA CREPA" (23 lettere)
        - "NON CI RESTA CHE PIANGERE" (21 lettere)
-    4. PULIZIA: NO punteggiatura, NO apostrofi (es: usa È invece di E'). Solo lettere e spazi.
+       - "CHI SEMINA VENTO RACCOGLIE TEMPESTA" (29 lettere)
+    4. PULIZIA: NO punteggiatura, NO apostrofi. Se devi usare il verbo essere, scrivi È (maiuscola accentata).
     
-    Seme casuale per la generazione: ${Date.now()}
-    Restituisci SOLO un JSON valido: {"phrase": "FRASE LUNGA", "hint": "Categoria"}
-    Restituisci solo il JSON.`;
+    Restituisci il risultato in formato JSON: {"phrase": "FRASE LUNGA", "hint": "Categoria"}`;
 
     let lastError = null;
     for (let attempt = 1; attempt <= 5; attempt++) {
@@ -897,10 +895,10 @@ async function fetchPuzzleFromAI() {
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        { role: "system", content: "Sei un autore televisivo creativo. Generi frasi lunghe (20-30 lettere), originali, senza punteggiatura o apostrofi." },
-                        { role: "user", content: prompt }
+                        { role: "system", content: "Sei un autore televisivo della Ruota della Fortuna. Generi frasi lunghe (20-30 lettere), originali e variegate. Usa un italiano moderno e corretto. REGOLE: 1. Distingui tra E (congiunzione) ed È (verbo). 2. NO punteggiatura, NO apostrofi." },
+                        { role: "user", content: prompt + "\nAssicurati che la frase sia naturale e non forzata." }
                     ],
-                    temperature: 1.2, // Higher randomness to break cliches
+                    temperature: 1.2,
                     response_format: { type: "json_object" }
                 })
             });
