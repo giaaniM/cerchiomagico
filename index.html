@@ -101,6 +101,10 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Spin Button Center -->
+                    <div class="spin-container-centered">
+                        <button id="spin-btn" class="btn-spin">🎡 GIRA LA RUOTA</button>
+                    </div>
                 </div>
 
                 <!-- Right: Wheel Value Display -->
@@ -112,49 +116,41 @@
                 </aside>
             </div>
 
-            <!-- Bottom Section Layout -->
-            <div class="bottom-interaction-container">
-                <!-- Top Row: Wheel + Letters -->
-                <div class="wheel-letters-row">
-                    <!-- Wheel -->
-                    <div class="wheel-area">
-                        <!-- Wheel Container removed from here -->
-                        <button id="spin-btn" class="btn-spin">🎡 GIRA LA RUOTA</button>
+            <!-- Interazioni Inferiori Affiancate -->
+            <div class="game-actions-row">
+                <!-- Letters Controls -->
+                <div class="letters-controls">
+                    <!-- Consonant Input -->
+                    <div class="control-group" id="consonant-group">
+                        <label>Chiama una CONSONANTE:</label>
+                        <div class="input-group">
+                            <input type="text" id="consonant-input" maxlength="1" autocomplete="off" disabled>
+                            <button id="consonant-btn" class="btn-action" disabled>CHIAMA</button>
+                        </div>
                     </div>
 
-                    <!-- Letters Controls -->
-                    <div class="letters-controls">
-                        <!-- Consonant Input -->
-                        <div class="control-group" id="consonant-group">
-                            <label>Chiama una CONSONANTE:</label>
-                            <div class="input-group">
-                                <input type="text" id="consonant-input" maxlength="1" autocomplete="off" disabled>
-                                <button id="consonant-btn" class="btn-action" disabled>CHIAMA</button>
-                            </div>
+                    <!-- Vowel Input -->
+                    <div class="control-group" id="vowel-group">
+                        <label>Compra una VOCALE (€1000):</label>
+                        <div class="input-group">
+                            <input type="text" id="vowel-input" maxlength="1" autocomplete="off" disabled>
+                            <button id="vowel-btn" class="btn-action btn-vowel" disabled>COMPRA</button>
                         </div>
-
-                        <!-- Vowel Input -->
-                        <div class="control-group" id="vowel-group">
-                            <label>Compra una VOCALE (€1000):</label>
-                            <div class="input-group">
-                                <input type="text" id="vowel-input" maxlength="1" autocomplete="off" disabled>
-                                <button id="vowel-btn" class="btn-action btn-vowel" disabled>COMPRA</button>
-                            </div>
-                        </div>
-
-                        <!-- Message Display -->
-                        <div id="message-display" class="message-display"></div>
                     </div>
+
+                    <!-- Message Display -->
+                    <div id="message-display" class="message-display"></div>
                 </div>
 
-                <!-- Bottom Row: Solve -->
-                <div class="solve-section-full">
+                <!-- Solve Section (A destra) -->
+                <div class="solve-section-card">
                     <div class="control-group" id="solve-group">
                         <label>Risolvi la frase:</label>
                         <div class="input-group full-width">
                             <input type="text" id="solution-input" placeholder="Scrivi la soluzione..."
                                 autocomplete="off">
                             <button id="solve-btn" class="btn-solve">RISOLVI</button>
+                            <button id="pass-btn" class="btn-pass" style="display: none;">PASSA</button>
                         </div>
                     </div>
                 </div>

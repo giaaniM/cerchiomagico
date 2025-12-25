@@ -55,12 +55,17 @@ const soundManager = {
     },
 
     playWin() {
-        // Victory fanfare
-        const now = 0;
-        this.playTone(523, 'square', 0.1); // C5
-        setTimeout(() => this.playTone(659, 'square', 0.1), 150); // E5
-        setTimeout(() => this.playTone(783, 'square', 0.1), 300); // G5
-        setTimeout(() => this.playTone(1046, 'square', 0.6), 450); // C6
+        // Play external MP3 for victory
+        const winAudio = new Audio('fraseindovinata.mp3');
+        winAudio.play().catch(e => {
+            console.warn("Could not play fraseindovinata.mp3, falling back to synthetic sound:", e);
+            // Fallback victory fanfare
+            const now = 0;
+            this.playTone(523, 'square', 0.1); // C5
+            setTimeout(() => this.playTone(659, 'square', 0.1), 150); // E5
+            setTimeout(() => this.playTone(783, 'square', 0.1), 300); // G5
+            setTimeout(() => this.playTone(1046, 'square', 0.6), 450); // C6
+        });
     },
 
     playSpin() {
@@ -70,35 +75,35 @@ const soundManager = {
 
 // ===== Wheel Segments (24 segments like the real wheel) =====
 const WHEEL_SEGMENTS = [
-    { value: 1000, color: '#f39c12', label: '€1000' },
-    { value: 500, color: '#3498db', label: '€500' },
-    { value: 5000, color: '#000000', label: '€5000', glowing: true }, /* Special 5000 */
-    { value: 300, color: '#27ae60', label: '€300' },
-    { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
-    { value: 750, color: '#9b59b6', label: '€750' },
-    { value: 400, color: '#1abc9c', label: '€400' },
-    { value: 800, color: '#e67e22', label: '€800' },
-    { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
-    { value: 600, color: '#f1c40f', label: '€600' },
-    { value: 1500, color: '#e74c3c', label: '€1500' },
-    { value: 300, color: '#3498db', label: '€300' },
-    { value: 500, color: '#27ae60', label: '€500' },
-    { value: 'PASSA', color: '#95a5a6', label: 'PASSA' },
-    { value: 450, color: '#9b59b6', label: '€450' },
-    { value: 2000, color: '#f39c12', label: '€2000' },
-    { value: 350, color: '#1abc9c', label: '€350' },
-    { value: 900, color: '#e67e22', label: '€900' },
-    { value: 250, color: '#e74c3c', label: '€250' },
-    { value: 550, color: '#f1c40f', label: '€550' },
-    { value: 'BANCAROTTA', color: '#2c3e50', label: 'BANCA' },
-    { value: 700, color: '#3498db', label: '€700' },
-    { value: 400, color: '#27ae60', label: '€400' },
-    { value: 1200, color: '#9b59b6', label: '€1200' }
+    { value: 2000, color: '#FFD700', label: '2000€', glowing: true },
+    { value: 200, color: '#FFEB3B', label: '200€' },
+    { value: 350, color: '#FF1493', label: '350€' },
+    { value: 100, color: '#FFFFFF', label: '100€' },
+    { value: '?500', color: '#BFFF00', label: '?500€' },
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
+    { value: 300, color: '#FF1493', label: '300€' },
+    { value: 150, color: '#FFFFFF', label: '150€' },
+    { value: 400, color: '#00BCD4', label: '400€' },
+    { value: 250, color: '#FF1493', label: '250€' },
+    { value: 300, color: '#2196F3', label: '300€' },
+    { value: 'BANCAROTTA', color: '#000000', label: 'BANCA' },
+    { value: 200, color: '#F44336', label: '200€' },
+    { value: 300, color: '#FFFFFF', label: '300€' },
+    { value: 150, color: '#FF1493', label: '150€' },
+    { value: '?500', color: '#BFFF00', label: '?500€' },
+    { value: 200, color: '#F44336', label: '200€' },
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
+    { value: 350, color: '#2196F3', label: '350€' },
+    { value: 100, color: '#4CAF50', label: '100€' },
+    { value: 500, color: '#FFEB3B', label: '500€' },
+    { value: 250, color: '#FF1493', label: '250€' },
+    { value: 400, color: '#4CAF50', label: '400€' },
+    { value: 'BANCAROTTA', color: '#000000', label: 'BANCA' }
 ];
 
 const VOWELS = ['A', 'E', 'I', 'O', 'U'];
 const VOWEL_COST = 1000;
-const TOTAL_MANCHES = 2;
+const TOTAL_MANCHES = 5;
 
 // ===== Game State =====
 const gameState = {
@@ -167,6 +172,7 @@ const elements = {
     vowelBtn: document.getElementById('vowel-btn'),
     solutionInput: document.getElementById('solution-input'),
     solveBtn: document.getElementById('solve-btn'),
+    passBtn: document.getElementById('pass-btn'),
     messageDisplay: document.getElementById('message-display'),
     newGameBtn: document.getElementById('new-game-btn'),
 
@@ -460,59 +466,86 @@ function drawWheel(rotation = 0) {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const radius = Math.min(centerX, centerY) - 10;
-    const scale = canvas.width / 300; // Base scale on original 300px width
+    const scale = canvas.width / 300;
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const segmentAngle = (2 * Math.PI) / WHEEL_SEGMENTS.length;
     const rotationRad = (rotation * Math.PI) / 180;
 
-    // Draw each segment
     WHEEL_SEGMENTS.forEach((segment, i) => {
         const startAngle = i * segmentAngle + rotationRad;
         const endAngle = startAngle + segmentAngle;
 
-        // Draw segment
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
         ctx.closePath();
 
-        // Glow effect for special segments
+        // Radial Gradient (white/shimmer towards center)
+        const grad = ctx.createRadialGradient(centerX, centerY, radius * 0.2, centerX, centerY, radius);
+
         if (segment.glowing) {
-            ctx.shadowColor = '#fbbf24'; // Gold glow
-            ctx.shadowBlur = 30 * scale;
-            ctx.fillStyle = '#000'; // Dark background for contrast
+            grad.addColorStop(0, '#fff');
+            grad.addColorStop(0.3, '#fbbf24');
+            grad.addColorStop(1, '#92400e');
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 40 * scale;
         } else {
+            // Lighten the center for that "shine" effect
+            const baseColor = segment.color;
+            grad.addColorStop(0, '#ffffff'); // Center shine
+            grad.addColorStop(0.2, baseColor === '#FFFFFF' ? '#f8fafc' : baseColor);
+            grad.addColorStop(1, baseColor);
             ctx.shadowBlur = 0;
-            ctx.fillStyle = segment.color;
         }
 
+        ctx.fillStyle = grad;
         ctx.fill();
-        ctx.shadowBlur = 0; // Reset shadow for stroke
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2 * scale;
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#000'; // Black stroke like image
+        ctx.lineWidth = 1 * scale;
         ctx.stroke();
 
-        // Draw text
+        // Draw Text
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + segmentAngle / 2);
-        ctx.textAlign = 'right';
-        ctx.fillStyle = (segment.value === 'BANCAROTTA' || segment.glowing) ? '#fff' : '#000';
-        ctx.font = `bold ${14 * scale}px Outfit, sans-serif`; // Scled font
-        ctx.fillText(segment.label, radius - (15 * scale), 5 * scale);
+
+        ctx.fillStyle = (segment.color === '#000000') ? '#fff' : '#000';
+        ctx.textAlign = 'center';
+
+        // Vertical text logic
+        const label = segment.label;
+        const chars = label.replace(/\s/g, '').split(''); // Remove spaces to avoid gaps
+        const fontSize = 16 * scale;
+        ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
+
+        // Start from near the outer edge and move inwards
+        let currentRadius = radius * 0.85; // Slightly further out
+        const charSpacing = 0.9; // Reduced from 1.1 for tighter spacing
+
+        chars.forEach(char => {
+            // Rotate each char to stay upright relative to the spoke
+            ctx.save();
+            ctx.translate(currentRadius, 0);
+            ctx.rotate(Math.PI / 2);
+            ctx.fillText(char, 0, 0);
+            ctx.restore();
+            currentRadius -= fontSize * charSpacing;
+        });
+
         ctx.restore();
     });
 
     // Draw center circle
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 25 * scale, 0, 2 * Math.PI);
-    ctx.fillStyle = '#2c3e50';
+    ctx.arc(centerX, centerY, 30 * scale, 0, 2 * Math.PI);
+    ctx.fillStyle = '#1e293b';
     ctx.fill();
     ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 4 * scale;
+    ctx.lineWidth = 3 * scale;
     ctx.stroke();
 }
 
@@ -632,6 +665,9 @@ function onWheelStop(result) {
         renderPlayersList();
         showPopup(`<div class="popup-bancarotta">BANCAROTTA!<br>Perdi tutto!</div>`, 2500);
         setTimeout(passTurn, 3000);
+    } else if (result.value === '?500') {
+        soundManager.playClick();
+        handleMysterySegment();
     } else {
         soundManager.playClick();
         gameState.pendingWheelValue = result.value;
@@ -642,6 +678,52 @@ function onWheelStop(result) {
         showMessage(`Chiama una consonante (vale €${result.value})`, 'info');
     }
 }
+
+function handleMysterySegment() {
+    const html = `
+        <div class="popup-mystery">
+            <div class="popup-title">❓ SEGMENTO MISTERIOSO ❓</div>
+            <p>Scegli la tua sorte per questa consonante:</p>
+            <div class="popup-choices">
+                <button onclick="resolveMysteryChoice(500)" class="btn-mystery-take">Prendi €500</button>
+                <div class="choice-divider">O</div>
+                <button onclick="resolveMysteryChoice('RAFFLE')" class="btn-mystery-raffle">Estrai a Sorte</button>
+            </div>
+            <p class="choice-note">(L'estrazione esclude Passa e Bancarotta)</p>
+        </div>
+    `;
+    showPopup(html, 0); // Permanent until clicked
+}
+
+window.resolveMysteryChoice = function (choice) {
+    elements.modalOverlay.style.display = 'none';
+    elements.popupMessage.style.display = 'none';
+
+    if (choice === 'RAFFLE') {
+        soundManager.playSpin();
+        // Raffle: Random segment excluding PASSA, BANCAROTTA, ?500
+        const eligible = WHEEL_SEGMENTS.filter(s =>
+            typeof s.value === 'number' &&
+            s.value !== '?500'
+        );
+        const selected = eligible[Math.floor(Math.random() * eligible.length)];
+        gameState.pendingWheelValue = selected.value;
+        showPopup(`<div class="popup-mystery-result">ESTRATTO:<br><span class="popup-value">€${selected.value}</span></div>`, 2000);
+    } else {
+        soundManager.playReveal();
+        gameState.pendingWheelValue = choice;
+        showPopup(`<div class="popup-mystery-result">HAI SCELTO:<br><span class="popup-value">€${choice}</span></div>`, 2000);
+    }
+
+    // Update UI and phase
+    setTimeout(() => {
+        elements.currentWheelValue.textContent = `€${gameState.pendingWheelValue}`;
+        elements.currentWheelValue.className = 'wheel-value';
+        gameState.wheelPhase = 'call_consonant';
+        updateUI();
+        showMessage(`Chiama una consonante (vale €${gameState.pendingWheelValue})`, 'info');
+    }, 2000);
+};
 
 // ===== Letter Actions =====
 function callConsonant() {
@@ -685,7 +767,13 @@ function callConsonant() {
         if (checkWin()) {
             setTimeout(endManche, 1500);
         } else {
+            const wasFinished = gameState.allConsonantsRevealed;
             gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
+
+            if (!wasFinished && gameState.allConsonantsRevealed) {
+                showPopup(`<div class="popup-info">CONSONANTI TERMINATE!</div>`, 2500);
+            }
+
             gameState.wheelPhase = 'choose_action';
             gameState.pendingWheelValue = null;
             elements.currentWheelValue.textContent = '-';
@@ -787,6 +875,7 @@ function trySolve() {
 
 // ===== Manche & Game Flow =====
 function endManche() {
+    soundManager.playWin();
     const winner = getCurrentPlayer();
     const winnings = gameState.partialScores[winner.name];
     gameState.totalScores[winner.name] += winnings;
@@ -817,7 +906,7 @@ async function startNextManche() {
     gameState.usedLetters = new Set();
     gameState.pendingWheelValue = null;
     gameState.wheelPhase = 'idle';
-    gameState.allConsonantsRevealed = false;
+    // Nota: allConsonantsRevealed verrà calcolato dopo il caricamento della frase
 
     // Reset partial scores
     gameState.players.forEach(p => gameState.partialScores[p.name] = 0);
@@ -842,10 +931,13 @@ async function startNextManche() {
     }
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+    gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
 
     elements.popupMessage.style.display = 'none';
     elements.modalOverlay.style.display = 'none';
 
+    elements.currentWheelValue.textContent = '-';
+    elements.currentWheelValue.className = 'wheel-value';
     elements.mancheNumber.textContent = gameState.currentManche;
     elements.hintText.textContent = gameState.hint;
     createBoard();
@@ -906,6 +998,12 @@ function updateUI() {
     elements.vowelBtn.disabled = !canBuyVowel;
 
     // Solve is always available
+
+    // Pass button (available only if consonants finished and it's player choice time)
+    const canPass = allConsRevealed && (phase === 'choose_action' || phase === 'idle');
+    elements.passBtn.style.display = allConsRevealed ? 'block' : 'none';
+    elements.passBtn.disabled = !canPass;
+
     renderPlayersList();
 }
 
@@ -1050,6 +1148,7 @@ async function startGame() {
     gameState.usedLetters = new Set();
     gameState.wheelPhase = 'idle';
     gameState.pendingWheelValue = null;
+    gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
 
     elements.popupMessage.style.display = 'none';
     elements.modalOverlay.style.display = 'none';
@@ -1057,6 +1156,7 @@ async function startGame() {
     elements.mancheNumber.textContent = '1';
     elements.hintText.textContent = gameState.hint;
     elements.currentWheelValue.textContent = '-';
+    elements.currentWheelValue.className = 'wheel-value';
 
     createBoard();
     drawWheel(0);
@@ -1103,6 +1203,10 @@ elements.spinBtn?.addEventListener('click', spinWheel);
 elements.consonantBtn?.addEventListener('click', callConsonant);
 elements.vowelBtn?.addEventListener('click', buyVowel);
 elements.solveBtn?.addEventListener('click', trySolve);
+elements.passBtn?.addEventListener('click', () => {
+    soundManager.playClick();
+    passTurn();
+});
 elements.newGameBtn?.addEventListener('click', newGame);
 
 elements.consonantInput?.addEventListener('keypress', (e) => {
