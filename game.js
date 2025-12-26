@@ -76,30 +76,34 @@ const soundManager = {
 // ===== Wheel Segments (24 segments like the real wheel) =====
 const WHEEL_SEGMENTS = [
     { value: 2000, color: '#FFD700', label: '2000€', glowing: true },
-    { value: 200, color: '#FFEB3B', label: '200€' },
-    { value: 350, color: '#FF1493', label: '350€' },
-    { value: 100, color: '#FFFFFF', label: '100€' },
+    { value: 300, color: '#FFEB3B', label: '300€' }, // 200 -> 300
+    { value: 450, color: '#FF1493', label: '450€' }, // 350 -> 450
+    { value: 200, color: '#FFFFFF', label: '200€' }, // 100 -> 200
     { value: '?500', color: '#BFFF00', label: '?500€' },
     { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
-    { value: 300, color: '#FF1493', label: '300€' },
-    { value: 150, color: '#FFFFFF', label: '150€' },
-    { value: 400, color: '#00BCD4', label: '400€' },
-    { value: 250, color: '#FF1493', label: '250€' },
-    { value: 300, color: '#2196F3', label: '300€' },
-    { value: 'BANCAROTTA', color: '#000000', label: 'BANCAROTTA' },
-    { value: 200, color: '#F44336', label: '200€' },
-    { value: 300, color: '#FFFFFF', label: '300€' },
-    { value: 150, color: '#FF1493', label: '150€' },
+    { value: 400, color: '#FF1493', label: '400€' }, // 300 -> 400
+    { value: 250, color: '#FFFFFF', label: '250€' }, // 150 -> 250
+    { value: 500, color: '#00BCD4', label: '500€' }, // 400 -> 500
+    { value: 350, color: '#FF1493', label: '350€' }, // 250 -> 350
+    { value: 400, color: '#2196F3', label: '400€' }, // 300 -> 400
+    { value: 'BANCAROTTA', color: '#000000', label: 'BANCAROTTA' }, // Manteniamo questo
+    { value: 300, color: '#F44336', label: '300€' }, // 200 -> 300
+    { value: 400, color: '#FFFFFF', label: '400€' }, // 300 -> 400
+    { value: 250, color: '#FF1493', label: '250€' }, // 150 -> 250
     { value: '?500', color: '#BFFF00', label: '?500€' },
-    { value: 200, color: '#F44336', label: '200€' },
+    { value: 300, color: '#F44336', label: '300€' }, // 200 -> 300
     { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
-    { value: 350, color: '#2196F3', label: '350€' },
-    { value: 100, color: '#4CAF50', label: '100€' },
+    { value: 450, color: '#2196F3', label: '450€' }, // 350 -> 450
+    { value: 200, color: '#4CAF50', label: '200€' }, // 100 -> 200
     { value: 500, color: '#FFEB3B', label: '500€' },
-    { value: 250, color: '#FF1493', label: '250€' },
-    { value: 400, color: '#4CAF50', label: '400€' },
-    { value: 'BANCAROTTA', color: '#000000', label: 'BANCAROTTA' }
+    { value: 350, color: '#FF1493', label: '350€' }, // 250 -> 350
+    { value: 500, color: '#4CAF50', label: '500€' }, // 400 -> 500
+    { value: 1500, color: '#E91E63', label: '1500€' }
 ];
+
+// Wheel Animation Cache Variables
+let wheelCacheCanvas = null;
+let wheelCacheCtx = null;
 
 const VOWELS = ['A', 'E', 'I', 'O', 'U'];
 const VOWEL_COST = 1000;
@@ -497,22 +501,30 @@ function passTurn() {
 }
 
 // ===== Wheel Drawing =====
-function drawWheel(rotation = 0) {
+function renderWheelToCache() {
     const canvas = elements.wheelCanvas;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 10;
-    const scale = canvas.width / 300;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Create or resize off-screen canvas to match wheel canvas
+    if (!wheelCacheCanvas) {
+        wheelCacheCanvas = document.createElement('canvas');
+    }
+    wheelCacheCanvas.width = canvas.width;
+    wheelCacheCanvas.height = canvas.height;
+    wheelCacheCtx = wheelCacheCanvas.getContext('2d');
+
+    const ctx = wheelCacheCtx;
+    const centerX = wheelCacheCanvas.width / 2;
+    const centerY = wheelCacheCanvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 10;
+    const scale = wheelCacheCanvas.width / 300;
+
+    ctx.clearRect(0, 0, wheelCacheCanvas.width, wheelCacheCanvas.height);
 
     const segmentAngle = (2 * Math.PI) / WHEEL_SEGMENTS.length;
-    const rotationRad = (rotation * Math.PI) / 180;
 
     WHEEL_SEGMENTS.forEach((segment, i) => {
-        const startAngle = i * segmentAngle + rotationRad;
+        const startAngle = i * segmentAngle;
         const endAngle = startAngle + segmentAngle;
 
         ctx.beginPath();
@@ -520,7 +532,7 @@ function drawWheel(rotation = 0) {
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
         ctx.closePath();
 
-        // Radial Gradient (white/shimmer towards center)
+        // Radial Gradient
         const grad = ctx.createRadialGradient(centerX, centerY, radius * 0.2, centerX, centerY, radius);
 
         if (segment.glowing) {
@@ -530,9 +542,8 @@ function drawWheel(rotation = 0) {
             ctx.shadowColor = '#fbbf24';
             ctx.shadowBlur = 40 * scale;
         } else {
-            // Lighten the center for that "shine" effect
             const baseColor = segment.color;
-            grad.addColorStop(0, '#ffffff'); // Center shine
+            grad.addColorStop(0, '#ffffff');
             grad.addColorStop(0.2, baseColor === '#FFFFFF' ? '#f8fafc' : baseColor);
             grad.addColorStop(1, baseColor);
             ctx.shadowBlur = 0;
@@ -542,7 +553,7 @@ function drawWheel(rotation = 0) {
         ctx.fill();
 
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = '#000'; // Black stroke like image
+        ctx.strokeStyle = '#000';
         ctx.lineWidth = 1 * scale;
         ctx.stroke();
 
@@ -554,23 +565,19 @@ function drawWheel(rotation = 0) {
         ctx.fillStyle = (segment.color === '#000000') ? '#fff' : '#000';
         ctx.textAlign = 'center';
 
-        // Vertical text logic
         const label = segment.label;
-        const chars = label.replace(/\s/g, '').split(''); // Remove spaces to avoid gaps
+        const chars = label.replace(/\s/g, '').split('');
         let fontSize = 16 * scale;
 
-        // Font size reduction for long words
         if (label === 'BANCAROTTA') fontSize = 10 * scale;
         else if (label === 'PASSA') fontSize = 14 * scale;
 
         ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
 
-        // Start from near the outer edge and move inwards
-        let currentRadius = radius * 0.85; // Slightly further out
-        const charSpacing = 0.9; // Reduced from 1.1 for tighter spacing
+        let currentRadius = radius * 0.85;
+        const charSpacing = 0.9;
 
         chars.forEach(char => {
-            // Rotate each char to stay upright relative to the spoke
             ctx.save();
             ctx.translate(currentRadius, 0);
             ctx.rotate(Math.PI / 2);
@@ -578,11 +585,33 @@ function drawWheel(rotation = 0) {
             ctx.restore();
             currentRadius -= fontSize * charSpacing;
         });
-
         ctx.restore();
     });
+}
 
-    // Draw center circle
+function drawWheel(rotation = 0) {
+    const canvas = elements.wheelCanvas;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // Lazy initialize cache
+    if (!wheelCacheCanvas) {
+        renderWheelToCache();
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw pre-rendered wheel with rotation
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.drawImage(wheelCacheCanvas, -centerX, -centerY);
+    ctx.restore();
+
+    // Draw center circle (always on top, no rotation needed)
+    const scale = canvas.width / 300;
     ctx.beginPath();
     ctx.arc(centerX, centerY, 30 * scale, 0, 2 * Math.PI);
     ctx.fillStyle = '#1e293b';
@@ -725,7 +754,7 @@ function onWheelStop(result) {
 function handleMysterySegment() {
     const html = `
         <div class="popup-mystery">
-            <div class="popup-title">❓ SEGMENTO MISTERIOSO ❓</div>
+            <div class="popup-title">❓ SEGMENTO MISTERIOS</div>
             <p>Scegli la tua sorte per questa consonante:</p>
             <div class="popup-choices">
                 <button onclick="resolveMysteryChoice(500)" class="btn-mystery-take">Prendi €500</button>
@@ -742,23 +771,26 @@ window.resolveMysteryChoice = function (choice) {
     elements.modalOverlay.style.display = 'none';
     elements.popupMessage.style.display = 'none';
 
+    let finalValue;
     if (choice === 'RAFFLE') {
         soundManager.playSpin();
-        // Raffle: Random segment excluding PASSA, BANCAROTTA, ?500
+        // Raffle: Random segment excluding non-numeric values
         const eligible = WHEEL_SEGMENTS.filter(s =>
             typeof s.value === 'number' &&
             s.value !== '?500'
         );
         const selected = eligible[Math.floor(Math.random() * eligible.length)];
-        gameState.pendingWheelValue = selected.value;
-        showPopup(`<div class="popup-mystery-result">ESTRATTO:<br><span class="popup-value">€${selected.value}</span></div>`, 2000);
+        finalValue = Number(selected.value);
+        showPopup(`<div class="popup-mystery-result">ESTRATTO:<br><span class="popup-value">€${finalValue}</span></div>`, 2000);
     } else {
         soundManager.playReveal();
-        gameState.pendingWheelValue = choice;
-        showPopup(`<div class="popup-mystery-result">HAI SCELTO:<br><span class="popup-value">€${choice}</span></div>`, 2000);
+        finalValue = Number(choice);
+        showPopup(`<div class="popup-mystery-result">HAI SCELTO:<br><span class="popup-value">€${finalValue}</span></div>`, 2000);
     }
 
-    // Update UI and phase
+    gameState.pendingWheelValue = finalValue;
+
+    // Update UI and phase after popup
     setTimeout(() => {
         elements.currentWheelValue.textContent = `€${gameState.pendingWheelValue}`;
         elements.currentWheelValue.className = 'wheel-value';
