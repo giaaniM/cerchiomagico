@@ -900,7 +900,7 @@ function trySolve() {
     }
 
     if (normalizePhrase(guess) === gameState.normalizedPhrase) {
-        soundManager.playWin();
+        soundManager.playWin(); // Suono immediato qui
         showMessage('🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉', 'success');
         // Reveal all letters
         document.querySelectorAll('.tile.letter').forEach(tile => {
@@ -917,7 +917,16 @@ function trySolve() {
 
 // ===== Manche & Game Flow =====
 function endManche() {
-    soundManager.playWin();
+    // Il suono di vittoria viene chiamato qui solo se la manche finisce naturalmente (indovinando l'ultima lettera)
+    // Se è stata attivata la risoluzione manuale, il suono è già partito in trySolve()
+    const isManualSolve = document.getElementById('win-screen').classList.contains('active');
+    // Ma endManche viene chiamata prima della win-screen. Usiamo un'altra logica:
+    // Se non è già in esecuzione un suono di vittoria. Ma playWin ricrea l'oggetto Audio.
+    // Semplicemente rimuoviamolo da qui e mettiamolo in checkWin() o gestiamolo meglio.
+
+    // DECISIONE: Mettiamolo in trySolve e in revealLetter se checkWin è true.
+    // In questo modo è sempre immediato.
+
     const winner = getCurrentPlayer();
     const winnings = Number(gameState.partialScores[winner.name]) || 0;
     gameState.totalScores[winner.name] = (Number(gameState.totalScores[winner.name]) || 0) + winnings;

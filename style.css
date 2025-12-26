@@ -845,26 +845,29 @@ body {
 /* ===== Message Display (Floating Toast) ===== */
 .message-display {
     position: fixed;
-    top: 15%;
+    top: 100px;
     left: 50%;
-    transform: translateX(-50%);
-    min-width: 300px;
-    padding: 15px 30px;
-    border-radius: 50px;
+    transform: translateX(-50%) translateY(-20px) scale(0.9);
+    min-width: 320px;
+    padding: 16px 40px;
+    border-radius: 20px;
     font-size: 1.2rem;
-    font-weight: 700;
+    font-weight: 800;
     text-align: center;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
     z-index: 2000;
     opacity: 0;
     pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .message-display:not(:empty) {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(1);
 }
 
 /* Hide when empty */
@@ -873,21 +876,24 @@ body {
 }
 
 .message-display.success {
-    background: #10b981;
+    background: rgba(16, 185, 129, 0.9);
     color: white;
-    border: 2px solid #059669;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
 }
 
 .message-display.error {
-    background: #ef4444;
+    background: rgba(239, 68, 68, 0.9);
     color: white;
-    border: 2px solid #b91c1c;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
 }
 
 .message-display.info {
-    background: #3b82f6;
+    background: rgba(59, 130, 246, 0.9);
     color: white;
-    border: 2px solid #2563eb;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
 }
 
 .error-message {
