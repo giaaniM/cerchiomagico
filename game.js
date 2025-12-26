@@ -86,7 +86,7 @@ const WHEEL_SEGMENTS = [
     { value: 400, color: '#00BCD4', label: '400€' },
     { value: 250, color: '#FF1493', label: '250€' },
     { value: 300, color: '#2196F3', label: '300€' },
-    { value: 'BANCAROTTA', color: '#000000', label: 'BANCA' },
+    { value: 'BANCAROTTA', color: '#000000', label: 'BANCAROTTA' },
     { value: 200, color: '#F44336', label: '200€' },
     { value: 300, color: '#FFFFFF', label: '300€' },
     { value: 150, color: '#FF1493', label: '150€' },
@@ -98,7 +98,7 @@ const WHEEL_SEGMENTS = [
     { value: 500, color: '#FFEB3B', label: '500€' },
     { value: 250, color: '#FF1493', label: '250€' },
     { value: 400, color: '#4CAF50', label: '400€' },
-    { value: 'BANCAROTTA', color: '#000000', label: 'BANCA' }
+    { value: 'BANCAROTTA', color: '#000000', label: 'BANCAROTTA' }
 ];
 
 const VOWELS = ['A', 'E', 'I', 'O', 'U'];
@@ -175,6 +175,7 @@ const elements = {
     passBtn: document.getElementById('pass-btn'),
     messageDisplay: document.getElementById('message-display'),
     newGameBtn: document.getElementById('new-game-btn'),
+    totalWinningsList: document.getElementById('total-winnings-list'),
 
     // Win
     winTitle: document.getElementById('win-title'),
@@ -318,6 +319,18 @@ function createBoard() {
     }
 }
 
+// Verifica se la frase può entrare nel tabellone
+function canFitOnBoard(phrase) {
+    const words = phrase.split(' ');
+    // Prova prima l'area ristretta (forma a scalino 12-10-10-12)
+    let contentRows = splitPhraseIntoRows(words, [12, 10, 10, 12]);
+    if (contentRows) return true;
+
+    // Prova l'area estesa (12-14-14-12)
+    contentRows = splitPhraseIntoRows(words, [12, 14, 14, 12]);
+    return !!contentRows;
+}
+
 // Funzione helper per dividere la frase in righe rispettando i limiti forniti
 function splitPhraseIntoRows(words, rowLimits) {
     const rows = [];
@@ -440,6 +453,31 @@ function renderPlayersList() {
         `;
         elements.playersList.appendChild(li);
     });
+
+    renderTotalWinnings();
+}
+
+function renderTotalWinnings() {
+    if (!elements.totalWinningsList) return;
+    elements.totalWinningsList.innerHTML = '';
+
+    // Create a list of players with their cumulative total scores
+    const playersWithTotals = gameState.players.map((player) => ({
+        name: player.name,
+        total: gameState.totalScores[player.name] || 0
+    }));
+
+    // Sort by total score descending
+    playersWithTotals.sort((a, b) => b.total - a.total);
+
+    playersWithTotals.forEach((item) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span class="win-name">${item.name}</span>
+            <span class="win-amount">€${item.total}</span>
+        `;
+        elements.totalWinningsList.appendChild(li);
+    });
 }
 
 function getCurrentPlayer() {
@@ -519,7 +557,12 @@ function drawWheel(rotation = 0) {
         // Vertical text logic
         const label = segment.label;
         const chars = label.replace(/\s/g, '').split(''); // Remove spaces to avoid gaps
-        const fontSize = 16 * scale;
+        let fontSize = 16 * scale;
+
+        // Font size reduction for long words
+        if (label === 'BANCAROTTA') fontSize = 10 * scale;
+        else if (label === 'PASSA') fontSize = 14 * scale;
+
         ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
 
         // Start from near the outer edge and move inwards
@@ -861,7 +904,6 @@ function trySolve() {
         showMessage('🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉', 'success');
         // Reveal all letters
         document.querySelectorAll('.tile.letter').forEach(tile => {
-            tile.textContent = tile.dataset.letter;
             tile.classList.add('revealed');
         });
         setTimeout(endManche, 1500);
@@ -877,8 +919,9 @@ function trySolve() {
 function endManche() {
     soundManager.playWin();
     const winner = getCurrentPlayer();
-    const winnings = gameState.partialScores[winner.name];
-    gameState.totalScores[winner.name] += winnings;
+    const winnings = Number(gameState.partialScores[winner.name]) || 0;
+    gameState.totalScores[winner.name] = (Number(gameState.totalScores[winner.name]) || 0) + winnings;
+    updateUI(); // Aggiorna subito la sidebar con i nuovi totali cumulati
 
     showPopup(`<div class="popup-win">
         <div class="popup-title">MANCHE ${gameState.currentManche} VINTA!</div>
@@ -918,14 +961,26 @@ async function startNextManche() {
 
     // AI Logic with Offline Fallback
     try {
-        const data = await fetchPuzzleFromAI();
-        gameState.phrase = sanitizePhrase(data.phrase);
-        gameState.hint = data.hint;
+        let attempts = 0;
+        let valid = false;
+        while (!valid && attempts < 15) { // Massimo 15 tentativi per trovare una frase valida
+            attempts++;
+            const data = await fetchPuzzleFromAI();
+            if (canFitOnBoard(data.phrase)) {
+                gameState.phrase = sanitizePhrase(data.phrase);
+                gameState.hint = data.hint;
+                valid = true;
+            } else {
+                console.warn(`Frase scartata perché troppo lunga (${attempts}/15):`, data.phrase);
+            }
+        }
     } catch (e) {
         console.error("AI Generation failed, using offline DB", e);
-        // Fallback
-        const randomIndex = Math.floor(Math.random() * OFFLINE_PHRASES.length);
-        const selected = OFFLINE_PHRASES[randomIndex];
+        // Fallback robusto dal database offline
+        const shuffled = [...OFFLINE_PHRASES].sort(() => Math.random() - 0.5);
+        const validOffline = shuffled.find(p => canFitOnBoard(p.phrase));
+        const selected = validOffline || OFFLINE_PHRASES[0];
+
         gameState.phrase = sanitizePhrase(selected.phrase);
         gameState.hint = selected.hint;
     }
@@ -959,13 +1014,51 @@ function showFinalResults() {
         }
     });
 
-    let resultsHtml = '<div class="results-list">';
-    gameState.players
-        .sort((a, b) => gameState.totalScores[b.name] - gameState.totalScores[a.name])
-        .forEach((p, i) => {
-            resultsHtml += `<div class="result-row ${i === 0 ? 'winner' : ''}">${i + 1}. ${p.name}: €${gameState.totalScores[p.name]}</div>`;
-        });
+    const sortedPlayers = gameState.players
+        .sort((a, b) => gameState.totalScores[b.name] - gameState.totalScores[a.name]);
+
+    let resultsHtml = '<div class="results-podium">';
+
+    // Primo posto
+    if (sortedPlayers[0]) {
+        resultsHtml += `
+        <div class="podium-place first">
+            <div class="place-rank">1</div>
+            <div class="place-name">${sortedPlayers[0].name}</div>
+            <div class="place-score">€${gameState.totalScores[sortedPlayers[0].name]}</div>
+        </div>`;
+    }
+
+    // Secondo posto
+    if (sortedPlayers[1]) {
+        resultsHtml += `
+        <div class="podium-place second">
+            <div class="place-rank">2</div>
+            <div class="place-name">${sortedPlayers[1].name}</div>
+            <div class="place-score">€${gameState.totalScores[sortedPlayers[1].name]}</div>
+        </div>`;
+    }
+
+    // Terzo posto
+    if (sortedPlayers[2]) {
+        resultsHtml += `
+        <div class="podium-place third">
+            <div class="place-rank">3</div>
+            <div class="place-name">${sortedPlayers[2].name}</div>
+            <div class="place-score">€${gameState.totalScores[sortedPlayers[2].name]}</div>
+        </div>`;
+    }
+
     resultsHtml += '</div>';
+
+    // Lista per gli altri giocatori (se più di 3)
+    if (sortedPlayers.length > 3) {
+        resultsHtml += '<div class="results-list-remaining">';
+        sortedPlayers.slice(3).forEach((p, i) => {
+            resultsHtml += `<div class="result-row-small">${i + 4}. ${p.name}: €${gameState.totalScores[p.name]}</div>`;
+        });
+        resultsHtml += '</div>';
+    }
 
     elements.winTitle.textContent = `🏆 ${winner.name} VINCE! 🏆`;
     elements.winPhrase.innerHTML = resultsHtml;
@@ -1131,14 +1224,22 @@ async function startGame() {
 
     // AI Logic with Offline Fallback
     try {
-        const data = await fetchPuzzleFromAI();
-        gameState.phrase = sanitizePhrase(data.phrase);
-        gameState.hint = data.hint;
+        let attempts = 0;
+        let valid = false;
+        while (!valid && attempts < 15) {
+            attempts++;
+            const data = await fetchPuzzleFromAI();
+            if (canFitOnBoard(data.phrase)) {
+                gameState.phrase = sanitizePhrase(data.phrase);
+                gameState.hint = data.hint;
+                valid = true;
+            }
+        }
     } catch (e) {
         console.warn("AI Generation failed (using offline fallback):", e.message);
-        // SILENT FALLBACK: No popup, immediate start with offline phrase
-        const randomIndex = Math.floor(Math.random() * OFFLINE_PHRASES.length);
-        const selected = OFFLINE_PHRASES[randomIndex];
+        const shuffled = [...OFFLINE_PHRASES].sort(() => Math.random() - 0.5);
+        const validOffline = shuffled.find(p => canFitOnBoard(p.phrase));
+        const selected = validOffline || OFFLINE_PHRASES[0];
         gameState.phrase = sanitizePhrase(selected.phrase);
         gameState.hint = selected.hint;
     }

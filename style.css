@@ -1010,20 +1010,33 @@ body {
 /* Win Screen Updates */
 /* ===== Win Screen ===== */
 .win-card {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(10px);
-    border: 2px solid var(--accent-gold);
-    border-radius: 25px;
-    padding: 50px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+    backdrop-filter: blur(20px);
+    border: 3px solid var(--accent-gold);
+    border-radius: 30px;
+    padding: 60px 40px;
     text-align: center;
-    max-width: 800px;
-    /* Increased from 450px */
+    max-width: 900px;
     width: 90%;
-    box-shadow: var(--glow-gold);
-    animation: winPulse 2s infinite;
+    box-shadow: 0 0 50px rgba(251, 191, 36, 0.3), inset 0 0 30px rgba(255, 255, 255, 0.05);
+    animation: winEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes winEntrance {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 @keyframes winPulse {
@@ -1611,6 +1624,96 @@ body {
     text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
 }
 
+.win-card h2 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin-bottom: 30px;
+    background: linear-gradient(to bottom, #fff, var(--accent-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+    letter-spacing: -1px;
+}
+
+/* Podio Risultati */
+.results-podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 15px;
+    margin: 40px 0;
+    width: 100%;
+}
+
+.podium-place {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px 20px 10px 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    max-width: 200px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.podium-place:hover {
+    transform: translateY(-5px);
+}
+
+.podium-place.first {
+    height: 220px;
+    background: linear-gradient(180deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05));
+    border-color: var(--accent-gold);
+    box-shadow: 0 10px 30px rgba(251, 191, 36, 0.2);
+    order: 2;
+}
+
+.podium-place.second {
+    height: 180px;
+    order: 1;
+}
+
+.podium-place.third {
+    height: 150px;
+    order: 3;
+}
+
+.place-rank {
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.first .place-rank {
+    color: var(--accent-gold);
+}
+
+.second .place-rank {
+    color: #cbd5e1;
+}
+
+.third .place-rank {
+    color: #92400e;
+}
+
+.place-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.place-score {
+    font-weight: 800;
+    color: var(--accent-gold);
+    font-size: 1.2rem;
+}
+
 .wheel-value.bancarotta {
     color: var(--accent-red);
     font-size: 1rem;
@@ -1619,6 +1722,49 @@ body {
 .wheel-value.passa {
     color: var(--text-secondary);
     font-size: 1.2rem;
+}
+
+/* Total Winnings Sidebar Box */
+.total-winnings-card {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    min-width: 180px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.total-winnings-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.total-winnings-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.total-winnings-list .win-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.total-winnings-list .win-amount {
+    font-weight: 800;
+    color: var(--accent-gold);
 }
 
 /* Game Actions Row - New side-by-side structure */
