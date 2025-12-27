@@ -36,14 +36,20 @@ const soundManager = {
     },
 
     playCorrect() {
-        // Coin sound: Two high sine waves in quick succession
-        this.playTone(987, 'sine', 0.08, 0.1); // B5
-        setTimeout(() => this.playTone(1318, 'sine', 0.2, 0.1), 50); // E6
+        const audio = new Audio('foundletter.mp3');
+        audio.play().catch(e => console.warn('Audio play error:', e));
+    },
+
+    playCash() {
+        // Requested sound for money gain
+        const audio = new Audio('cash.mp3');
+        audio.play().catch(e => console.warn('Audio play error:', e));
     },
 
     playError() {
-        // Error sound: Low triangle wave, boosted volume
-        this.playTone(80, 'triangle', 0.4, 0.4);
+        // Play external MP3
+        const audio = new Audio('notfoundletter.mp3');
+        audio.play().catch(e => console.warn('Audio play error:', e));
     },
 
     playReveal() {
@@ -51,55 +57,77 @@ const soundManager = {
     },
 
     playClick() {
-        this.playTone(400, 'triangle', 0.05, 0.05);
+        const audio = new Audio('click.mp3');
+        audio.play().catch(e => console.warn('Audio play error:', e));
+    },
+
+    // CROWD REACTIONS
+    playCrowdApplause() {
+        // Applause: white noise burst
+        if (!this.audioCtx) this.init();
+        if (!this.audioCtx) return;
+
+        const bufferSize = this.audioCtx.sampleRate * 0.5;
+        const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.15; // Soft white noise
+        }
+
+        const source = this.audioCtx.createBufferSource();
+        const gain = this.audioCtx.createGain();
+        source.buffer = buffer;
+        gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.5);
+
+        source.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        source.start();
+    },
+
+    playCrowdCheer() {
+        // Cheer: rising pitch sweep
+        this.playTone(200, 'sawtooth', 0.3, 0.2);
+        setTimeout(() => this.playTone(400, 'sawtooth', 0.3, 0.2), 100);
+        setTimeout(() => this.playTone(600, 'sawtooth', 0.4, 0.2), 200);
+    },
+
+    playCrowdAww() {
+        // Aww: descending pitch
+        this.playTone(400, 'sine', 0.2, 0.15);
+        setTimeout(() => this.playTone(300, 'sine', 0.3, 0.15), 150);
+        setTimeout(() => this.playTone(200, 'sine', 0.4, 0.15), 300);
     },
 
     playWin() {
-        // Play external MP3 for victory
+        // 1. Play external MP3 (Voice/Jingle)
         const winAudio = new Audio('fraseindovinata.mp3');
-        winAudio.play().catch(e => {
-            console.warn("Could not play fraseindovinata.mp3, falling back to synthetic sound:", e);
-            // Fallback victory fanfare
-            const now = 0;
-            this.playTone(523, 'square', 0.1); // C5
-            setTimeout(() => this.playTone(659, 'square', 0.1), 150); // E5
-            setTimeout(() => this.playTone(783, 'square', 0.1), 300); // G5
-            setTimeout(() => this.playTone(1046, 'square', 0.6), 450); // C6
-        });
+        winAudio.play().catch(e => console.warn("Audio play error:", e));
+
+        // 2. Play Synthetic Victory Fanfare (Together)
+        // Arpeggio C Major: C5 - E5 - G5 - C6
+        this.playTone(523.25, 'triangle', 0.1, 0.2); // C5
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.1, 0.2), 150); // E5
+        setTimeout(() => this.playTone(783.99, 'triangle', 0.1, 0.2), 300); // G5
+        setTimeout(() => {
+            // Sustain final note
+            this.playTone(1046.50, 'triangle', 0.4, 0.3); // C6
+            this.playTone(523.25, 'sine', 0.4, 0.3); // Low octave harmony
+        }, 450);
+
+        // Final flourish
+        setTimeout(() => this.playTone(1318.51, 'sine', 0.6, 0.1), 600); // E6
     },
 
-    playSpin() {
-        this.playTone(300, 'sawtooth', 0.1, 0.05);
+    playWheelTick() {
+        // RESTORED Synthetic "tck tck" as requested
+        this.playTone(600, 'sawtooth', 0.05, 0.05);
     }
 };
 
-// ===== Wheel Segments (24 segments like the real wheel) =====
-const WHEEL_SEGMENTS = [
-    { value: 2000, color: '#FFD700', label: '2000€', glowing: true },
-    { value: 300, color: '#FFEB3B', label: '300€' }, // 200 -> 300
-    { value: 450, color: '#FF1493', label: '450€' }, // 350 -> 450
-    { value: 200, color: '#FFFFFF', label: '200€' }, // 100 -> 200
-    { value: '?500', color: '#BFFF00', label: '?500€' },
-    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
-    { value: 400, color: '#FF1493', label: '400€' }, // 300 -> 400
-    { value: 250, color: '#FFFFFF', label: '250€' }, // 150 -> 250
-    { value: 500, color: '#00BCD4', label: '500€' }, // 400 -> 500
-    { value: 350, color: '#FF1493', label: '350€' }, // 250 -> 350
-    { value: 400, color: '#2196F3', label: '400€' }, // 300 -> 400
-    { value: 'BANCAROTTA', color: '#000000', label: 'BANCAROTTA' }, // Manteniamo questo
-    { value: 300, color: '#F44336', label: '300€' }, // 200 -> 300
-    { value: 400, color: '#FFFFFF', label: '400€' }, // 300 -> 400
-    { value: 250, color: '#FF1493', label: '250€' }, // 150 -> 250
-    { value: '?500', color: '#BFFF00', label: '?500€' },
-    { value: 300, color: '#F44336', label: '300€' }, // 200 -> 300
-    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
-    { value: 450, color: '#2196F3', label: '450€' }, // 350 -> 450
-    { value: 200, color: '#4CAF50', label: '200€' }, // 100 -> 200
-    { value: 500, color: '#FFEB3B', label: '500€' },
-    { value: 350, color: '#FF1493', label: '350€' }, // 250 -> 350
-    { value: 500, color: '#4CAF50', label: '500€' }, // 400 -> 500
-    { value: 1500, color: '#E91E63', label: '1500€' }
-];
+// Wheel Segments moved to line ~620 to be near renderWheelToCache and avoid duplication
+
 
 // Wheel Animation Cache Variables
 let wheelCacheCanvas = null;
@@ -121,7 +149,9 @@ const gameState = {
     currentManche: 1,
     partialScores: {},
     totalScores: {},
+    hasJolly: {}, // Track which players have Jolly shield
     pendingWheelValue: null,
+    nextValueMultiplier: 1, // For Raddoppia (x2)
     wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
     allConsonantsRevealed: false,
     wheelRotation: 0
@@ -388,8 +418,12 @@ function revealLetter(letter, animate = true) {
             if (animate) {
                 setTimeout(() => {
                     tile.classList.add('revealed', 'just-revealed');
+
+                    // INCREMENTAL JACKPOT SOUND (no particles)
+                    soundManager.playCorrect();
+
                     setTimeout(() => tile.classList.remove('just-revealed'), 1100);
-                }, index * 100);
+                }, index * 1500); // 1.5s delay between each letter per user request
             } else {
                 tile.classList.add('revealed');
             }
@@ -397,6 +431,60 @@ function revealLetter(letter, animate = true) {
     });
     gameState.revealedLetters.add(normalizedLetter);
     return count;
+}
+
+// Particle explosion effect for revealed letters
+function triggerParticleExplosion(tileElement) {
+    if (typeof confetti === 'undefined') return; // Library not loaded
+
+    const rect = tileElement.getBoundingClientRect();
+    const x = (rect.left + rect.width / 2) / window.innerWidth;
+    const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+    confetti({
+        particleCount: 20,
+        spread: 60,
+        origin: { x, y },
+        colors: ['#FFD700', '#00d4ff', '#8b5cf6', '#ec4899'],
+        ticks: 100,
+        gravity: 1.2,
+        scalar: 0.8
+    });
+}
+
+// Confetti rain celebration for manche win
+function triggerConfettiRain() {
+    if (typeof confetti === 'undefined') return; // Library not loaded
+
+    const duration = 3000; // 3 seconds
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+            return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+
+        // Confetti from left
+        confetti(Object.assign({}, defaults, {
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        }));
+
+        // Confetti from right
+        confetti(Object.assign({}, defaults, {
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        }));
+    }, 250);
 }
 
 function revealAllLetters() {
@@ -451,8 +539,12 @@ function renderPlayersList() {
         const li = document.createElement('li');
         // Check if this player is the current active player
         li.className = item.originalIndex === gameState.currentPlayerIndex ? 'active' : '';
+
+        // Add Jolly shield if player has it (with pulsing animation)
+        const jollyIcon = gameState.hasJolly[item.player.name] ? '<span class="shield-icon">🛡️</span>' : '';
+
         li.innerHTML = `
-            <span class="player-name">${item.player.name}</span>
+            <span class="player-name">${item.player.name} ${jollyIcon}</span>
             <span class="player-score">€${item.score}</span>
         `;
         elements.playersList.appendChild(li);
@@ -500,6 +592,50 @@ function passTurn() {
     showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2000);
 }
 
+// ===== Wheel Segments (Patterned: Purple -> DeepBlue -> DarkBlue -> Blue -> LiteBlue -> Special) =====
+// Palette:
+// Purple: #7e22ce (Purple 700)
+// Deep Blue: #172554 (Blue 950)
+// Dark Blue: #1e3a8a (Blue 900)
+// Blue: #2563eb (Blue 600)
+// Light Blue: #60a5fa (Blue 400)
+// Specials: 1000, PASSA, BANCAROTTA, RADDOPPIA
+// Note: SCUDO replaces the "Purple" slot in the last group to fit.
+
+const WHEEL_SEGMENTS = [
+    // Group 1
+    { value: 300, color: '#7e22ce', label: '300€' }, // Purple
+    { value: 200, color: '#172554', label: '200€' }, // Deep Blue
+    { value: 700, color: '#1e3a8a', label: '700€' }, // Dark Blue
+    { value: 500, color: '#2563eb', label: '500€' }, // Blue
+    { value: 250, color: '#60a5fa', label: '250€' }, // Light Blue
+    { value: 1000, color: 'RAINBOW', label: '1000€', glowing: true }, // 1000 Rainbow
+
+    // Group 2
+    { value: 'BANCAROTTA', color: '#111827', label: 'BANCAROTTA' }, // Near 1000
+    { value: 350, color: '#7e22ce', label: '350€' }, // Purple
+    { value: 300, color: '#172554', label: '300€' }, // Deep Blue
+    { value: 450, color: '#1e3a8a', label: '450€' }, // Dark Blue
+    { value: 700, color: '#2563eb', label: '700€' }, // Blue
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // PASSA 1
+
+    // Group 3
+    { value: 'RADDOPPIA', color: 'GOLD', label: 'RADDOPPIA', glowing: true }, // Near PASSA 1
+    { value: 400, color: '#7e22ce', label: '400€' }, // Purple
+    { value: 800, color: '#1e3a8a', label: '800€' }, // Dark Blue
+    { value: 300, color: '#2563eb', label: '300€' }, // Blue
+    { value: 250, color: '#60a5fa', label: '250€' }, // Light Blue
+    { value: '?500', color: '#FFFFFF', label: '?500' }, // RESTORED MYSTERY
+
+    // Group 4
+    { value: 'SCUDO', color: '#9333EA', label: 'SCUDO' }, // SCUDO
+    { value: 300, color: '#172554', label: '300€' }, // Deep Blue
+    { value: 500, color: '#2563eb', label: '500€' }, // Blue
+    { value: 200, color: '#60a5fa', label: '200€' }, // Light Blue
+    { value: 200, color: '#7e22ce', label: '200€' }, // Extra value
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' } // Now between 200 and 300 (Group 1 starts with 300)
+];
+
 // ===== Wheel Drawing =====
 function renderWheelToCache() {
     const canvas = elements.wheelCanvas;
@@ -532,28 +668,61 @@ function renderWheelToCache() {
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
         ctx.closePath();
 
-        // Radial Gradient
-        const grad = ctx.createRadialGradient(centerX, centerY, radius * 0.2, centerX, centerY, radius);
+        // Reset Effects for each segment to prevent "bleeding"
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
 
-        if (segment.glowing) {
-            grad.addColorStop(0, '#fff');
-            grad.addColorStop(0.3, '#fbbf24');
-            grad.addColorStop(1, '#92400e');
+        // Radial Gradient Logic (Universal Vignette Effect)
+        let fillStyle;
+
+        // Base Vignette for ALL segments (Dark Center -> Out)
+        // We will layer color on top or use stops.
+
+        if (segment.color === 'RAINBOW') {
+            // RAINBOW GRADIENT (Dark Center -> Rainbow Rim)
+            const rainGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+            rainGrad.addColorStop(0, '#000000'); // Black center
+            rainGrad.addColorStop(0.3, '#330033'); // Deep purple
+            rainGrad.addColorStop(0.5, '#ff0000'); // Red
+            rainGrad.addColorStop(0.65, '#ffcc00'); // Yellow
+            rainGrad.addColorStop(0.8, '#00ff00'); // Green
+            rainGrad.addColorStop(0.9, '#00ccff'); // Blue
+            rainGrad.addColorStop(1, '#ff00ff'); // Rim
+            fillStyle = rainGrad;
+
+        } else if (segment.color === 'GOLD' || segment.glowing) {
+            // INVERTED GOLD GRADIENT (Radial, Bright Center -> Dark Rim)
+            const goldGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+            goldGrad.addColorStop(0, '#fef3c7'); // Bright Gold center
+            goldGrad.addColorStop(0.4, '#f59e0b'); // Amber
+            goldGrad.addColorStop(0.8, '#422006'); // Dark brown
+            goldGrad.addColorStop(1, '#000000'); // Black rim
+            fillStyle = goldGrad;
             ctx.shadowColor = '#fbbf24';
-            ctx.shadowBlur = 40 * scale;
+            ctx.shadowBlur = 15 * scale;
         } else {
+            // Standard Segments - Deep Vignette
             const baseColor = segment.color;
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(0.2, baseColor === '#FFFFFF' ? '#f8fafc' : baseColor);
-            grad.addColorStop(1, baseColor);
+            const vignetteGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+            if (baseColor === '#FFFFFF') {
+                // For White segments (PASSA, ?500, SCUDO), keep center bright
+                vignetteGrad.addColorStop(0, '#FFFFFF'); // Bright center
+                vignetteGrad.addColorStop(0.6, '#f8fafc'); // Mostly white
+                vignetteGrad.addColorStop(1, '#cbd5e1'); // Light gray rim
+            } else {
+                vignetteGrad.addColorStop(0, '#000000'); // Black center
+                vignetteGrad.addColorStop(0.3, '#0f172a'); // Dark area
+                vignetteGrad.addColorStop(1, baseColor);
+            }
+            fillStyle = vignetteGrad;
             ctx.shadowBlur = 0;
         }
 
-        ctx.fillStyle = grad;
+        ctx.fillStyle = fillStyle;
         ctx.fill();
 
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = '#000';
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
         ctx.lineWidth = 1 * scale;
         ctx.stroke();
 
@@ -562,29 +731,85 @@ function renderWheelToCache() {
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + segmentAngle / 2);
 
-        ctx.fillStyle = (segment.color === '#000000') ? '#fff' : '#000';
-        ctx.textAlign = 'center';
-
+        // Text Color Logic
         const label = segment.label;
-        const chars = label.replace(/\s/g, '').split('');
-        let fontSize = 16 * scale;
+        if (label === 'PASSA') {
+            ctx.fillStyle = '#000000';
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'transparent'; // No stroke either
+        }
+        else if (label === 'BANCAROTTA') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'SCUDO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'RADDOPPIA') ctx.fillStyle = '#FFFFFF';
+        else {
+            ctx.fillStyle = '#FFFF00'; // YELLOW text
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 4 * scale;
+        }
 
-        if (label === 'BANCAROTTA') fontSize = 10 * scale;
-        else if (label === 'PASSA') fontSize = 14 * scale;
+        ctx.textAlign = 'center';
+        if (label !== 'PASSA') ctx.lineWidth = 3 * scale;
+
+        const chars = label.replace(/\s/g, '').split('');
+
+        // Text Styling (Refined)
+        let fontSize = 21 * scale;
+        if (label === 'BANCAROTTA') fontSize = 11 * scale;
+        else if (label === 'PASSA') fontSize = 16 * scale;
+        else if (label === 'RADDOPPIA') fontSize = 12 * scale;
+        else if (label === 'SCUDO') fontSize = 16 * scale;
 
         ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
 
-        let currentRadius = radius * 0.85;
-        const charSpacing = 0.9;
+        // Text Radius Logic
+        // "I testi devono partire in cima come i numeri" 
+        // Numbers (21px): 0.86
+        let baseRadius = 0.86;
 
+        // Adjust for smaller fonts so the *top* edge aligns at the rim
+        if (label === 'SCUDO') baseRadius = 0.87; // 16px
+        if (label === 'PASSA') baseRadius = 0.87; // 16px
+        if (label === 'RADDOPPIA') baseRadius = 0.88; // 12px
+        if (label === 'BANCAROTTA') baseRadius = 0.89; // 11px (Lower font = higher radius)
+
+        let currentRadius = radius * baseRadius;
+
+        // "Letterspacing minimo" -> 0.95
+        const charSpacing = 0.95;
+
+        // (Removed Top-Emoji block)
+
+        // Draw Characters
         chars.forEach(char => {
             ctx.save();
             ctx.translate(currentRadius, 0);
             ctx.rotate(Math.PI / 2);
+
+            // "Euro piu piccolino" e Avvicinalo moltissimo allo zero
+            if (char === '€') {
+                ctx.font = `bold ${fontSize * 0.55}px Outfit, sans-serif`;
+            } else {
+                ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
+            }
+
             ctx.fillText(char, 0, 0);
             ctx.restore();
-            currentRadius -= fontSize * charSpacing;
+            // Extremely tight spacing for the Euro symbol
+            const currentSpacing = (char === '€') ? charSpacing * 0.2 : charSpacing;
+            currentRadius -= fontSize * currentSpacing;
         });
+
+        // "Scudo: Prima testo poi simbolo, piccolo"
+        if (label === 'SCUDO') {
+            ctx.save();
+            // Position after text (currentRadius is now lower/inner)
+            ctx.translate(currentRadius - (5 * scale), 0);
+            ctx.rotate(Math.PI / 2);
+            ctx.font = `${14 * scale}px serif`; // "Piccolo"
+            ctx.fillText('🛡️', 0, 0);
+            ctx.restore();
+        }
         ctx.restore();
     });
 }
@@ -626,10 +851,12 @@ let wheelAnimationId = null;
 
 function spinWheel() {
     if (gameState.wheelPhase !== 'idle' && gameState.wheelPhase !== 'choose_action') return;
+    if (gameState.players[gameState.currentPlayerIndex].score < VOWEL_COST && gameState.wheelPhase === 'choose_action') {
+        // ...
+    }
 
-    soundManager.init();
     gameState.wheelPhase = 'spinning';
-    elements.spinBtn.disabled = true;
+    updateUI();
 
     // Show Overlay
     const overlay = document.getElementById('wheel-overlay');
@@ -682,8 +909,9 @@ function spinWheel() {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
 
-        // Easing function for realistic deceleration (cubic ease out)
+        // REVERTED EASING: Standard Cubic Ease-Out
         const easeOut = 1 - Math.pow(1 - progress, 3);
+
         const currentRotation = startRotation + totalRotation * easeOut;
 
         gameState.wheelRotation = currentRotation;
@@ -698,7 +926,7 @@ function spinWheel() {
         const currentSegment = Math.floor(normalizedAngle / segmentAngle);
 
         if (currentSegment !== lastTickSegment) {
-            soundManager.playClick();
+            soundManager.playWheelTick();
             lastTickSegment = currentSegment;
         }
 
@@ -729,39 +957,146 @@ function onWheelStop(result) {
         elements.currentWheelValue.className = 'wheel-value passa';
         showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
         setTimeout(passTurn, 2500);
-    } else if (result.value === 'BANCAROTTA') {
-        soundManager.playError();
-        elements.currentWheelValue.textContent = 'BANCAROTTA';
-        elements.currentWheelValue.className = 'wheel-value bancarotta';
-        gameState.partialScores[player.name] = 0;
+    } else if (result.value === 'RADDOPPIA') {
+        // RADDOPPIA - Next value is doubled
+        soundManager.playCorrect();
+        gameState.nextValueMultiplier = 2;
+        elements.currentWheelValue.textContent = 'RADDOPPIA';
+        elements.currentWheelValue.className = 'wheel-value raddoppia';
+        showPopup(`<div class="popup-raddoppia">🔥 RADDOPPIA!<br>Il prossimo valore sarà DOPPIO!</div>`, 2500);
+        setTimeout(() => {
+            gameState.wheelPhase = 'idle';
+            updateUI();
+            showMessage('Gira di nuovo! Il valore sarà raddoppiato!', 'success');
+        }, 2500);
+    } else if (result.value === 'SCUDO') {
+        // SCUDO - Give player a shield
+        soundManager.playReveal();
+        gameState.hasJolly[player.name] = true;
+        elements.currentWheelValue.textContent = '🛡️';
+        elements.currentWheelValue.className = 'wheel-value jolly';
         renderPlayersList();
-        showPopup(`<div class="popup-bancarotta">BANCAROTTA!<br>Perdi tutto!</div>`, 2500);
-        setTimeout(passTurn, 3000);
+        showPopup(`<div class="popup-jolly">🛡️ SCUDO!<br>${player.name} ha ottenuto uno scudo!</div>`, 2500);
+        setTimeout(() => {
+            gameState.wheelPhase = 'idle';
+            updateUI();
+            showMessage('Hai uno scudo! Ti proteggerà dalla Bancarotta!', 'success');
+        }, 2500);
+    } else if (result.value === 'BANCAROTTA') {
+        // Check if player has Jolly shield
+        if (gameState.hasJolly[player.name]) {
+            // Offer choice: use Jolly or accept Bancarotta
+            handleBancarottaWithJolly(player);
+        } else {
+            // Normal Bancarotta
+            soundManager.playError();
+            elements.currentWheelValue.textContent = 'BANCAROTTA';
+            elements.currentWheelValue.className = 'wheel-value bancarotta';
+            gameState.partialScores[player.name] = 0;
+            renderPlayersList();
+            showPopup(`<div class="popup-bancarotta">BANCAROTTA!<br>Perdi tutto!</div>`, 2500);
+            setTimeout(passTurn, 3000);
+        }
     } else if (result.value === '?500') {
         soundManager.playClick();
         handleMysterySegment();
     } else {
+        // Normal value - apply multiplier if active
         soundManager.playClick();
-        gameState.pendingWheelValue = result.value;
-        elements.currentWheelValue.textContent = `€${result.value}`;
+        const baseValue = result.value;
+        const finalValue = baseValue * gameState.nextValueMultiplier;
+
+        gameState.pendingWheelValue = finalValue;
+        elements.currentWheelValue.textContent = `€${finalValue}`;
         elements.currentWheelValue.className = 'wheel-value';
+
+        // Reset multiplier after use
+        if (gameState.nextValueMultiplier > 1) {
+            showMessage(`🔥 Valore RADDOPPIATO! Chiama una consonante (vale €${finalValue})`, 'success');
+            gameState.nextValueMultiplier = 1;
+        } else {
+            showMessage(`Chiama una consonante (vale €${finalValue})`, 'info');
+        }
+
         gameState.wheelPhase = 'call_consonant';
         updateUI();
-        showMessage(`Chiama una consonante (vale €${result.value})`, 'info');
     }
 }
 
+function handleBancarottaWithJolly(player) {
+    const html = `
+        <div class="popup-jolly-choice">
+            <div class="jolly-choice-title">⚠️ BANCAROTTA!</div>
+            <p class="jolly-choice-text">Hai uno scudo Jolly 🛡️<br>Vuoi usarlo per salvarti?</p>
+            <div class="mystery-cards-container">
+                <!-- Use Jolly -->
+                <div class="mystery-card left" onclick="resolveJollyChoice(true)">
+                    <div class="card-content">
+                        <span class="card-icon">🛡️</span>
+                        <span class="card-text">USA<br>JOLLY</span>
+                    </div>
+                </div>
+
+                <!-- Accept Bancarotta -->
+                <div class="mystery-card right" onclick="resolveJollyChoice(false)">
+                    <div class="card-content">
+                        <span class="card-icon">💥</span>
+                        <span class="card-text">ACCETTA<br>BANCAROTTA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    showPopup(html, 0); // Permanent until choice
+}
+
+window.resolveJollyChoice = function (useJolly) {
+    const player = getCurrentPlayer();
+    elements.modalOverlay.style.display = 'none';
+    elements.popupMessage.style.display = 'none';
+
+    if (useJolly) {
+        // Use Jolly - keep money, lose shield, KEEP TURN
+        soundManager.playReveal();
+        gameState.hasJolly[player.name] = false;
+        renderPlayersList();
+        showPopup(`<div class="popup-jolly-used">🛡️ SCUDO USATO!<br>${player.name} è salvo!</div>`, 2500);
+        // Player keeps turn - reset to idle
+        setTimeout(() => {
+            gameState.wheelPhase = 'idle';
+            updateUI();
+            showMessage('Sei salvo! Gira di nuovo!', 'success');
+        }, 2500);
+    } else {
+        // Accept Bancarotta - lose money, keep shield
+        soundManager.playError();
+        gameState.partialScores[player.name] = 0;
+        renderPlayersList();
+        showPopup(`<div class="popup-bancarotta">BANCAROTTA!<br>Perdi tutto! (Jolly conservato)</div>`, 2500);
+        setTimeout(passTurn, 3000);
+    }
+};
+
 function handleMysterySegment() {
     const html = `
-        <div class="popup-mystery">
-            <div class="popup-title">❓ SEGMENTO MISTERIOS</div>
-            <p>Scegli la tua sorte per questa consonante:</p>
-            <div class="popup-choices">
-                <button onclick="resolveMysteryChoice(500)" class="btn-mystery-take">Prendi €500</button>
-                <div class="choice-divider">O</div>
-                <button onclick="resolveMysteryChoice('RAFFLE')" class="btn-mystery-raffle">Estrai a Sorte</button>
+        <div class="popup-mystery-minimal">
+            <div class="mystery-cards-container">
+                <!-- Card 1: Risk (500) -->
+                <div class="mystery-card left" onclick="resolveMysteryChoice(500)">
+                    <div class="card-content">
+                        <span class="card-icon">💶</span>
+                        <span class="card-text">PRENDI<br>€500</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Raffle -->
+                <div class="mystery-card right" onclick="resolveMysteryChoice('RAFFLE')">
+                    <div class="card-content">
+                        <span class="card-icon">🎲</span>
+                        <span class="card-text">ESTRAI<br>A SORTE</span>
+                    </div>
+                </div>
             </div>
-            <p class="choice-note">(L'estrazione esclude Passa e Bancarotta)</p>
         </div>
     `;
     showPopup(html, 0); // Permanent until clicked
@@ -834,26 +1169,35 @@ function callConsonant() {
     if (occurrences > 0) {
         const earnings = gameState.pendingWheelValue * occurrences;
         gameState.partialScores[getCurrentPlayer().name] += earnings;
-        soundManager.playCorrect();
+        // Moved cash sound to delay block (line 1162)
+        // Removed immediate sounds per user request (only reveal sounds play)
         revealLetter(letter);
         renderPlayersList();
-        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (+€${earnings})`, 'success');
 
-        if (checkWin()) {
-            setTimeout(endManche, 1500);
-        } else {
-            const wasFinished = gameState.allConsonantsRevealed;
-            gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
 
-            if (!wasFinished && gameState.allConsonantsRevealed) {
-                showPopup(`<div class="popup-info">CONSONANTI TERMINATE!</div>`, 2500);
+        // Show popup AFTER all letters are revealed (1.5s per letter)
+        const delay = occurrences * 1500;
+        setTimeout(() => {
+            showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (+€${earnings})`, 'success');
+            soundManager.playCash(); // Delayed cash sound for popup
+            soundManager.playCrowdApplause(); // Crowd applause after all revealed
+
+            if (checkWin()) {
+                setTimeout(endManche, 1500);
+            } else {
+                const wasFinished = gameState.allConsonantsRevealed;
+                gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
+
+                if (!wasFinished && gameState.allConsonantsRevealed) {
+                    showPopup(`<div class="popup-info">CONSONANTI TERMINATE!</div>`, 2500);
+                }
+
+                gameState.wheelPhase = 'choose_action';
+                gameState.pendingWheelValue = null;
+                elements.currentWheelValue.textContent = '-';
+                updateUI();
             }
-
-            gameState.wheelPhase = 'choose_action';
-            gameState.pendingWheelValue = null;
-            elements.currentWheelValue.textContent = '-';
-            updateUI();
-        }
+        }, delay + 500);
     } else {
         soundManager.playError();
         showMessage(`❌ "${letter}" non c'è nella frase.`, 'error');
@@ -963,6 +1307,10 @@ function endManche() {
     const winnings = Number(gameState.partialScores[winner.name]) || 0;
     gameState.totalScores[winner.name] = (Number(gameState.totalScores[winner.name]) || 0) + winnings;
     updateUI(); // Aggiorna subito la sidebar con i nuovi totali cumulati
+
+    // CONFETTI RAIN CELEBRATION
+    triggerConfettiRain();
+    soundManager.playCrowdCheer(); // CROWD REACTION
 
     showPopup(`<div class="popup-win">
         <div class="popup-title">MANCHE ${gameState.currentManche} VINTA!</div>
@@ -1133,22 +1481,32 @@ function updateUI() {
     const phase = gameState.wheelPhase;
     const allConsRevealed = gameState.allConsonantsRevealed;
 
-    // Spin button
-    // Enable spin if idle OR if player has control (choose_action)
-    elements.spinBtn.disabled = !(phase === 'idle' || phase === 'choose_action') || allConsRevealed;
+    const spinBtn = document.getElementById('spin-btn');
+    const consonantContainer = document.getElementById('consonant-call-container');
 
-    // Consonant input
-    const canCallConsonant = phase === 'call_consonant' && !allConsRevealed;
-    elements.consonantInput.disabled = !canCallConsonant;
-    elements.consonantBtn.disabled = !canCallConsonant;
+    // Central Main Action: Toggle between Spin and Call Consonant
+    if (phase === 'call_consonant') {
+        spinBtn.style.display = 'none';
+        consonantContainer.style.display = 'flex';
+
+        // Enable inputs inside container
+        elements.consonantInput.disabled = false;
+        elements.consonantBtn.disabled = false;
+        elements.consonantInput.focus();
+    } else {
+        // Idle or Choose Action or Spinning
+        spinBtn.style.display = 'block';
+        consonantContainer.style.display = 'none';
+
+        // Enable Spin if allowed
+        spinBtn.disabled = !(phase === 'idle' || phase === 'choose_action') || allConsRevealed;
+    }
 
     // Vowel input (available if player has money and it's their turn to choose)
     const player = getCurrentPlayer();
     const canBuyVowel = (phase === 'choose_action' || phase === 'idle') && (gameState.partialScores[player?.name] >= VOWEL_COST);
     elements.vowelInput.disabled = !canBuyVowel;
     elements.vowelBtn.disabled = !canBuyVowel;
-
-    // Solve is always available
 
     // Pass button (available only if consonants finished and it's player choice time)
     const canPass = allConsRevealed && (phase === 'choose_action' || phase === 'idle');

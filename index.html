@@ -101,18 +101,26 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Spin Button Center -->
-                    <div class="spin-container-centered">
+                    <!-- Spin Button Center & Consonant Call Area -->
+                    <div id="central-action-area" class="central-action-area">
+                        <!-- State 1: Spin -->
                         <button id="spin-btn" class="btn-spin">🎡 GIRA LA RUOTA</button>
+
+                        <!-- State 2: Call Consonant (Hidden by default) -->
+                        <div id="consonant-call-container" class="consonant-call-container" style="display: none;">
+                            <div class="value-box">
+                                <span class="value-label-small">VALORE</span>
+                                <span id="current-wheel-value" class="value-amount">-</span>
+                            </div>
+                            <div class="consonant-input-wrapper">
+                                <input type="text" id="consonant-input" maxlength="1" autocomplete="off">
+                                <button id="consonant-btn" class="btn-action">CHIAMA</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <aside class="wheel-value-sidebar">
-                    <div class="wheel-value-display" id="wheel-value-display">
-                        <span class="value-label">VALORE</span>
-                        <span id="current-wheel-value" class="wheel-value">-</span>
-                    </div>
-
                     <!-- New: Total Winnings Box -->
                     <div class="total-winnings-card">
                         <span class="value-label">TOTALI GARA</span>
@@ -127,15 +135,6 @@
             <div class="game-actions-row">
                 <!-- Letters Controls -->
                 <div class="letters-controls">
-                    <!-- Consonant Input -->
-                    <div class="control-group" id="consonant-group">
-                        <label>Chiama una CONSONANTE:</label>
-                        <div class="input-group">
-                            <input type="text" id="consonant-input" maxlength="1" autocomplete="off" disabled>
-                            <button id="consonant-btn" class="btn-action" disabled>CHIAMA</button>
-                        </div>
-                    </div>
-
                     <!-- Vowel Input -->
                     <div class="control-group" id="vowel-group">
                         <label>Compra una VOCALE (€1000):</label>
@@ -199,6 +198,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="puzzles.js"></script>
     <script src="game.js"></script>
 </body>

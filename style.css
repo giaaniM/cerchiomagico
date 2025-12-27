@@ -130,6 +130,16 @@ body {
     }
 }
 
+@keyframes fadeInStatic {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
 /* ===== Setup Layout ===== */
 .setup-layout {
     display: flex;
@@ -914,13 +924,13 @@ body {
     border-radius: 15px;
     border: 2px solid var(--accent-gold);
     box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
-    animation: slideUpFade 0.5s ease-out;
+    animation: fadeInStatic 0.3s ease-out;
 
-    /* Position at bottom */
+    /* Position at center */
     position: absolute;
-    bottom: 50px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     width: 90%;
     max-width: 600px;
 }
@@ -2250,4 +2260,240 @@ body {
     display: block;
     margin-top: 10px;
     text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+}
+
+/* ===== Central Action Area (Spin / Consonant) ===== */
+.central-action-area {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80px;
+    /* Preserve space */
+    margin-top: 20px;
+}
+
+.consonant-call-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px 30px;
+    border-radius: 50px;
+    border: 2px solid var(--accent-blue);
+    animation: fadeIn 0.3s ease;
+}
+
+.value-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    padding-right: 20px;
+}
+
+.value-label-small {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.value-amount {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent-gold);
+}
+
+.consonant-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.consonant-input-wrapper input {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+    text-align: center;
+    border-radius: 10px;
+    border: 2px solid var(--accent-blue);
+    background: #fff;
+    color: #000;
+    font-weight: bold;
+}
+
+.consonant-input-wrapper input:focus {
+    outline: none;
+    box-shadow: 0 0 10px var(--accent-blue);
+}
+
+/* ===== Minimal Mystery Popup ===== */
+.popup-mystery-minimal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.mystery-cards-container {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    align-items: center;
+}
+
+.mystery-card {
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.mystery-card:hover {
+    transform: translateY(-10px) scale(1.05);
+    border-color: #fff;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+}
+
+.mystery-card.left {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.4) 100%);
+    border-color: var(--accent-green);
+}
+
+.mystery-card.left:hover {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+}
+
+.mystery-card.right {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(217, 119, 6, 0.4) 100%);
+    border-color: var(--accent-gold);
+}
+
+.mystery-card.right:hover {
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.6);
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    text-align: center;
+    pointer-events: none;
+    /* Click on parent */
+}
+
+.card-icon {
+    font-size: 4rem;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+.card-text {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+/* ===== Jolly Choice Popup ===== */
+.popup-jolly-choice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.jolly-choice-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #ef4444;
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+}
+
+.jolly-choice-text {
+    font-size: 1.2rem;
+    color: #fff;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ===== New Wheel Value States ===== */
+.wheel-value.raddoppia {
+    background: linear-gradient(135deg, #FF6B35, #F7931E);
+    color: #fff;
+    font-size: 2rem;
+    animation: pulseRaddoppia 1s infinite;
+}
+
+@keyframes pulseRaddoppia {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(255, 107, 53, 1);
+    }
+}
+
+.wheel-value.jolly {
+    background: linear-gradient(135deg, #9333EA, #7C3AED);
+    color: #fff;
+    font-size: 2.5rem;
+}
+
+/* ===== New Popup Styles ===== */
+.popup-raddoppia {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #FF6B35;
+    text-shadow: 0 0 30px rgba(255, 107, 53, 0.8);
+}
+
+.popup-jolly {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #9333EA;
+    text-shadow: 0 0 30px rgba(147, 51, 234, 0.8);
+}
+
+.popup-jolly-used {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--accent-green);
+    text-shadow: 0 0 30px rgba(16, 185, 129, 0.8);
+}
+
+/* ===== Shield Icon Pulsing Animation ===== */
+.shield-icon {
+    display: inline-block;
+    animation: shieldPulse 1.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 5px rgba(147, 51, 234, 0.8));
+}
+
+@keyframes shieldPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 5px rgba(147, 51, 234, 0.8));
+    }
+
+    50% {
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 15px rgba(147, 51, 234, 1));
+    }
 }
