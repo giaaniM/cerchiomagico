@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: http: https: data: blob:; connect-src 'self' ws: wss: http: https:;">
     <title>Gioco di Natale per Federica</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,8 +35,28 @@
                             <input type="number" id="player-count-input" min="1" max="10" value="2"
                                 class="player-count-input">
                         </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enable-mobile-mode" style="width: auto; margin-right: 8px;">
+                                Modalità Mobile (giocatori da smartphone)
+                            </label>
+                        </div>
+                        <div id="lobby-info" style="display: none; margin: 15px 0; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
+                            <p style="margin-bottom: 10px; font-weight: 600;">Lobby ID: <span id="lobby-id-display" style="color: #667eea; font-size: 24px; font-weight: 800;"></span></p>
+                            <p style="font-size: 14px; color: #666;">Condividi questo ID con i giocatori per entrare da mobile</p>
+                            <p style="font-size: 12px; color: #999; margin-top: 5px; margin-bottom: 15px;">Link mobile: <span id="mobile-link" style="color: #667eea; cursor: pointer; text-decoration: underline;"></span></p>
+                            <div id="connected-players" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(102, 126, 234, 0.2);">
+                                <p style="font-size: 14px; font-weight: 600; color: #667eea; margin-bottom: 8px;">Giocatori connessi:</p>
+                                <ul id="connected-players-list" style="list-style: none; padding: 0;">
+                                    <li style="color: #999; font-size: 12px;">Nessun giocatore ancora...</li>
+                                </ul>
+                            </div>
+                        </div>
                         <button id="next-step-btn" class="btn-primary">
                             Avanti ➡️
+                        </button>
+                        <button id="start-game-btn-mobile" class="btn-primary" style="display: none; margin-top: 10px;">
+                            Inizia Partita 🚀
                         </button>
                     </div>
 
@@ -199,6 +220,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="puzzles.js"></script>
     <script src="game.js"></script>
 </body>

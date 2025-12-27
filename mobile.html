@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: http: https: data: blob:; connect-src 'self' ws: wss: http: https:;">
+    <title>Ruota della Fortuna - Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            color: #333;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-action {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .lobby-list {
+            list-style: none;
+        }
+
+        .lobby-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .lobby-item:active {
+            background: #e9ecef;
+        }
+
+        .lobby-item h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .lobby-item p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .player-info {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .player-name {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .player-score {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+
+        .score-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .game-actions {
+            display: grid;
+            gap: 15px;
+        }
+
+        .action-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .action-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        .input-group .btn {
+            width: auto;
+            min-width: 100px;
+            margin: 0;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .waiting-message {
+            text-align: center;
+            padding: 30px;
+            color: #fff;
+        }
+
+        .error {
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .success {
+            background: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Lobby Selection Screen -->
+        <div id="lobby-screen" class="screen active">
+            <h1>🎡 Ruota della Fortuna</h1>
+            <div class="card">
+                <div class="form-group">
+                    <label for="lobby-id-input">Inserisci ID Lobby:</label>
+                    <input type="text" id="lobby-id-input" placeholder="Es: ABC123" maxlength="6" style="text-transform: uppercase;">
+                </div>
+                <button id="join-lobby-btn" class="btn btn-primary">Entra in Lobby</button>
+                <button id="refresh-lobbies-btn" class="btn btn-secondary">Aggiorna Lobby</button>
+            </div>
+            <div id="lobbies-list" class="card">
+                <h3 style="margin-bottom: 15px; color: #667eea;">Lobby Disponibili:</h3>
+                <ul id="lobbies-ul" class="lobby-list"></ul>
+            </div>
+            <div id="error-message"></div>
+        </div>
+
+        <!-- Player Name Screen -->
+        <div id="name-screen" class="screen">
+            <h1>Inserisci il tuo nome</h1>
+            <div class="card">
+                <div class="form-group">
+                    <label for="player-name-input">Nome Giocatore:</label>
+                    <input type="text" id="player-name-input" placeholder="Il tuo nome" maxlength="20">
+                </div>
+                <button id="confirm-name-btn" class="btn btn-primary">Conferma</button>
+                <button id="back-to-lobby-btn" class="btn btn-secondary">Indietro</button>
+            </div>
+            <div id="name-error-message"></div>
+        </div>
+
+        <!-- Waiting Screen -->
+        <div id="waiting-screen" class="screen">
+            <h1>In attesa...</h1>
+            <div class="card">
+                <div class="waiting-message">
+                    <p style="font-size: 18px; margin-bottom: 10px; color: #667eea; font-weight: 700;">Lobby: <strong id="waiting-lobby-id" style="font-size: 24px;"></strong></p>
+                    <p style="font-size: 16px; color: #666; margin-top: 15px;">In attesa che l'host avvii la partita...</p>
+                    <div id="waiting-players-list" style="margin-top: 20px; text-align: left;">
+                        <h3 style="color: #667eea; margin-bottom: 10px;">Giocatori:</h3>
+                        <ul id="waiting-players-ul" style="list-style: none;"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="player-info">
+                <div class="player-name" id="game-player-name">Giocatore</div>
+                <div class="player-score" id="game-player-score">€0</div>
+                <div class="score-label">Montepremi Attuale</div>
+            </div>
+
+            <div id="game-status" class="status-message">In attesa del tuo turno...</div>
+
+            <div class="card">
+                <div class="game-actions">
+                    <!-- Spin Wheel -->
+                    <div class="action-section">
+                        <h3>🎡 Gira la Ruota</h3>
+                        <button id="spin-btn" class="btn btn-primary" disabled>GIRA</button>
+                    </div>
+
+                    <!-- Call Consonant -->
+                    <div class="action-section" id="consonant-section" style="display: none;">
+                        <h3>Chiama Consonante</h3>
+                        <div class="input-group">
+                            <input type="text" id="consonant-input" maxlength="1" placeholder="A-Z" style="text-transform: uppercase;">
+                            <button id="consonant-btn" class="btn btn-action">CHIAMA</button>
+                        </div>
+                    </div>
+
+                    <!-- Buy Vowel -->
+                    <div class="action-section">
+                        <h3>Compra Vocale (€1000)</h3>
+                        <div class="input-group">
+                            <input type="text" id="vowel-input" maxlength="1" placeholder="A, E, I, O, U" style="text-transform: uppercase;" disabled>
+                            <button id="vowel-btn" class="btn btn-action" disabled>COMPRA</button>
+                        </div>
+                    </div>
+
+                    <!-- Solve -->
+                    <div class="action-section">
+                        <h3>Risolvi la Frase</h3>
+                        <div class="input-group">
+                            <input type="text" id="solve-input" placeholder="Scrivi la soluzione...">
+                            <button id="solve-btn" class="btn btn-danger">RISOLVI</button>
+                        </div>
+                    </div>
+
+                    <!-- Pass -->
+                    <div class="action-section" id="pass-section" style="display: none;">
+                        <button id="pass-btn" class="btn btn-secondary">PASSA</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        let socket = null;
+        let currentLobbyId = null;
+        let playerId = null;
+        let playerName = null;
+        let gameState = null;
+
+        // DOM Elements
+        const screens = {
+            lobby: document.getElementById('lobby-screen'),
+            name: document.getElementById('name-screen'),
+            waiting: document.getElementById('waiting-screen'),
+            game: document.getElementById('game-screen')
+        };
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        // Lobby Screen
+        document.getElementById('join-lobby-btn').addEventListener('click', () => {
+            const lobbyId = document.getElementById('lobby-id-input').value.trim().toUpperCase();
+            if (!lobbyId) {
+                showError('Inserisci un ID lobby valido');
+                return;
+            }
+            joinLobby(lobbyId);
+        });
+
+        document.getElementById('refresh-lobbies-btn').addEventListener('click', loadLobbies);
+
+        document.getElementById('lobby-id-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('join-lobby-btn').click();
+            }
+        });
+
+        async function loadLobbies() {
+            try {
+                const response = await fetch(`${API_URL}/api/lobbies`);
+                const lobbies = await response.json();
+                const ul = document.getElementById('lobbies-ul');
+                ul.innerHTML = '';
+                
+                if (lobbies.length === 0) {
+                    ul.innerHTML = '<li style="padding: 15px; color: #666;">Nessuna lobby disponibile</li>';
+                } else {
+                    lobbies.forEach(lobby => {
+                        const li = document.createElement('li');
+                        li.className = 'lobby-item';
+                        li.innerHTML = `
+                            <h3>Lobby ${lobby.id}</h3>
+                            <p>Giocatori: ${lobby.players.length} | Status: ${lobby.status}</p>
+                        `;
+                        li.addEventListener('click', () => {
+                            document.getElementById('lobby-id-input').value = lobby.id;
+                            joinLobby(lobby.id);
+                        });
+                        ul.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading lobbies:', error);
+            }
+        }
+
+        async function joinLobby(lobbyId) {
+            try {
+                const response = await fetch(`${API_URL}/api/lobby/${lobbyId}`);
+                if (!response.ok) {
+                    showError('Lobby non trovata');
+                    return;
+                }
+                currentLobbyId = lobbyId;
+                showScreen('name');
+            } catch (error) {
+                showError('Errore nel connettersi alla lobby');
+            }
+        }
+
+        // Name Screen
+        document.getElementById('confirm-name-btn').addEventListener('click', () => {
+            const name = document.getElementById('player-name-input').value.trim();
+            if (!name) {
+                document.getElementById('name-error-message').innerHTML = 
+                    '<div class="error">Inserisci un nome valido</div>';
+                return;
+            }
+            playerName = name;
+            connectToLobby();
+        });
+
+        document.getElementById('back-to-lobby-btn').addEventListener('click', () => {
+            showScreen('lobby');
+        });
+
+        function connectToLobby() {
+            socket = io(API_URL);
+            
+            socket.on('connect', () => {
+                socket.emit('player:join', { lobbyId: currentLobbyId, playerName });
+            });
+
+            socket.on('player:joined', (data) => {
+                playerId = data.playerId;
+                document.getElementById('waiting-lobby-id').textContent = currentLobbyId;
+                showScreen('waiting');
+                updateWaitingPlayers();
+            });
+
+            socket.on('lobby:updated', (data) => {
+                updateWaitingPlayers(data.players);
+            });
+
+            socket.on('game:started', () => {
+                showScreen('game');
+                document.getElementById('game-player-name').textContent = playerName;
+            });
+
+            socket.on('game:state-updated', (state) => {
+                gameState = state;
+                // Convert Arrays back to Sets
+                if (state.revealedLetters) {
+                    gameState.revealedLetters = new Set(state.revealedLetters);
+                }
+                if (state.usedLetters) {
+                    gameState.usedLetters = new Set(state.usedLetters);
+                }
+                updateGameUI();
+            });
+
+            socket.on('error', (data) => {
+                showError(data.message);
+            });
+
+            socket.on('lobby:closed', () => {
+                showError('Lobby chiusa dall\'host');
+                socket.disconnect();
+                showScreen('lobby');
+            });
+        }
+
+        function updateWaitingPlayers(players) {
+            const ul = document.getElementById('waiting-players-ul');
+            if (!ul) return;
+            ul.innerHTML = '';
+            const playersList = players || [];
+            playersList.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = player.name;
+                li.style.padding = '5px 0';
+                li.style.color = '#333';
+                ul.appendChild(li);
+            });
+        }
+
+        function updateGameUI() {
+            if (!gameState) return;
+
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            const isMyTurn = currentPlayer && currentPlayer.name === playerName;
+            const myPartialScore = gameState.partialScores[playerName] || 0;
+            const myTotalScore = gameState.totalScores[playerName] || 0;
+
+            document.getElementById('game-player-score').textContent = `€${myPartialScore}`;
+            
+            const statusEl = document.getElementById('game-status');
+            if (gameState.wheelPhase === 'spinning') {
+                statusEl.textContent = 'La ruota sta girando...';
+            } else if (isMyTurn) {
+                statusEl.textContent = 'È IL TUO TURNO!';
+            } else {
+                statusEl.textContent = `Turno di: ${currentPlayer.name}`;
+            }
+
+            // Update buttons based on game state
+            const spinBtn = document.getElementById('spin-btn');
+            const consonantSection = document.getElementById('consonant-section');
+            const consonantInput = document.getElementById('consonant-input');
+            const consonantBtn = document.getElementById('consonant-btn');
+            const vowelInput = document.getElementById('vowel-input');
+            const vowelBtn = document.getElementById('vowel-btn');
+            const passSection = document.getElementById('pass-section');
+
+            if (isMyTurn && gameState.wheelPhase === 'idle' || gameState.wheelPhase === 'choose_action') {
+                spinBtn.disabled = false;
+            } else {
+                spinBtn.disabled = true;
+            }
+
+            if (isMyTurn && gameState.wheelPhase === 'call_consonant') {
+                consonantSection.style.display = 'block';
+                consonantInput.disabled = false;
+                consonantBtn.disabled = false;
+            } else {
+                consonantSection.style.display = 'none';
+                consonantInput.disabled = true;
+                consonantBtn.disabled = true;
+            }
+
+            const canBuyVowel = isMyTurn && (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle') && myPartialScore >= 1000;
+            vowelInput.disabled = !canBuyVowel;
+            vowelBtn.disabled = !canBuyVowel;
+
+            if (isMyTurn && gameState.allConsonantsRevealed && (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle')) {
+                passSection.style.display = 'block';
+            } else {
+                passSection.style.display = 'none';
+            }
+        }
+
+        // Game Actions
+        document.getElementById('spin-btn').addEventListener('click', () => {
+            socket.emit('player:spin-wheel', { lobbyId: currentLobbyId, playerId });
+        });
+
+        document.getElementById('consonant-btn').addEventListener('click', () => {
+            const letter = document.getElementById('consonant-input').value.trim();
+            if (!letter) return;
+            socket.emit('player:call-consonant', { lobbyId: currentLobbyId, playerId, letter });
+            document.getElementById('consonant-input').value = '';
+        });
+
+        document.getElementById('vowel-btn').addEventListener('click', () => {
+            const letter = document.getElementById('vowel-input').value.trim();
+            if (!letter) return;
+            socket.emit('player:buy-vowel', { lobbyId: currentLobbyId, playerId, letter });
+            document.getElementById('vowel-input').value = '';
+        });
+
+        document.getElementById('solve-btn').addEventListener('click', () => {
+            const solution = document.getElementById('solve-input').value.trim();
+            if (!solution) return;
+            socket.emit('player:solve', { lobbyId: currentLobbyId, playerId, solution });
+            document.getElementById('solve-input').value = '';
+        });
+
+        document.getElementById('pass-btn').addEventListener('click', () => {
+            socket.emit('player:pass', { lobbyId: currentLobbyId, playerId });
+        });
+
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.innerHTML = `<div class="error">${message}</div>`;
+            setTimeout(() => {
+                errorEl.innerHTML = '';
+            }, 5000);
+        }
+
+        // Load lobbies on page load
+        loadLobbies();
+        setInterval(loadLobbies, 5000); // Refresh every 5 seconds
+    </script>
+</body>
+</html>
+

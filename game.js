@@ -138,6 +138,12 @@ const VOWELS = ['A', 'E', 'I', 'O', 'U'];
 const VOWEL_COST = 1000;
 const TOTAL_MANCHES = 5;
 
+// ===== WebSocket / Multiplayer =====
+let socket = null;
+let currentLobbyId = null;
+let isMobileMode = false;
+const API_URL = window.location.origin;
+
 // ===== Game State =====
 const gameState = {
     phrase: '',
@@ -588,6 +594,7 @@ function passTurn() {
     elements.currentWheelValue.textContent = '-';
     elements.currentWheelValue.className = 'wheel-value';
     updateUI();
+    if (isMobileMode) syncGameState();
 
     const nextPlayer = getCurrentPlayer();
     showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2000);
@@ -1028,6 +1035,7 @@ function onWheelStop(result) {
 
         gameState.wheelPhase = 'call_consonant';
         updateUI();
+        if (isMobileMode) syncGameState();
     }
 }
 
@@ -1181,7 +1189,7 @@ function callConsonant() {
         // Removed immediate sounds per user request (only reveal sounds play)
         revealLetter(letter);
         renderPlayersList();
-
+        if (isMobileMode) syncGameState();
 
         // Show popup AFTER all letters are revealed (1.5s per letter)
         const delay = occurrences * 1500;
@@ -1204,6 +1212,7 @@ function callConsonant() {
                 gameState.pendingWheelValue = null;
                 elements.currentWheelValue.textContent = '-';
                 updateUI();
+                if (isMobileMode) syncGameState();
             }
         }, delay + 500);
     } else {
@@ -1252,6 +1261,7 @@ function buyVowel() {
     gameState.partialScores[player.name] -= VOWEL_COST;
     gameState.usedLetters.add(normalized);
     renderPlayersList();
+    if (isMobileMode) syncGameState();
 
     const occurrences = countLetterOccurrences(letter);
 
@@ -1265,6 +1275,7 @@ function buyVowel() {
         } else {
             gameState.wheelPhase = 'choose_action';
             updateUI();
+            if (isMobileMode) syncGameState();
         }
     } else {
         soundManager.playError();
@@ -1314,7 +1325,8 @@ function endManche() {
     const winner = getCurrentPlayer();
     const winnings = Number(gameState.partialScores[winner.name]) || 0;
     gameState.totalScores[winner.name] = (Number(gameState.totalScores[winner.name]) || 0) + winnings;
-    updateUI(); // Aggiorna subito la sidebar con i nuovi totali cumulati
+    updateUI();
+    if (isMobileMode) syncGameState();
 
     // CONFETTI RAIN CELEBRATION
     triggerConfettiRain();
@@ -1413,6 +1425,7 @@ async function startNextManche() {
     drawWheel(0);
     renderPlayersList();
     updateUI();
+    if (isMobileMode) syncGameState();
 
     showPopup(`<div class="popup-turn">MANCHE ${gameState.currentManche}<br>INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>`, 2500);
 }
@@ -1657,20 +1670,221 @@ FORMATO RISPOSTA JSON: {"hint": "HINT", "phrase": "FRASE"}`;
     throw lastError || new Error("Impossibile generare frase e nessun DB statico disponibile.");
 }
 
+// ===== WebSocket Functions =====
+async function createLobby() {
+    try {
+        const response = await fetch(`${API_URL}/api/lobby/create`, { method: 'POST' });
+        const data = await response.json();
+        currentLobbyId = data.lobbyId;
+        
+        socket = io(API_URL);
+        socket.on('connect', () => {
+            socket.emit('host:join', currentLobbyId);
+        });
+        
+        socket.on('host:joined', () => {
+            console.log('Host joined lobby:', currentLobbyId);
+        });
+        
+        socket.on('lobby:updated', (data) => {
+            // Update players from lobby
+            if (data.players) {
+                const previousCount = gameState.players.length;
+                gameState.players = data.players.map(p => ({ name: p.name }));
+                gameState.players.forEach(p => {
+                    if (!gameState.partialScores[p.name]) {
+                        gameState.partialScores[p.name] = 0;
+                        gameState.totalScores[p.name] = 0;
+                    }
+                });
+                
+                console.log('Lobby updated - Players:', gameState.players.length, gameState.players);
+                
+                console.log('Lobby updated - Players:', gameState.players.length, gameState.players);
+                
+                // Show message if new player joined
+                if (data.players.length > previousCount && previousCount > 0) {
+                    const newPlayer = data.players[data.players.length - 1];
+                    showMessage(`${newPlayer.name} si è unito!`, 'success');
+                }
+                
+                // Update connected players list in setup screen
+                const playersListEl = document.getElementById('connected-players-list');
+                if (playersListEl) {
+                    if (data.players.length === 0) {
+                        playersListEl.innerHTML = '<li style="color: #999; font-size: 12px;">Nessun giocatore ancora...</li>';
+                    } else {
+                        playersListEl.innerHTML = data.players.map(p => 
+                            `<li style="color: #667eea; font-size: 14px; padding: 4px 0; font-weight: 600;">✓ ${p.name}</li>`
+                        ).join('');
+                    }
+                }
+                
+                // Show start button if players are connected and in mobile mode
+                const startBtnMobile = document.getElementById('start-game-btn-mobile');
+                const mobileModeCheckbox = document.getElementById('enable-mobile-mode');
+                const isMobileEnabled = mobileModeCheckbox && mobileModeCheckbox.checked;
+                
+                console.log('Checking start button - Mobile enabled:', isMobileEnabled, 'Players:', data.players.length);
+                
+                if (startBtnMobile && isMobileEnabled && data.players.length > 0) {
+                    startBtnMobile.style.display = 'block';
+                    console.log('Start button shown');
+                    // Hide "Avanti" button when players are connected
+                    const nextBtn = document.getElementById('next-step-btn');
+                    if (nextBtn) {
+                        nextBtn.style.display = 'none';
+                    }
+                } else if (startBtnMobile && (!isMobileEnabled || data.players.length === 0)) {
+                    startBtnMobile.style.display = 'none';
+                }
+                
+                if (elements.gameScreen.classList.contains('active')) {
+                    renderPlayersList();
+                }
+            }
+        });
+        
+        socket.on('player:action', (action) => {
+            handlePlayerAction(action);
+        });
+        
+        return currentLobbyId;
+    } catch (error) {
+        console.error('Error creating lobby:', error);
+        return null;
+    }
+}
+
+function syncGameState() {
+    if (!socket || !currentLobbyId) return;
+    
+    // Convert Sets to Arrays for JSON serialization
+    const stateToSync = {
+        ...gameState,
+        revealedLetters: Array.from(gameState.revealedLetters),
+        usedLetters: Array.from(gameState.usedLetters),
+        players: gameState.players.map(p => ({ name: p.name }))
+    };
+    
+    socket.emit('host:sync-state', { lobbyId: currentLobbyId, gameState: stateToSync });
+}
+
+function handlePlayerAction(action) {
+    const player = gameState.players.find(p => p.name === action.playerName);
+    if (!player) return;
+    
+    const playerIndex = gameState.players.indexOf(player);
+    const isCurrentPlayer = gameState.currentPlayerIndex === playerIndex;
+    
+    if (!isCurrentPlayer) {
+        showMessage(`Azione da ${action.playerName} ignorata: non è il suo turno`, 'error');
+        return;
+    }
+    
+    switch (action.type) {
+        case 'spin-wheel':
+            if (gameState.wheelPhase === 'idle' || gameState.wheelPhase === 'choose_action') {
+                spinWheel();
+            }
+            break;
+        case 'call-consonant':
+            if (gameState.wheelPhase === 'call_consonant') {
+                elements.consonantInput.value = action.letter;
+                callConsonant();
+            }
+            break;
+        case 'buy-vowel':
+            if (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle') {
+                elements.vowelInput.value = action.letter;
+                buyVowel();
+            }
+            break;
+        case 'solve':
+            elements.solutionInput.value = action.solution;
+            trySolve();
+            break;
+        case 'pass':
+            if (gameState.allConsonantsRevealed) {
+                passTurn();
+            }
+            break;
+    }
+}
+
 // ===== Game Start =====
 async function startGame() {
     soundManager.init();
     soundManager.playClick();
 
-    // Collect players
-    const nameInputs = document.querySelectorAll('.player-name-input');
-    gameState.players = [];
-    nameInputs.forEach((input, index) => {
-        const name = input.value.trim() || `Giocatore ${index + 1}`;
-        gameState.players.push({ name });
-        gameState.partialScores[name] = 0;
-        gameState.totalScores[name] = 0;
-    });
+    // Check if mobile mode is enabled
+    const mobileModeCheckbox = document.getElementById('enable-mobile-mode');
+    isMobileMode = mobileModeCheckbox && mobileModeCheckbox.checked;
+    
+    if (isMobileMode) {
+        // In mobile mode, DON'T reset players - they come from lobby
+        // Just verify we have them
+        // In mobile mode, check if lobby already exists
+        if (!currentLobbyId || !socket) {
+            showMessage('Errore: lobby non creata. Abilita di nuovo la modalità mobile.', 'error');
+            return;
+        }
+        
+        // Check if players joined - get fresh data from lobby
+        console.log('Starting game - Current players in state:', gameState.players.length, gameState.players);
+        
+        // Fetch current lobby state to ensure we have latest players
+        try {
+            const response = await fetch(`${API_URL}/api/lobby/${currentLobbyId}`);
+            if (response.ok) {
+                const lobbyData = await response.json();
+                if (lobbyData.players && lobbyData.players.length > 0) {
+                    // Update gameState with fresh data
+                    gameState.players = lobbyData.players.map(p => ({ name: p.name }));
+                    gameState.players.forEach(p => {
+                        if (!gameState.partialScores[p.name]) {
+                            gameState.partialScores[p.name] = 0;
+                            gameState.totalScores[p.name] = 0;
+                        }
+                    });
+                    console.log('Updated players from lobby:', gameState.players.length, gameState.players);
+                } else {
+                    showMessage('Aspetta che almeno un giocatore si unisca alla lobby!', 'error');
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching lobby:', error);
+            if (gameState.players.length === 0) {
+                showMessage('Errore nel recuperare i giocatori. Riprova.', 'error');
+                return;
+            }
+        }
+        
+        if (gameState.players.length === 0) {
+            showMessage('Aspetta che almeno un giocatore si unisca alla lobby!', 'error');
+            return;
+        }
+        
+        // Start game - emit to server first
+        socket.emit('host:start-game', currentLobbyId);
+        console.log('Game start signal sent to server');
+    } else {
+        // Local mode - collect players from inputs
+        const nameInputs = document.querySelectorAll('.player-name-input');
+        gameState.players = [];
+        nameInputs.forEach((input, index) => {
+            const name = input.value.trim() || `Giocatore ${index + 1}`;
+            gameState.players.push({ name });
+            gameState.partialScores[name] = 0;
+            gameState.totalScores[name] = 0;
+        });
+    }
+    
+    startGameLocal();
+}
+
+async function startGameLocal() {
 
     // Random starting player
     gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
@@ -1719,6 +1933,11 @@ async function startGame() {
     updateUI();
 
     showPopup(`<div class="popup-turn">MANCHE 1<br>INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>`, 3000);
+    
+    // Sync initial state if in mobile mode
+    if (isMobileMode) {
+        syncGameState();
+    }
 }
 
 function newGame() {
@@ -1729,8 +1948,60 @@ function newGame() {
 }
 
 // ===== Event Listeners =====
+const mobileModeCheckbox = document.getElementById('enable-mobile-mode');
+if (mobileModeCheckbox) {
+    mobileModeCheckbox.addEventListener('change', async (e) => {
+        const isEnabled = e.target.checked;
+        const step2 = document.getElementById('setup-step-2');
+        const lobbyInfo = document.getElementById('lobby-info');
+        
+        if (isEnabled) {
+            step2.style.display = 'none';
+            lobbyInfo.style.display = 'none';
+            // Create lobby immediately when enabled
+            const lobbyId = await createLobby();
+            if (lobbyId) {
+                isMobileMode = true; // Set mobile mode flag
+                document.getElementById('lobby-id-display').textContent = lobbyId;
+                const mobileLink = `${API_URL}/mobile.html`;
+                document.getElementById('mobile-link').textContent = mobileLink;
+                document.getElementById('mobile-link').style.cursor = 'pointer';
+                document.getElementById('mobile-link').onclick = () => {
+                    navigator.clipboard.writeText(mobileLink);
+                    showMessage('Link copiato!', 'success');
+                };
+                lobbyInfo.style.display = 'block';
+                // Hide "Avanti" button in mobile mode
+                const nextBtn = document.getElementById('next-step-btn');
+                if (nextBtn) {
+                    nextBtn.style.display = 'none';
+                }
+            }
+        } else {
+            if (elements.setupStep2.style.display === 'block') {
+                step2.style.display = 'block';
+            }
+            lobbyInfo.style.display = 'none';
+            // Disconnect if connected
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                currentLobbyId = null;
+            }
+        }
+    });
+}
+
 elements.nextStepBtn?.addEventListener('click', () => {
     soundManager.playClick();
+    const mobileModeEnabled = mobileModeCheckbox && mobileModeCheckbox.checked;
+    
+    if (mobileModeEnabled) {
+        // In mobile mode, don't proceed to step 2
+        // User should see lobby info and wait for players, then click "Inizia Partita"
+        return;
+    }
+    
     const count = parseInt(elements.playerCountInput.value) || 2;
     const playerCount = Math.max(1, Math.min(10, count));
 
@@ -1753,7 +2024,26 @@ elements.backStepBtn?.addEventListener('click', () => {
     elements.setupStep1.style.display = 'block';
 });
 
-elements.startGameBtn?.addEventListener('click', startGame);
+// Mobile mode start button
+const startGameBtnMobile = document.getElementById('start-game-btn-mobile');
+if (startGameBtnMobile) {
+    startGameBtnMobile.addEventListener('click', () => {
+        console.log('Mobile start button clicked - Current players:', gameState.players.length, gameState.players);
+        startGame();
+    });
+}
+
+elements.startGameBtn?.addEventListener('click', () => {
+    if (isMobileMode && currentLobbyId) {
+        // In mobile mode, check if players joined
+        if (gameState.players.length === 0) {
+            showMessage('Aspetta che almeno un giocatore si unisca alla lobby!', 'error');
+            return;
+        }
+        socket.emit('host:start-game', currentLobbyId);
+    }
+    startGame();
+});
 elements.spinBtn?.addEventListener('click', spinWheel);
 elements.consonantBtn?.addEventListener('click', callConsonant);
 elements.vowelBtn?.addEventListener('click', buyVowel);
