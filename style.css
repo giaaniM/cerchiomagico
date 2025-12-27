@@ -140,6 +140,31 @@ body {
     }
 }
 
+@keyframes blink-focus {
+    0% {
+        background-color: #fef3c7;
+        box-shadow: 0 0 5px #fbbf24;
+        border-color: #fbbf24;
+    }
+
+    50% {
+        background-color: #fffbeb;
+        box-shadow: 0 0 20px #fbbf24;
+        border-color: #f59e0b;
+    }
+
+    100% {
+        background-color: #fef3c7;
+        box-shadow: 0 0 5px #fbbf24;
+        border-color: #fbbf24;
+    }
+}
+
+.input-blink {
+    animation: blink-focus 0.8s infinite;
+    border-width: 3px !important;
+}
+
 /* ===== Setup Layout ===== */
 .setup-layout {
     display: flex;

@@ -121,8 +121,9 @@ const soundManager = {
     },
 
     playWheelTick() {
-        // RESTORED Synthetic "tck tck" as requested
-        this.playTone(600, 'sawtooth', 0.05, 0.05);
+        // Play rotation.mp3 as requested
+        const audio = new Audio('rotation.mp3');
+        audio.play().catch(e => console.warn('Audio play error:', e));
     }
 };
 
@@ -663,10 +664,12 @@ function renderWheelToCache() {
         const startAngle = i * segmentAngle;
         const endAngle = startAngle + segmentAngle;
 
+        ctx.save();
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
         ctx.closePath();
+        ctx.clip(); // Ensure everything stays within the segment slice
 
         // Reset Effects for each segment to prevent "bleeding"
         ctx.shadowBlur = 0;
@@ -674,9 +677,6 @@ function renderWheelToCache() {
 
         // Radial Gradient Logic (Universal Vignette Effect)
         let fillStyle;
-
-        // Base Vignette for ALL segments (Dark Center -> Out)
-        // We will layer color on top or use stops.
 
         if (segment.color === 'RAINBOW') {
             // RAINBOW GRADIENT (Dark Center -> Rainbow Rim)
@@ -698,6 +698,8 @@ function renderWheelToCache() {
             goldGrad.addColorStop(0.8, '#422006'); // Dark brown
             goldGrad.addColorStop(1, '#000000'); // Black rim
             fillStyle = goldGrad;
+
+            // Add internal glow (contained by clip)
             ctx.shadowColor = '#fbbf24';
             ctx.shadowBlur = 15 * scale;
         } else {
@@ -715,16 +717,22 @@ function renderWheelToCache() {
                 vignetteGrad.addColorStop(1, baseColor);
             }
             fillStyle = vignetteGrad;
-            ctx.shadowBlur = 0;
         }
 
         ctx.fillStyle = fillStyle;
         ctx.fill();
+        ctx.restore(); // Stop clipping
 
-        ctx.shadowBlur = 0;
+        // Draw Stroke (Outside the clip to avoid cutting border in half)
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
         ctx.strokeStyle = 'rgba(0,0,0,0.5)';
         ctx.lineWidth = 1 * scale;
         ctx.stroke();
+        ctx.restore();
 
         // Draw Text
         ctx.save();
@@ -1178,7 +1186,7 @@ function callConsonant() {
         // Show popup AFTER all letters are revealed (1.5s per letter)
         const delay = occurrences * 1500;
         setTimeout(() => {
-            showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (+€${earnings})`, 'success');
+            showMessage(`${getCurrentPlayer().name}: +€${earnings}`, 'success');
             soundManager.playCash(); // Delayed cash sound for popup
             soundManager.playCrowdApplause(); // Crowd applause after all revealed
 
@@ -1493,6 +1501,9 @@ function updateUI() {
         elements.consonantInput.disabled = false;
         elements.consonantBtn.disabled = false;
         elements.consonantInput.focus();
+
+        // Add blinking effect to guide user
+        elements.consonantInput.classList.add('input-blink');
     } else {
         // Idle or Choose Action or Spinning
         spinBtn.style.display = 'block';
@@ -1500,6 +1511,9 @@ function updateUI() {
 
         // Enable Spin if allowed
         spinBtn.disabled = !(phase === 'idle' || phase === 'choose_action') || allConsRevealed;
+
+        // Remove blinking
+        elements.consonantInput.classList.remove('input-blink');
     }
 
     // Vowel input (available if player has money and it's their turn to choose)
