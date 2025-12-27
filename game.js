@@ -1000,30 +1000,47 @@ async function startNextManche() {
 
     showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
 
-    // AI Logic with Offline Fallback
+    /* 
+    // AI Logic Disabilitata su richiesta
     try {
         let attempts = 0;
         let valid = false;
-        while (!valid && attempts < 15) { // Massimo 15 tentativi per trovare una frase valida
+        while (!valid && attempts < 10) {
             attempts++;
             const data = await fetchPuzzleFromAI();
             if (canFitOnBoard(data.phrase)) {
                 gameState.phrase = sanitizePhrase(data.phrase);
                 gameState.hint = data.hint;
                 valid = true;
-            } else {
-                console.warn(`Frase scartata perché troppo lunga (${attempts}/15):`, data.phrase);
             }
         }
+        if (!valid) throw new Error("AI failed");
     } catch (e) {
-        console.error("AI Generation failed, using offline DB", e);
-        // Fallback robusto dal database offline
-        const shuffled = [...OFFLINE_PHRASES].sort(() => Math.random() - 0.5);
-        const validOffline = shuffled.find(p => canFitOnBoard(p.phrase));
-        const selected = validOffline || OFFLINE_PHRASES[0];
+        console.warn("AI fallback to DB:", e);
+        const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
+        gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
+        gameState.hint = randomPuzzle.hint;
+    }
+    */
 
-        gameState.phrase = sanitizePhrase(selected.phrase);
-        gameState.hint = selected.hint;
+    // Selezione diretta da PUZZLE_DATABASE
+    let valid = false;
+    let attempts = 0;
+    while (!valid && attempts < 50) {
+        attempts++;
+        const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
+        if (canFitOnBoard(randomPuzzle.phrase)) {
+            gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
+            gameState.hint = randomPuzzle.hint;
+            console.log(`[DB] Frase Scelta: "${gameState.phrase}" - Hint: "${gameState.hint}"`);
+            valid = true;
+        }
+    }
+    // Fallback estremo se il DB ha problemi
+    if (!valid) {
+        const fallback = OFFLINE_PHRASES[0];
+        gameState.phrase = sanitizePhrase(fallback.phrase);
+        gameState.hint = fallback.hint;
     }
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
@@ -1142,32 +1159,63 @@ function updateUI() {
 }
 
 // ===== AI Fetch (DATABASE STATICO PRIMARIO) =====
+// ===== AI Fetch (Con Few-Shot Prompting e Fallback) =====
 async function fetchPuzzleFromAI() {
-    // Pesca un enigma casuale dal database statico fornito dall'utente
-    if (typeof PUZZLE_DATABASE !== 'undefined' && PUZZLE_DATABASE.length > 0) {
-        const randomIndex = Math.floor(Math.random() * PUZZLE_DATABASE.length);
-        const puzzle = PUZZLE_DATABASE[randomIndex];
-        console.log("Enigma caricato dal database statico:", puzzle.phrase);
-        return {
-            phrase: puzzle.phrase.toUpperCase(),
-            hint: puzzle.hint.toUpperCase()
-        };
-    }
-
-    /* 
-    // LOGICA AI (DISATTIVATA TEMPORANEAMENTE)
     const API_KEY = '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';
     const url = 'https://api.groq.com/openai/v1/chat/completions';
+
+    // 1. Preparazione Esempi (Few-Shot Prompting mirato alla lunghezza corretta)
+    let examplesText = "";
+    if (typeof PUZZLE_DATABASE !== 'undefined' && PUZZLE_DATABASE.length > 0) {
+        // Filtra solo esempi che hanno lunghezza simile al target (28-38 lettere) per insegnare la lunghezza giusta
+        const validExamples = PUZZLE_DATABASE.filter(p => {
+            const len = p.phrase.replace(/\s/g, '').length;
+            return len >= 28 && len <= 38;
+        });
+
+        // Se non ce ne sono abbastanza, usa tutto il DB
+        const pool = validExamples.length >= 4 ? validExamples : PUZZLE_DATABASE;
+
+        const shuffled = [...pool].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 4);
+        examplesText = selected.map(p => `- ${p.hint}: ${p.phrase}`).join("\n");
+    }
 
     const categories = ["CINEMA", "MUSICA", "STORIA", "GEOGRAFIA", "LETTERATURA", "SCIENZA", "ARTE", "CURIOSITÀ", "CUCINA", "SPORT", "NATURA", "NATALE", "TRADIZIONI", "VITA QUOTIDIANA"];
 
     let lastError = null;
-    for (let attempt = 1; attempt <= 10; attempt++) {
+    for (let attempt = 1; attempt <= 10; attempt++) { // Aumentiamo a 10 tentativi per trovare la lunghezza perfetta
         const chosenCategory = categories[Math.floor(Math.random() * categories.length)];
         const randomSeed = Math.random().toString(36).substring(7);
 
         try {
-            console.log(`Groq Attempt ${attempt}/10 (Category: ${chosenCategory}, Seed: ${randomSeed})...`);
+            console.log(`Groq AI Attempt ${attempt}/10 (Category: ${chosenCategory})...`);
+
+            // PROMPT AGGIORNATO (User Request: Apostrofi SI, 30-40 caratteri totali)
+            const systemPrompt = `Sei il capo autore della "Ruota della Fortuna". Genera un database JSON di enigmi con uno stile evocativo, concreto e pop.
+
+Regole Tassative:
+
+SÌ Apostrofi: Usa correttamente gli apostrofi quando la grammatica lo richiede (es. "L'AMORE", "SULL'ALTARE", "D'AMPEZZO").
+
+Lunghezza Caratteri: Ogni frase deve avere una lunghezza totale compresa tra 30 e 40 caratteri (spazi e apostrofi inclusi).
+
+Stile Nominale e Concreto: Evita strutture Soggetto+Verbo banali. Usa "istantanee" di vita vera, titoli di giornale o didascalie sensoriali.
+
+Temi: Brand iconici, tradizioni italiane, cinema cult, sport, curiosità reali e abitudini quotidiane.
+
+Hint: Massimo 3 parole, molto specifico e pertinente.
+
+Esempi di riferimento (Modello Stilistico):
+
+{"hint": "UNA POLTRONA PER DUE", "phrase": "TRUFFE GAG E TRAVESTIMENTI NEL CULT DI ITALIA UNO"}
+
+{"hint": "LA GIOCONDA", "phrase": "IL MISTERO DEL SORRISO DI MONNA LISA AL LOUVRE"}
+
+{"hint": "FESTIVAL DI SANREMO", "phrase": "FIORI E CANZONI SUL PALCO DEL TEATRO ARISTON"}
+
+FORMATO RISPOSTA JSON: {"hint": "HINT", "phrase": "FRASE"}`;
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -1177,32 +1225,11 @@ async function fetchPuzzleFromAI() {
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        {
-                            role: "system",
-                            content: `Sei il Capo Autore della Ruota della Fortuna (edizione italiana). Sei un esperto linguista.
-REGOLE INTEGRATIVE:
-1. SOLO ITALIANO: Vietato l'uso di parole straniere.
-2. NO APOSTROFI: Non usare MAI l'apostrofo. Riformula sempre.
-3. NO PUNTEGGIATURA: Solo lettere e spazi. Niente virgole o punti.
-4. QUALITÀ "CAPO AUTORE": Evita frasi infantili o elementari (es. NO "IL RISO È BIANCO"). 
-   Crea enigmi stimolanti, citazioni, proverbi o fatti curiosi.
-5. LUNGHEZZA: Mira a circa 28 lettere (range accettato 25-30). Sii conciso ma elegante.
-
-ESEMPI DI QUALITÀ (circa 28 lettere):
-- VITA QUOTIDIANA: PANDORO E TORRONE IN FAMIGLIA (25 lettere)
-- GEOGRAFIA: IL TEVERE BAGNA LA CITTÀ ETERNA (28 lettere)
-- CURIOSITÀ: IL CUORE DELLA BALENA È MOLTO GRANDE (29 lettere)
-- PROVERBI: IL LUPO PERDE IL PELO MA NON IL VIZIO (29 lettere)
-
-FORMATO: JSON {"phrase": "FRASE IN MAIUSCOLO", "hint": "CATEGORIA IN MAIUSCOLO"}`
-                        },
-                        {
-                            role: "user",
-                            content: `Genera un enigma di spessore culturale per la categoria ${chosenCategory}. Seme: ${randomSeed}. Target: 28 lettere.`
-                        }
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: `Categoria: ${chosenCategory}. DAMMI UNA FRASE TRA 30 E 40 CARATTERI TOTALI.` }
                     ],
-                    temperature: 0.85,
-                    top_p: 0.9,
+                    temperature: 0.9,
+                    max_tokens: 150,
                     response_format: { type: "json_object" }
                 })
             });
@@ -1213,31 +1240,49 @@ FORMATO: JSON {"phrase": "FRASE IN MAIUSCOLO", "hint": "CATEGORIA IN MAIUSCOLO"}
             }
 
             const data = await response.json();
-            const result = JSON.parse(data.choices[0].message.content);
-            const phrase = result.phrase.toUpperCase();
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error("Formato risposta API non valido");
+            }
 
-            // Validate length (excluding spaces)
-            const letterCount = phrase.replace(/\s/g, '').length;
-            const hasPunctuation = /[^A-ZÀ-ÿ\s]/.test(phrase);
+            const content = data.choices[0].message.content;
+            const result = JSON.parse(content);
 
-            // Slightly more flexible range in code (22-33) to avoid "failed attempts" 
-            // but the prompt asks for 25-30 (target 28).
-            if (letterCount < 22 || letterCount > 33 || hasPunctuation) {
-                console.warn(`Scartata: "${phrase}" (${letterCount} lettere). Fuori dal range di sicurezza 22-33.`);
+            if (!result.phrase || !result.hint) throw new Error("JSON incompleto");
+
+            const phrase = result.phrase.toUpperCase().trim();
+            const hint = result.hint.toUpperCase().trim();
+
+            // Validate Total Length (including spaces/apostrophes as requested)
+            const totalLength = phrase.length;
+
+            // Strict pre-validation (30-40 range)
+            if (totalLength < 30 || totalLength > 40) {
+                console.warn(`AI: Frase scartata per lunghezza (${totalLength}): ${phrase}`);
                 continue;
             }
 
-            console.log("Frase valida ricevuta:", phrase, `(${letterCount} lettere)`);
-            return { phrase, hint: result.hint };
+            console.log("Frase generata dall'AI:", phrase);
+            console.log("Hint generato:", hint);
+            return { phrase, hint: hint };
 
         } catch (e) {
-            console.error(`Attempt ${attempt} failed:`, e.message);
+            console.error(`Attempt ${attempt} failed:`, e);
             lastError = e;
         }
     }
-    */
 
-    throw new Error("Database enigmi non trovato e logica AI disattivata.");
+    // Se l'AI fallisce, usiamo il Database Statico (PUZZLE_DATABASE) come primo fallback
+    if (typeof PUZZLE_DATABASE !== 'undefined' && PUZZLE_DATABASE.length > 0) {
+        console.warn("AI fallita, uso PUZZLE_DATABASE.");
+        const randomIndex = Math.floor(Math.random() * PUZZLE_DATABASE.length);
+        const puzzle = PUZZLE_DATABASE[randomIndex];
+        return {
+            phrase: puzzle.phrase.toUpperCase(),
+            hint: puzzle.hint.toUpperCase()
+        };
+    }
+
+    throw lastError || new Error("Impossibile generare frase e nessun DB statico disponibile.");
 }
 
 // ===== Game Start =====
@@ -1259,30 +1304,26 @@ async function startGame() {
     gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
     gameState.currentManche = 1;
 
-    // Get phrase from AI
+    // Get phrase from DB (AI Disabled)
     showScreen('game-screen');
-    showPopup(`<div class="popup-loading">L'AI sta generando la frase...</div>`, 0);
 
-    // AI Logic with Offline Fallback
-    try {
-        let attempts = 0;
-        let valid = false;
-        while (!valid && attempts < 15) {
-            attempts++;
-            const data = await fetchPuzzleFromAI();
-            if (canFitOnBoard(data.phrase)) {
-                gameState.phrase = sanitizePhrase(data.phrase);
-                gameState.hint = data.hint;
-                valid = true;
-            }
+    // Selezione diretta da PUZZLE_DATABASE
+    let valid = false;
+    let attempts = 0;
+    while (!valid && attempts < 50) {
+        attempts++;
+        const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
+        if (canFitOnBoard(randomPuzzle.phrase)) {
+            gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
+            gameState.hint = randomPuzzle.hint;
+            console.log(`[DB] Frase Scelta: "${gameState.phrase}" - Hint: "${gameState.hint}"`);
+            valid = true;
         }
-    } catch (e) {
-        console.warn("AI Generation failed (using offline fallback):", e.message);
-        const shuffled = [...OFFLINE_PHRASES].sort(() => Math.random() - 0.5);
-        const validOffline = shuffled.find(p => canFitOnBoard(p.phrase));
-        const selected = validOffline || OFFLINE_PHRASES[0];
-        gameState.phrase = sanitizePhrase(selected.phrase);
-        gameState.hint = selected.hint;
+    }
+    if (!valid) {
+        const fallback = OFFLINE_PHRASES[0];
+        gameState.phrase = sanitizePhrase(fallback.phrase);
+        gameState.hint = fallback.hint;
     }
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
