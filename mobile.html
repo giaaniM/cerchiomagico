@@ -18,7 +18,7 @@
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a3e 0%, #0d0d2b 50%, #1a0a2e 100%);
             min-height: 100vh;
             padding: 20px;
             color: #fff;
@@ -44,12 +44,13 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+            border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 20px;
             padding: 25px;
             margin-bottom: 20px;
-            color: #333;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .form-group {
@@ -95,23 +96,30 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #8b5cf6, #ec4899);
             color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
         }
 
         .btn-secondary {
-            background: #6c757d;
+            background: linear-gradient(90deg, #6b7280, #374151);
             color: white;
         }
 
         .btn-action {
-            background: #28a745;
+            background: linear-gradient(90deg, #00d4ff, #10b981);
             color: white;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
         }
 
         .btn-danger {
-            background: #dc3545;
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
             color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
         }
 
         .btn:disabled {
@@ -149,21 +157,39 @@
         .player-info {
             text-align: center;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.3);
             border-radius: 15px;
             margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
         }
 
         .player-name {
             font-size: 24px;
             font-weight: 800;
             margin-bottom: 10px;
+            background: radial-gradient(circle, #ffe681 0%, #d4af37 60%, #8a6e18 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .player-score {
             font-size: 32px;
             font-weight: 700;
-            color: #ffd700;
+            color: #fbbf24;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+        
+        .shield-icon {
+            font-size: 20px;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
         }
 
         .score-label {
@@ -178,15 +204,17 @@
         }
 
         .action-section {
-            background: #f8f9fa;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
             padding: 20px;
             border-radius: 15px;
         }
 
         .action-section h3 {
-            color: #667eea;
+            color: #8b5cf6;
             margin-bottom: 15px;
             font-size: 18px;
+            font-weight: 700;
         }
 
         .input-group {
@@ -207,10 +235,12 @@
         .status-message {
             text-align: center;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 10px;
             margin-bottom: 20px;
             font-weight: 600;
+            color: #fff;
         }
 
         .waiting-message {
@@ -294,7 +324,7 @@
         <!-- Game Screen -->
         <div id="game-screen" class="screen">
             <div class="player-info">
-                <div class="player-name" id="game-player-name">Giocatore</div>
+                <div class="player-name" id="game-player-name">Giocatore <span id="player-shield" class="shield-icon" style="display: none;">🛡️</span></div>
                 <div class="player-score" id="game-player-score">€0</div>
                 <div class="score-label">Montepremi Attuale</div>
             </div>
@@ -475,6 +505,10 @@
                 if (state.usedLetters) {
                     gameState.usedLetters = new Set(state.usedLetters);
                 }
+                // Ensure hasJolly is an object
+                if (!gameState.hasJolly) {
+                    gameState.hasJolly = {};
+                }
                 updateGameUI();
             });
 
@@ -531,30 +565,52 @@
             const vowelBtn = document.getElementById('vowel-btn');
             const passSection = document.getElementById('pass-section');
 
-            if (isMyTurn && gameState.wheelPhase === 'idle' || gameState.wheelPhase === 'choose_action') {
+            // Spin button and consonant are EXCLUSIVE - show one or the other
+            if (isMyTurn && (gameState.wheelPhase === 'idle' || gameState.wheelPhase === 'choose_action')) {
                 spinBtn.disabled = false;
-            } else {
-                spinBtn.disabled = true;
-            }
-
-            if (isMyTurn && gameState.wheelPhase === 'call_consonant') {
+                spinBtn.style.display = 'block';
+                consonantSection.style.display = 'none';
+            } else if (isMyTurn && gameState.wheelPhase === 'call_consonant') {
+                spinBtn.style.display = 'none';
                 consonantSection.style.display = 'block';
                 consonantInput.disabled = false;
                 consonantBtn.disabled = false;
             } else {
+                spinBtn.disabled = true;
+                spinBtn.style.display = 'block';
                 consonantSection.style.display = 'none';
-                consonantInput.disabled = true;
-                consonantBtn.disabled = true;
             }
 
             const canBuyVowel = isMyTurn && (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle') && myPartialScore >= 1000;
             vowelInput.disabled = !canBuyVowel;
             vowelBtn.disabled = !canBuyVowel;
 
+            // Solve button only for current player
+            const solveBtn = document.getElementById('solve-btn');
+            const solveInput = document.getElementById('solve-input');
+            if (solveBtn && solveInput) {
+                solveBtn.disabled = !isMyTurn;
+                solveInput.disabled = !isMyTurn;
+                if (!isMyTurn) {
+                    solveInput.placeholder = 'Non è il tuo turno';
+                } else {
+                    solveInput.placeholder = 'Scrivi la soluzione...';
+                }
+            }
+
+            // Pass button - only when all consonants are revealed
             if (isMyTurn && gameState.allConsonantsRevealed && (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle')) {
                 passSection.style.display = 'block';
             } else {
                 passSection.style.display = 'none';
+            }
+            
+            // Show shield if player has it
+            const shieldIcon = document.getElementById('player-shield');
+            if (shieldIcon && gameState.hasJolly && gameState.hasJolly[playerName]) {
+                shieldIcon.style.display = 'inline';
+            } else if (shieldIcon) {
+                shieldIcon.style.display = 'none';
             }
         }
 

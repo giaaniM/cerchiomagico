@@ -43,6 +43,35 @@ npm start
 
 Il server sarà disponibile su `http://localhost:3000`
 
+## Gestione del Server
+
+### Avviare il server:
+Apri un terminale e vai nella cartella del progetto:
+```bash
+cd /Users/valeriopadovano/applicazioni/wheel-of-fortune
+source ~/.nvm/nvm.sh
+npm start
+```
+
+Il server resterà in esecuzione finché non lo fermi.
+
+### Fermare il server:
+Nel terminale dove è in esecuzione, premi:
+- **Ctrl + C** (su Windows/Linux)
+- **Cmd + C** (su Mac)
+
+Oppure, se il server è in esecuzione in background, puoi fermarlo con:
+```bash
+pkill -f "node server.js"
+```
+
+### Verificare se il server è in esecuzione:
+```bash
+lsof -i :3000
+```
+
+Se vedi un processo, il server è attivo.
+
 **Nota**: Per evitare di digitare `source ~/.nvm/nvm.sh` ogni volta, aggiungi questa riga al file `~/.zshrc`:
 ```bash
 export NVM_DIR="$HOME/.nvm"

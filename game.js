@@ -214,6 +214,7 @@ const elements = {
     solutionInput: document.getElementById('solution-input'),
     solveBtn: document.getElementById('solve-btn'),
     passBtn: document.getElementById('pass-btn'),
+    passBtnCenter: document.getElementById('pass-btn-center'),
     messageDisplay: document.getElementById('message-display'),
     newGameBtn: document.getElementById('new-game-btn'),
     totalWinningsList: document.getElementById('total-winnings-list'),
@@ -279,9 +280,10 @@ function showMessage(text, type = 'info') {
     }, 3000);
 }
 
-function showPopup(html, duration = 2000) {
+function showPopup(html, duration = 2000, className = '') {
     elements.modalOverlay.style.display = 'flex';
     elements.popupMessage.style.display = 'block';
+    elements.popupMessage.className = 'popup-message' + (className ? ' ' + className : '');
     elements.popupMessage.innerHTML = html;
     if (duration > 0) {
         setTimeout(() => {
@@ -597,7 +599,8 @@ function passTurn() {
     if (isMobileMode) syncGameState();
 
     const nextPlayer = getCurrentPlayer();
-    showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2000);
+    // Show turn popup (without hint - hint only at manche start)
+    showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2500);
 }
 
 // ===== Wheel Segments (Patterned: Purple -> DeepBlue -> DarkBlue -> Blue -> LiteBlue -> Special) =====
@@ -616,7 +619,7 @@ const WHEEL_SEGMENTS = [
     { value: 200, color: '#172554', label: '200€' }, // Deep Blue
     { value: 700, color: '#1e3a8a', label: '700€' }, // Dark Blue
     { value: 500, color: '#2563eb', label: '500€' }, // Blue
-    { value: 250, color: '#60a5fa', label: '250€' }, // Light Blue
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // PASSA (near 1000)
     { value: 1000, color: 'RAINBOW', label: '1000€', glowing: true }, // 1000 Rainbow
 
     // Group 2
@@ -640,8 +643,8 @@ const WHEEL_SEGMENTS = [
     { value: 300, color: '#172554', label: '300€' }, // Deep Blue
     { value: 500, color: '#2563eb', label: '500€' }, // Blue
     { value: 200, color: '#60a5fa', label: '200€' }, // Light Blue
-    { value: 200, color: '#7e22ce', label: '200€' }, // Extra value
-    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' } // Now between 200 and 300 (Group 1 starts with 300)
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // PASSA 2
+    { value: 200, color: '#7e22ce', label: '200€' } // Extra value
 ];
 
 // ===== Wheel Drawing =====
@@ -973,17 +976,27 @@ function onWheelStop(result) {
         showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
         setTimeout(passTurn, 2500);
     } else if (result.value === 'RADDOPPIA') {
-        // RADDOPPIA - Next value is doubled
+        // RADDOPPIA - Double current manche score and give another turn
         soundManager.playCorrect();
-        gameState.nextValueMultiplier = 2;
+        const player = getCurrentPlayer();
+        const currentScore = gameState.partialScores[player.name] || 0;
+        gameState.partialScores[player.name] = currentScore * 2;
+        renderPlayersList();
         elements.currentWheelValue.textContent = 'RADDOPPIA';
         elements.currentWheelValue.className = 'wheel-value raddoppia';
-        showPopup(`<div class="popup-raddoppia">🔥 RADDOPPIA!<br>Il prossimo valore sarà DOPPIO!</div>`, 2500);
+        showPopup(`<div class="popup-raddoppia">
+            <div>🔥 RADDOPPIA!</div>
+            <div>Il tuo montepremi è stato</div>
+            <div>RADDOPPIATO!</div>
+            <div>Da €${currentScore} a €${currentScore * 2}</div>
+            <div>Gira di nuovo!</div>
+        </div>`, 3500);
+        if (isMobileMode) syncGameState();
         setTimeout(() => {
             gameState.wheelPhase = 'idle';
             updateUI();
-            showMessage('Gira di nuovo! Il valore sarà raddoppiato!', 'success');
-        }, 2500);
+            showMessage('Il tuo montepremi è raddoppiato! Gira di nuovo!', 'success');
+        }, 3500);
     } else if (result.value === 'SCUDO') {
         // SCUDO - Give player a shield
         soundManager.playReveal();
@@ -1003,14 +1016,16 @@ function onWheelStop(result) {
             // Offer choice: use Jolly or accept Bancarotta
             handleBancarottaWithJolly(player);
         } else {
-            // Normal Bancarotta
+            // Normal Bancarotta - lose ALL scores (partial + total)
             soundManager.playError();
             elements.currentWheelValue.textContent = 'BANCAROTTA';
             elements.currentWheelValue.className = 'wheel-value bancarotta';
             gameState.partialScores[player.name] = 0;
+            gameState.totalScores[player.name] = 0; // Lose global score too
             renderPlayersList();
-            showPopup(`<div class="popup-bancarotta">BANCAROTTA!<br>Perdi tutto!</div>`, 2500);
-            setTimeout(passTurn, 3000);
+            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0</div>`, 4000);
+            if (isMobileMode) syncGameState();
+            setTimeout(passTurn, 4500);
         }
     } else if (result.value === '?500') {
         soundManager.playClick();
@@ -1084,12 +1099,14 @@ window.resolveJollyChoice = function (useJolly) {
             showMessage('Sei salvo! Gira di nuovo!', 'success');
         }, 2500);
     } else {
-        // Accept Bancarotta - lose money, keep shield
+        // Accept Bancarotta - lose ALL money (partial + total), keep shield
         soundManager.playError();
         gameState.partialScores[player.name] = 0;
+        gameState.totalScores[player.name] = 0; // Lose global score too
         renderPlayersList();
-        showPopup(`<div class="popup-bancarotta">BANCAROTTA!<br>Perdi tutto! (Jolly conservato)</div>`, 2500);
-        setTimeout(passTurn, 3000);
+        showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0<br><br>(Jolly conservato)</div>`, 4000);
+        if (isMobileMode) syncGameState();
+        setTimeout(passTurn, 4500);
     }
 };
 
@@ -1125,13 +1142,18 @@ window.resolveMysteryChoice = function (choice) {
     let finalValue;
     if (choice === 'RAFFLE') {
         soundManager.playSpin();
-        // Raffle: Random segment excluding non-numeric values
-        const eligible = WHEEL_SEGMENTS.filter(s =>
-            typeof s.value === 'number' &&
-            s.value !== '?500'
-        );
-        const selected = eligible[Math.floor(Math.random() * eligible.length)];
-        finalValue = Number(selected.value);
+        // Raffle: Random segment excluding special values (only numeric values)
+        const eligible = WHEEL_SEGMENTS.filter(s => typeof s.value === 'number');
+        
+        if (eligible.length === 0) {
+            console.error('No eligible segments found for raffle!');
+            finalValue = 500; // Fallback
+        } else {
+            const selected = eligible[Math.floor(Math.random() * eligible.length)];
+            finalValue = Number(selected.value);
+        }
+        
+        console.log('Raffle result:', finalValue, 'from', eligible.length, 'eligible segments');
         showPopup(`<div class="popup-mystery-result">ESTRATTO:<br><span class="popup-value">€${finalValue}</span></div>`, 2000);
     } else {
         soundManager.playReveal();
@@ -1173,9 +1195,17 @@ function callConsonant() {
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
         soundManager.playError();
-        showMessage(`La lettera "${letter}" è già stata chiamata!`, 'error');
-        showPopup(`<div class="popup-error">LETTERA GIÀ CHIAMATA!<br>Turno perso</div>`, 2000);
-        setTimeout(passTurn, 2500);
+        const nextPlayer = gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length];
+        showPopup(`<div class="popup-error-letter">
+            <div>❌ LETTERA GIÀ CHIAMATA!</div>
+            <div class="popup-letter-wrong-small">${letter}</div>
+            <div>Turno perso</div>
+            <div class="popup-turn-info">Tocca a: ${nextPlayer.name}</div>
+        </div>`, 3000);
+        setTimeout(() => {
+            showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2500);
+            setTimeout(passTurn, 2800);
+        }, 3000);
         return;
     }
 
@@ -1217,11 +1247,19 @@ function callConsonant() {
         }, delay + 500);
     } else {
         soundManager.playError();
-        showMessage(`❌ "${letter}" non c'è nella frase.`, 'error');
         gameState.pendingWheelValue = null; // Clear value
         elements.currentWheelValue.textContent = '-';
-        showPopup(`<div class="popup-error">LETTERA ASSENTE!<br><span class="popup-name">${gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length].name}</span> tocca a te</div>`, 2000);
-        setTimeout(passTurn, 2500);
+        const nextPlayer = gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length];
+        // Show error popup with larger letter, then turn popup
+        showPopup(`<div class="popup-error-large">
+            <div>LETTERA ASSENTE</div>
+            <span class="popup-letter-wrong">${letter}</span>
+            <div>non c'è nella frase</div>
+        </div>`, 3000);
+        setTimeout(() => {
+            showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2500);
+            setTimeout(passTurn, 2800);
+        }, 3000);
     }
 }
 
@@ -1427,7 +1465,12 @@ async function startNextManche() {
     updateUI();
     if (isMobileMode) syncGameState();
 
-    showPopup(`<div class="popup-turn">MANCHE ${gameState.currentManche}<br>INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>`, 2500);
+    showPopup(`<div class="popup-manche-start">
+        <div class="popup-manche-number">MANCHE ${gameState.currentManche}</div>
+        <div class="popup-category-label">Categoria:</div>
+        <div class="popup-manche-hint-large">${gameState.hint}</div>
+        <div class="popup-turn-player">INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
+    </div>`, 4000);
 }
 
 function showFinalResults() {
@@ -1539,6 +1582,10 @@ function updateUI() {
     const canPass = allConsRevealed && (phase === 'choose_action' || phase === 'idle');
     elements.passBtn.style.display = allConsRevealed ? 'block' : 'none';
     elements.passBtn.disabled = !canPass;
+    if (elements.passBtnCenter) {
+        elements.passBtnCenter.style.display = allConsRevealed ? 'block' : 'none';
+        elements.passBtnCenter.disabled = !canPass;
+    }
 
     renderPlayersList();
 }
@@ -1932,7 +1979,12 @@ async function startGameLocal() {
     renderPlayersList();
     updateUI();
 
-    showPopup(`<div class="popup-turn">MANCHE 1<br>INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>`, 3000);
+    showPopup(`<div class="popup-manche-start">
+        <div class="popup-manche-number">MANCHE 1</div>
+        <div class="popup-category-label">Categoria:</div>
+        <div class="popup-manche-hint-large">${gameState.hint}</div>
+        <div class="popup-turn-player">INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
+    </div>`, 4000);
     
     // Sync initial state if in mobile mode
     if (isMobileMode) {
@@ -2049,6 +2101,11 @@ elements.consonantBtn?.addEventListener('click', callConsonant);
 elements.vowelBtn?.addEventListener('click', buyVowel);
 elements.solveBtn?.addEventListener('click', trySolve);
 elements.passBtn?.addEventListener('click', () => {
+    soundManager.playClick();
+    passTurn();
+});
+
+elements.passBtnCenter?.addEventListener('click', () => {
     soundManager.playClick();
     passTurn();
 });
