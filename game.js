@@ -156,6 +156,7 @@ const API_URL = window.location.origin;
 // ===== Game State =====
 const gameState = {
     phrase: '',
+    originalPhrase: '', // Original phrase for file removal
     hint: '',
     normalizedPhrase: '',
     revealedLetters: new Set(),
@@ -1454,6 +1455,9 @@ function endManche() {
     // Clear board as requested: "cancella la frase che è stata indovinata"
     if (elements.gameBoard) elements.gameBoard.innerHTML = '';
 
+    // Remove phrase from puzzles.js file permanently
+    removePhraseFromFile(gameState.originalPhrase || gameState.phrase);
+
     setTimeout(() => {
         elements.popupMessage.style.display = 'none';
         elements.modalOverlay.style.display = 'none';
@@ -1517,6 +1521,7 @@ async function startNextManche() {
 
         // Ensure it fits AND hasn't been used yet
         if (canFitOnBoard(randomPuzzle.phrase) && !gameState.usedPhrases.has(normalized)) {
+            gameState.originalPhrase = randomPuzzle.phrase;
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
             gameState.hint = randomPuzzle.hint;
             gameState.usedPhrases.add(normalized); // Mark as used
@@ -1527,6 +1532,7 @@ async function startNextManche() {
     // Fallback estremo se il DB ha problemi
     if (!valid) {
         const fallback = OFFLINE_PHRASES[0];
+        gameState.originalPhrase = fallback.phrase;
         gameState.phrase = sanitizePhrase(fallback.phrase);
         gameState.hint = fallback.hint;
     }
@@ -2325,3 +2331,21 @@ elements.vowelInput?.addEventListener('input', (e) => {
 elements.solutionInput?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') trySolve();
 });
+
+function removePhraseFromFile(phrase) {
+    if (!phrase) return;
+    fetch(`${API_URL}/api/puzzle/remove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phrase })
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                console.log(`[FILE] Phrase permanently removed from puzzles.js: "${phrase}"`);
+            } else {
+                console.warn(`[FILE] Failed to remove phrase or phrase not found: "${phrase}"`);
+            }
+        })
+        .catch(err => console.error('[FILE] Error calling remove API:', err));
+}

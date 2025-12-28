@@ -114,6 +114,41 @@ app.get('/api/lobbies', (req, res) => {
     res.json(lobbyList);
 });
 
+// Remove puzzle from puzzles.js file
+app.post('/api/puzzle/remove', (req, res) => {
+    const { phrase } = req.body;
+    if (!phrase) return res.status(400).json({ error: 'Phrase required' });
+
+    const fs = require('fs');
+    const puzzlesPath = path.join(__dirname, 'puzzles.js');
+
+    try {
+        let content = fs.readFileSync(puzzlesPath, 'utf8');
+
+        // Match the object containing the phrase. 
+        // We use a regex to find the object and any trailing comma/spaces.
+        // We handle both simple quotes and double quotes.
+        // We also need to be careful with apostrophes in the phrase being escaped or not.
+        // Since we sanitizePhrase before selecting, the phrase on disk and the phrase in memory should match.
+        const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\{[^}]*phrase:\\s*["']${escapedPhrase}["'][^}]*\\},?\\s*`, 'g');
+
+        const newContent = content.replace(regex, '');
+
+        if (content !== newContent) {
+            fs.writeFileSync(puzzlesPath, newContent, 'utf8');
+            console.log(`[FILE] Removed phrase from puzzles.js: "${phrase}"`);
+            res.json({ success: true });
+        } else {
+            console.warn(`[FILE] Phrase not found in puzzles.js: "${phrase}"`);
+            res.json({ success: false, message: 'Phrase not found' });
+        }
+    } catch (err) {
+        console.error('[FILE] Error updating puzzles.js:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
