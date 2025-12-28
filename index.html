@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: http: https: data: blob:; connect-src 'self' ws: wss: http: https:;">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: http: https: data: blob:; connect-src 'self' ws: wss: http: https:;">
     <title>Gioco di Natale per Federica</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,63 +20,107 @@
             <div class="subtitle">Sicignano Edition</div>
         </header>
 
-        <!-- Setup Screen -->
+        <!-- Setup Screen (Refactored) -->
         <div id="setup-screen" class="screen active">
             <div class="setup-layout">
                 <img src="gerryfoto.jpg" alt="Host" class="host-photo">
-                <!-- Multiplayer Mode -->
-                <div class="mode-card" id="free-mode-card">
-                    <h2>🎮 Ruota della Fortuna</h2>
-                    <p>Gioca con gli amici! Frase generata dall'AI.</p>
 
-                    <!-- Step 1: Player Count -->
-                    <div id="setup-step-1" class="setup-step">
-                        <div class="form-group">
-                            <label for="player-count-input">Quanti giocatori?</label>
-                            <input type="number" id="player-count-input" min="1" max="10" value="2"
-                                class="player-count-input">
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="enable-mobile-mode" style="width: auto; margin-right: 8px;">
-                                Modalità Mobile (giocatori da smartphone)
-                            </label>
-                        </div>
-                        <div id="lobby-info" style="display: none; margin: 15px 0; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
-                            <p style="margin-bottom: 10px; font-weight: 600;">Lobby ID: <span id="lobby-id-display" style="color: #667eea; font-size: 24px; font-weight: 800;"></span></p>
-                            <p style="font-size: 14px; color: #666;">Condividi questo ID con i giocatori per entrare da mobile</p>
-                            <p style="font-size: 12px; color: #999; margin-top: 5px; margin-bottom: 15px;">Link mobile: <span id="mobile-link" style="color: #667eea; cursor: pointer; text-decoration: underline;"></span></p>
-                            <div id="connected-players" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(102, 126, 234, 0.2);">
-                                <p style="font-size: 14px; font-weight: 600; color: #667eea; margin-bottom: 8px;">Giocatori connessi:</p>
-                                <ul id="connected-players-list" style="list-style: none; padding: 0;">
-                                    <li style="color: #999; font-size: 12px;">Nessun giocatore ancora...</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <button id="next-step-btn" class="btn-primary">
-                            Avanti ➡️
-                        </button>
-                        <button id="start-game-btn-mobile" class="btn-primary" style="display: none; margin-top: 10px;">
-                            Inizia Partita 🚀
-                        </button>
-                    </div>
+                <!-- Initial Mode Selection -->
+                <div id="mode-selection" class="setup-step" style="text-align: center;">
+                    <h2 style="font-size: 2rem; margin-bottom: 20px; text-align: center;">Scegli la modalità di gioco
+                    </h2>
 
-                    <!-- Step 2: Player Names -->
-                    <div id="setup-step-2" class="setup-step" style="display: none;">
-                        <div class="form-group">
-                            <label>Inserisci i nomi:</label>
-                            <div id="player-names-container">
-                                <!-- Injected via JS -->
-                            </div>
+                    <div class="mode-selection-container">
+                        <!-- Mode 1: Local Multiplayer -->
+                        <div class="mode-option-card" id="mode-local-btn">
+                            <div class="mode-icon">🎮</div>
+                            <div class="mode-title">Multigiocatore<br>Locale</div>
+                            <div class="mode-desc">Gioca sullo stesso schermo passandovi il mouse o la tastiera.</div>
                         </div>
-                        <button id="start-game-btn" class="btn-primary">
-                            Inizia Partita 🚀
-                        </button>
-                        <button id="back-step-btn" class="btn-secondary btn-small">
-                            ← Indietro
-                        </button>
+
+                        <!-- Mode 2: Smartphone Multiplayer -->
+                        <div class="mode-option-card" id="mode-smartphone-btn">
+                            <div class="mode-icon">📱</div>
+                            <div class="mode-title">Multigiocatore<br>Smartphone</div>
+                            <div class="mode-desc">Ogni giocatore usa il proprio telefono come controller.</div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Local Mode Step 1: Player Count -->
+                <div id="setup-local-players" class="setup-step" style="display: none; text-align: center;">
+                    <h2 style="font-size: 2rem; margin-bottom: 20px;">Configurazione Locale</h2>
+                    <div class="form-group">
+                        <label for="player-count-input" style="display: block; margin-bottom: 10px;">Quanti
+                            giocatori?</label>
+                        <input type="number" id="player-count-input" min="2" max="5" value="2"
+                            class="player-count-input">
+                    </div>
+
+                    <button id="next-local-names-btn" class="btn-primary" style="margin-top: 20px;">
+                        Avanti →
+                    </button>
+                    <button class="btn-secondary btn-back-mode" style="margin-top: 10px;">
+                        ← Indietro
+                    </button>
+                </div>
+
+                <!-- Local Mode Step 2: Player Names -->
+                <div id="setup-local-names" class="setup-step" style="display: none; text-align: center;">
+                    <h2 style="font-size: 2rem; margin-bottom: 20px;">Nomi dei Giocatori</h2>
+                    <div id="local-names-container" style="margin-bottom: 30px;">
+                        <!-- Generated by JS -->
+                    </div>
+
+                    <button id="start-local-game-btn" class="btn-primary">
+                        Inizia Partita 🚀
+                    </button>
+                    <button id="back-local-players-btn" class="btn-secondary" style="margin-top: 10px;">
+                        ← Indietro
+                    </button>
+                </div>
+
+                <!-- Smartphone Mode Lobby (Big View) -->
+                <div id="setup-smartphone-mode" class="setup-step" style="display: none; width: 100%;">
+                    <div class="big-lobby-container">
+                        <h2 style="color: var(--accent-gold); margin-bottom: 30px; font-size: 2rem;">LOBBY APERTA</h2>
+
+                        <div class="lobby-info-row">
+                            <div style="text-align: right;">
+                                <p style="margin-bottom: 5px; color: #aaa;">CODICE LOBBY</p>
+                                <div class="big-lobby-id" id="big-lobby-id-display">ABC1234</div>
+                            </div>
+                            <div style="height: 80px; width: 2px; background: rgba(255,255,255,0.1);"></div>
+                            <div style="text-align: left;">
+                                <p style="margin-bottom: 5px; color: #aaa;">LINK DI GIOCO</p>
+                                <p style="font-size: 1.5rem;">
+                                    <span id="big-mobile-link"
+                                        style="color: var(--accent-blue); font-weight: bold;"></span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="divider" style="justify-content: center; margin: 30px 0;">
+                            <span>GIOCATORI CONNESSI</span>
+                        </div>
+
+                        <div id="big-players-grid" class="big-players-grid">
+                            <!-- Players will appear here -->
+                            <p style="grid-column: 1/-1; color: #aaa; font-style: italic;">In attesa di giocatori...</p>
+                        </div>
+
+                        <div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center;">
+                            <button id="start-smartphone-game-btn" class="btn-primary pulse" style="max-width: 300px;"
+                                disabled>
+                                AVVIA PARTITA 🚀
+                            </button>
+                            <button class="btn-secondary btn-back-mode" style="width: auto;">
+                                Annulla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -138,9 +183,7 @@
                                 <button id="consonant-btn" class="btn-action">CHIAMA</button>
                             </div>
                         </div>
-                        
-                        <!-- Pass Button (when all consonants revealed) -->
-                        <button id="pass-btn-center" class="btn-pass" style="display: none;">PASSA</button>
+
                     </div>
                 </div>
 

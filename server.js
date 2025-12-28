@@ -2,8 +2,10 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
@@ -26,9 +28,46 @@ app.get('/favicon.ico', (req, res) => {
     res.status(204).end(); // No Content
 });
 
+const os = require('os');
+
+function getLocalIp() {
+    const interfaces = os.networkInterfaces();
+    const candidates = [];
+
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            // Node.js < 18 uses string 'IPv4', Node.js >= 18 uses number 4
+            if ((iface.family === 'IPv4' || iface.family === 4) && !iface.internal) {
+                candidates.push(iface.address);
+                console.log(`Potential IP found: ${iface.address} on interface ${name}`);
+            }
+        }
+    }
+
+    // Prioritize addresses in the 192.168.x.x or 10.x.x.x range (typical local Wi-Fi)
+    const preferredPrefixes = ['192.168.', '10.', '172.16.', '172.31.'];
+    const bestMatch = candidates.find(ip => preferredPrefixes.some(prefix => ip.startsWith(prefix)));
+
+    if (bestMatch) {
+        console.log(`Selected BEST IP: ${bestMatch}`);
+        return bestMatch;
+    }
+
+    if (candidates.length > 0) {
+        console.log(`Selected fallback IP: ${candidates[0]}`);
+        return candidates[0];
+    }
+
+    return 'localhost';
+}
+
+// Store lobbies and games
 // Store lobbies and games
 const lobbies = new Map();
 const games = new Map();
+const disconnectTimers = new Map();
+const playerSessions = new Map();
+let localIP = 'localhost';
 
 // Generate unique lobby ID
 function generateLobbyId() {
@@ -38,21 +77,22 @@ function generateLobbyId() {
 // Create lobby
 app.post('/api/lobby/create', (req, res) => {
     const lobbyId = generateLobbyId();
-    const lobby = {
+    lobbies.set(lobbyId, {
         id: lobbyId,
         hostSocketId: null,
         players: [],
         gameState: null,
         status: 'waiting' // waiting, playing, finished
-    };
-    lobbies.set(lobbyId, lobby);
-    res.json({ lobbyId });
+    });
+    console.log(`Lobby CREATED: ${lobbyId}. Total lobbies: ${lobbies.size}`);
+    res.json({ lobbyId, localIp: getLocalIp(), port: 3000 });
 });
 
 // Get lobby info
 app.get('/api/lobby/:id', (req, res) => {
     const lobby = lobbies.get(req.params.id);
     if (!lobby) {
+        console.log(`Lobby lookup FAILED for ID: ${req.params.id}`);
         return res.status(404).json({ error: 'Lobby not found' });
     }
     res.json({
@@ -64,7 +104,9 @@ app.get('/api/lobby/:id', (req, res) => {
 
 // List all lobbies
 app.get('/api/lobbies', (req, res) => {
-    const lobbyList = Array.from(lobbies.values()).map(lobby => ({
+    const list = Array.from(lobbies.values());
+    console.log(`API [GET /api/lobbies] requested. Active lobbies: ${list.length}`);
+    const lobbyList = list.map(lobby => ({
         id: lobby.id,
         players: lobby.players,
         status: lobby.status
@@ -80,6 +122,7 @@ io.on('connection', (socket) => {
     socket.on('host:join', (lobbyId) => {
         const lobby = lobbies.get(lobbyId);
         if (!lobby) {
+            console.log(`Host join failed: Lobby ${lobbyId} not found`);
             socket.emit('error', { message: 'Lobby not found' });
             return;
         }
@@ -93,12 +136,47 @@ io.on('connection', (socket) => {
     });
 
     // Player joins lobby
-    socket.on('player:join', ({ lobbyId, playerName }) => {
+    socket.on('player:join', ({ lobbyId, playerName, persistentPlayerId }) => {
         const lobby = lobbies.get(lobbyId);
         if (!lobby) {
+            console.log(`Player join failed: Lobby ${lobbyId} not found`);
             socket.emit('error', { message: 'Lobby not found' });
             return;
         }
+
+        // Check if this is a reconnection
+        const existingPlayer = lobby.players.find(p => p.persistentPlayerId === persistentPlayerId);
+
+        if (existingPlayer) {
+            console.log(`Player ${playerName} reconnected to lobby ${lobbyId}`);
+            // Clear disconnect timer if exists
+            const timerKey = `${lobbyId}:${persistentPlayerId}`;
+            if (disconnectTimers.has(timerKey)) {
+                clearTimeout(disconnectTimers.get(timerKey));
+                disconnectTimers.delete(timerKey);
+            }
+
+            // Update socket ID
+            existingPlayer.socketId = socket.id;
+            existingPlayer.id = socket.id; // Many events use player.id which was socket.id
+            socket.join(`lobby:${lobbyId}`);
+            socket.emit('player:joined', { playerId: socket.id, playerName, persistentPlayerId });
+
+            // Notify others
+            io.to(`lobby:${lobbyId}`).emit('lobby:updated', {
+                players: lobby.players,
+                status: lobby.status
+            });
+
+            // If game is in progress, sync state immediately
+            const game = games.get(lobbyId);
+            if (game && game.gameState) {
+                socket.emit('game:started');
+                socket.emit('game:state-updated', game.gameState);
+            }
+            return;
+        }
+
         if (lobby.status !== 'waiting') {
             socket.emit('error', { message: 'Game already started' });
             return;
@@ -111,11 +189,12 @@ io.on('connection', (socket) => {
         const player = {
             id: socket.id,
             name: playerName,
-            socketId: socket.id
+            socketId: socket.id,
+            persistentPlayerId: persistentPlayerId
         };
         lobby.players.push(player);
         socket.join(`lobby:${lobbyId}`);
-        socket.emit('player:joined', { playerId: socket.id, playerName });
+        socket.emit('player:joined', { playerId: socket.id, playerName, persistentPlayerId });
         io.to(`lobby:${lobbyId}`).emit('lobby:updated', {
             players: lobby.players,
             status: lobby.status
@@ -150,7 +229,7 @@ io.on('connection', (socket) => {
         if (!lobby) return;
         const player = lobby.players.find(p => p.id === playerId);
         if (!player || player.socketId !== socket.id) return;
-        
+
         // Forward to host
         if (lobby.hostSocketId) {
             io.to(lobby.hostSocketId).emit('player:action', {
@@ -167,7 +246,7 @@ io.on('connection', (socket) => {
         if (!lobby) return;
         const player = lobby.players.find(p => p.id === playerId);
         if (!player || player.socketId !== socket.id) return;
-        
+
         if (lobby.hostSocketId) {
             io.to(lobby.hostSocketId).emit('player:action', {
                 type: 'call-consonant',
@@ -184,7 +263,7 @@ io.on('connection', (socket) => {
         if (!lobby) return;
         const player = lobby.players.find(p => p.id === playerId);
         if (!player || player.socketId !== socket.id) return;
-        
+
         if (lobby.hostSocketId) {
             io.to(lobby.hostSocketId).emit('player:action', {
                 type: 'buy-vowel',
@@ -201,7 +280,7 @@ io.on('connection', (socket) => {
         if (!lobby) return;
         const player = lobby.players.find(p => p.id === playerId);
         if (!player || player.socketId !== socket.id) return;
-        
+
         if (lobby.hostSocketId) {
             io.to(lobby.hostSocketId).emit('player:action', {
                 type: 'solve',
@@ -212,13 +291,13 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Player action: pass
+    // Pass
     socket.on('player:pass', ({ lobbyId, playerId }) => {
         const lobby = lobbies.get(lobbyId);
         if (!lobby) return;
         const player = lobby.players.find(p => p.id === playerId);
         if (!player || player.socketId !== socket.id) return;
-        
+
         if (lobby.hostSocketId) {
             io.to(lobby.hostSocketId).emit('player:action', {
                 type: 'pass',
@@ -228,25 +307,61 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Mystery choice
+    socket.on('host:mystery-offer', ({ lobbyId, playerId }) => {
+        const lobby = lobbies.get(lobbyId);
+        if (lobby && lobby.hostSocketId === socket.id) {
+            io.to(playerId).emit('game:mystery-offer');
+        }
+    });
+
+    socket.on('host:mystery-resolved', (lobbyId) => {
+        const lobby = lobbies.get(lobbyId);
+        if (lobby && lobby.hostSocketId === socket.id) {
+            io.to(`lobby:${lobbyId}`).emit('game:mystery-resolved');
+        }
+    });
+
+    socket.on('player:mystery-choice', ({ lobbyId, choice }) => {
+        const lobby = lobbies.get(lobbyId);
+        if (lobby && lobby.hostSocketId) {
+            io.to(lobby.hostSocketId).emit('lobby:mystery-choice', choice);
+        }
+    });
+
     // Disconnect handling
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
-        // Remove player from lobby
+        // Find if this socket belongs to a host or player
         for (const [lobbyId, lobby] of lobbies.entries()) {
             if (lobby.hostSocketId === socket.id) {
-                // Host disconnected - remove lobby
+                // Host disconnected - remove lobby (host disconnection is still immediate for now)
                 lobbies.delete(lobbyId);
                 games.delete(lobbyId);
                 io.to(`lobby:${lobbyId}`).emit('lobby:closed');
+                console.log(`Lobby CLOSED because host ${socket.id} disconnected: ${lobbyId}`);
                 break;
             } else {
-                const playerIndex = lobby.players.findIndex(p => p.socketId === socket.id);
-                if (playerIndex !== -1) {
-                    lobby.players.splice(playerIndex, 1);
-                    io.to(`lobby:${lobbyId}`).emit('lobby:updated', {
-                        players: lobby.players,
-                        status: lobby.status
-                    });
+                const player = lobby.players.find(p => p.socketId === socket.id);
+                if (player) {
+                    console.log(`Player ${player.name} disconnected. Starting grace period.`);
+                    const timerKey = `${lobbyId}:${player.persistentPlayerId}`;
+
+                    // Set cleanup timer (grace period 5 minutes)
+                    const timeout = setTimeout(() => {
+                        console.log(`Grace period expired for player ${player.name}. Removing.`);
+                        const playerIndex = lobby.players.findIndex(p => p.persistentPlayerId === player.persistentPlayerId);
+                        if (playerIndex !== -1) {
+                            lobby.players.splice(playerIndex, 1);
+                            io.to(`lobby:${lobbyId}`).emit('lobby:updated', {
+                                players: lobby.players,
+                                status: lobby.status
+                            });
+                            disconnectTimers.delete(timerKey);
+                        }
+                    }, 300000); // 5 minutes grace period
+
+                    disconnectTimers.set(timerKey, timeout);
                     break;
                 }
             }
@@ -258,22 +373,8 @@ const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0'; // Listen on all network interfaces
 
 server.listen(PORT, HOST, () => {
-    const os = require('os');
-    const networkInterfaces = os.networkInterfaces();
-    let localIP = 'localhost';
-    
-    // Find local IP address
-    for (const interfaceName in networkInterfaces) {
-        const interfaces = networkInterfaces[interfaceName];
-        for (const iface of interfaces) {
-            if (iface.family === 'IPv4' && !iface.internal) {
-                localIP = iface.address;
-                break;
-            }
-        }
-        if (localIP !== 'localhost') break;
-    }
-    
+    localIP = getLocalIp();
+
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Server accessible from network on http://${localIP}:${PORT}`);
     console.log(`Mobile page: http://${localIP}:${PORT}/mobile.html`);

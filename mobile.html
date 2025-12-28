@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: http: https: data: blob:; connect-src 'self' ws: wss: http: https:;">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: http: https: data: blob:; connect-src 'self' ws: wss: http: https:;">
     <title>Ruota della Fortuna - Mobile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -180,16 +182,25 @@
             color: #fbbf24;
             text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
         }
-        
+
         .shield-icon {
             font-size: 20px;
             margin-left: 8px;
             animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
         }
 
         .score-label {
@@ -268,10 +279,38 @@
         }
 
         .hidden {
-            display: none;
+            display: none !important;
+        }
+
+        /* Solve Section Refinement */
+        #solve-input {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Outfit', sans-serif;
+            resize: none;
+            background: white;
+            color: #333;
+        }
+
+        .solve-section .input-group {
+            flex-direction: column;
+        }
+
+        .solve-section .btn {
+            width: 100%;
+        }
+
+        #mystery-modal .card {
+            border: 2px solid #fbbf24;
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Lobby Selection Screen -->
@@ -280,7 +319,8 @@
             <div class="card">
                 <div class="form-group">
                     <label for="lobby-id-input">Inserisci ID Lobby:</label>
-                    <input type="text" id="lobby-id-input" placeholder="Es: ABC123" maxlength="6" style="text-transform: uppercase;">
+                    <input type="text" id="lobby-id-input" placeholder="Es: ABC123" maxlength="6"
+                        style="text-transform: uppercase;">
                 </div>
                 <button id="join-lobby-btn" class="btn btn-primary">Entra in Lobby</button>
                 <button id="refresh-lobbies-btn" class="btn btn-secondary">Aggiorna Lobby</button>
@@ -311,8 +351,10 @@
             <h1>In attesa...</h1>
             <div class="card">
                 <div class="waiting-message">
-                    <p style="font-size: 18px; margin-bottom: 10px; color: #667eea; font-weight: 700;">Lobby: <strong id="waiting-lobby-id" style="font-size: 24px;"></strong></p>
-                    <p style="font-size: 16px; color: #666; margin-top: 15px;">In attesa che l'host avvii la partita...</p>
+                    <p style="font-size: 18px; margin-bottom: 10px; color: #667eea; font-weight: 700;">Lobby: <strong
+                            id="waiting-lobby-id" style="font-size: 24px;"></strong></p>
+                    <p style="font-size: 16px; color: #666; margin-top: 15px;">In attesa che l'host avvii la partita...
+                    </p>
                     <div id="waiting-players-list" style="margin-top: 20px; text-align: left;">
                         <h3 style="color: #667eea; margin-bottom: 10px;">Giocatori:</h3>
                         <ul id="waiting-players-ul" style="list-style: none;"></ul>
@@ -324,12 +366,30 @@
         <!-- Game Screen -->
         <div id="game-screen" class="screen">
             <div class="player-info">
-                <div class="player-name" id="game-player-name">Giocatore <span id="player-shield" class="shield-icon" style="display: none;">🛡️</span></div>
+                <div class="player-name" id="game-player-name">Giocatore <span id="player-shield" class="shield-icon"
+                        style="display: none;">🛡️</span></div>
                 <div class="player-score" id="game-player-score">€0</div>
                 <div class="score-label">Montepremi Attuale</div>
             </div>
 
             <div id="game-status" class="status-message">In attesa del tuo turno...</div>
+
+            <!-- Mystery Choice (Embedded) -->
+            <div id="mystery-modal" class="screen">
+                <div class="card" style="text-align: center;">
+                    <h2 style="color: #fbbf24; margin-bottom: 20px;">HAI TROVATO ?500!</h2>
+                    <p style="margin-bottom: 30px;">Cosa vuoi fare?</p>
+
+                    <button class="btn btn-action" onclick="sendMysteryChoice(500)"
+                        style="margin-bottom: 15px; background: linear-gradient(90deg, #10b981, #059669);">
+                        💰 PRENDI €500
+                    </button>
+                    <button class="btn btn-action" onclick="sendMysteryChoice('RAFFLE')"
+                        style="background: linear-gradient(90deg, #8b5cf6, #7c3aed);">
+                        🎲 ESTRAI A SORTE
+                    </button>
+                </div>
+            </div>
 
             <div class="card">
                 <div class="game-actions">
@@ -343,25 +403,27 @@
                     <div class="action-section" id="consonant-section" style="display: none;">
                         <h3>Chiama Consonante</h3>
                         <div class="input-group">
-                            <input type="text" id="consonant-input" maxlength="1" placeholder="A-Z" style="text-transform: uppercase;">
+                            <input type="text" id="consonant-input" maxlength="1" placeholder="A-Z"
+                                style="text-transform: uppercase;">
                             <button id="consonant-btn" class="btn btn-action">CHIAMA</button>
                         </div>
                     </div>
 
                     <!-- Buy Vowel -->
-                    <div class="action-section">
+                    <div class="action-section" id="vowel-section">
                         <h3>Compra Vocale (€1000)</h3>
                         <div class="input-group">
-                            <input type="text" id="vowel-input" maxlength="1" placeholder="A, E, I, O, U" style="text-transform: uppercase;" disabled>
+                            <input type="text" id="vowel-input" maxlength="1" placeholder="A, E, I, O, U"
+                                style="text-transform: uppercase;" disabled>
                             <button id="vowel-btn" class="btn btn-action" disabled>COMPRA</button>
                         </div>
                     </div>
 
                     <!-- Solve -->
-                    <div class="action-section">
+                    <div class="action-section solve-section">
                         <h3>Risolvi la Frase</h3>
                         <div class="input-group">
-                            <input type="text" id="solve-input" placeholder="Scrivi la soluzione...">
+                            <textarea id="solve-input" rows="2" placeholder="Scrivi la soluzione..."></textarea>
                             <button id="solve-btn" class="btn btn-danger">RISOLVI</button>
                         </div>
                     </div>
@@ -375,6 +437,9 @@
         </div>
     </div>
 
+
+    </div>
+
     <script>
         const API_URL = window.location.origin;
         let socket = null;
@@ -382,6 +447,17 @@
         let playerId = null;
         let playerName = null;
         let gameState = null;
+
+        // Persistent Player ID
+        function getPersistentPlayerId() {
+            let id = localStorage.getItem('wheel_fortune_player_id');
+            if (!id) {
+                id = 'player_' + Math.random().toString(36).substring(2, 9);
+                localStorage.setItem('wheel_fortune_player_id', id);
+            }
+            return id;
+        }
+        const persistentPlayerId = getPersistentPlayerId();
 
         // DOM Elements
         const screens = {
@@ -415,21 +491,44 @@
         });
 
         async function loadLobbies() {
+            const ul = document.getElementById('lobbies-ul');
+            const errorEl = document.getElementById('error-message');
+
+            // Show loading state if empty
+            if (ul.innerHTML === '') {
+                ul.innerHTML = '<li style="padding: 15px; color: #888; text-align: center;">Caricamento lobby...</li>';
+            }
+
             try {
-                const response = await fetch(`${API_URL}/api/lobbies`);
+                const url = `${API_URL}/api/lobbies`;
+                console.log('Fetching lobbies from:', url);
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+
                 const lobbies = await response.json();
-                const ul = document.getElementById('lobbies-ul');
                 ul.innerHTML = '';
-                
-                if (lobbies.length === 0) {
-                    ul.innerHTML = '<li style="padding: 15px; color: #666;">Nessuna lobby disponibile</li>';
+
+                if (!lobbies || lobbies.length === 0) {
+                    ul.innerHTML = '<li style="padding: 15px; color: #aaa; text-align: center; font-style: italic;">Nessuna lobby attiva.<br><small>Crea una partita sul PC per vederla qui.</small></li>';
                 } else {
                     lobbies.forEach(lobby => {
                         const li = document.createElement('li');
                         li.className = 'lobby-item';
+                        // Show lobby status (waiting, playing)
+                        const statusColor = lobby.status === 'waiting' ? '#10b981' : '#f59e0b';
+                        const statusText = lobby.status === 'waiting' ? 'IN ATTESA' : 'IN CORSO';
+
                         li.innerHTML = `
-                            <h3>Lobby ${lobby.id}</h3>
-                            <p>Giocatori: ${lobby.players.length} | Status: ${lobby.status}</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h3 style="margin: 0;">Lobby ${lobby.id}</h3>
+                                    <p style="margin: 5px 0 0 0; color: #888;">${lobby.players.length} Giocatori</p>
+                                </div>
+                                <span style="font-size: 10px; padding: 4px 8px; background: ${statusColor}; color: white; border-radius: 4px; font-weight: bold;">${statusText}</span>
+                            </div>
                         `;
                         li.addEventListener('click', () => {
                             document.getElementById('lobby-id-input').value = lobby.id;
@@ -438,8 +537,14 @@
                         ul.appendChild(li);
                     });
                 }
+                // Clear any previous general error if fetch succeeded
+                if (errorEl.innerText.includes('Impossibile caricare')) errorEl.innerHTML = '';
             } catch (error) {
                 console.error('Error loading lobbies:', error);
+                ul.innerHTML = `<li style="padding: 15px; color: #ef4444; text-align: center; font-size: 14px;">
+                    ⚠️ Errore di connessione<br>
+                    <small style="color: #888;">Verifica che il PC e lo smartphone siano sulla stessa rete Wi-Fi.<br>URL: ${API_URL}</small>
+                </li>`;
             }
         }
 
@@ -461,7 +566,7 @@
         document.getElementById('confirm-name-btn').addEventListener('click', () => {
             const name = document.getElementById('player-name-input').value.trim();
             if (!name) {
-                document.getElementById('name-error-message').innerHTML = 
+                document.getElementById('name-error-message').innerHTML =
                     '<div class="error">Inserisci un nome valido</div>';
                 return;
             }
@@ -475,9 +580,13 @@
 
         function connectToLobby() {
             socket = io(API_URL);
-            
+
             socket.on('connect', () => {
-                socket.emit('player:join', { lobbyId: currentLobbyId, playerName });
+                socket.emit('player:join', {
+                    lobbyId: currentLobbyId,
+                    playerName,
+                    persistentPlayerId
+                });
             });
 
             socket.on('player:joined', (data) => {
@@ -521,6 +630,40 @@
                 socket.disconnect();
                 showScreen('lobby');
             });
+
+            // Mystery Offer Listener
+            socket.on('game:mystery-offer', () => {
+                const modal = document.getElementById('mystery-modal');
+                if (modal) {
+                    modal.style.display = 'block';
+                    modal.classList.add('active');
+                    // Hide other screens if necessary
+                    const gameScreen = document.getElementById('screen-game');
+                    if (gameScreen) gameScreen.style.opacity = '0.5';
+                }
+            });
+
+            socket.on('game:mystery-resolved', () => {
+                const modal = document.getElementById('mystery-modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.classList.remove('active');
+                }
+                const gameScreen = document.getElementById('screen-game');
+                if (gameScreen) gameScreen.style.opacity = '1';
+            });
+        } // End connectToLobby
+
+        function sendMysteryChoice(choice) {
+            if (!socket) return;
+            socket.emit('player:mystery-choice', { lobbyId: currentLobbyId, choice });
+            const modal = document.getElementById('mystery-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.remove('active');
+            }
+            const gameScreen = document.getElementById('screen-game');
+            if (gameScreen) gameScreen.style.opacity = '1';
         }
 
         function updateWaitingPlayers(players) {
@@ -530,9 +673,12 @@
             const playersList = players || [];
             playersList.forEach(player => {
                 const li = document.createElement('li');
-                li.textContent = player.name;
-                li.style.padding = '5px 0';
-                li.style.color = '#333';
+                li.textContent = `👤 ${player.name}`;
+                li.style.padding = '10px 0';
+                li.style.color = '#fff';
+                li.style.fontSize = '1.1rem';
+                li.style.fontWeight = '600';
+                li.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
                 ul.appendChild(li);
             });
         }
@@ -546,7 +692,7 @@
             const myTotalScore = gameState.totalScores[playerName] || 0;
 
             document.getElementById('game-player-score').textContent = `€${myPartialScore}`;
-            
+
             const statusEl = document.getElementById('game-status');
             if (gameState.wheelPhase === 'spinning') {
                 statusEl.textContent = 'La ruota sta girando...';
@@ -557,60 +703,79 @@
             }
 
             // Update buttons based on game state
-            const spinBtn = document.getElementById('spin-btn');
-            const consonantSection = document.getElementById('consonant-section');
-            const consonantInput = document.getElementById('consonant-input');
-            const consonantBtn = document.getElementById('consonant-btn');
-            const vowelInput = document.getElementById('vowel-input');
-            const vowelBtn = document.getElementById('vowel-btn');
-            const passSection = document.getElementById('pass-section');
+            const actionCard = document.getElementById('action-card') || document.querySelector('#game-screen .card:not(#mystery-modal .card)');
+            const mysteryModal = document.getElementById('mystery-modal');
+            const isMysteryVisible = mysteryModal && (mysteryModal.style.display === 'block' || mysteryModal.classList.contains('active'));
 
-            // Spin button and consonant are EXCLUSIVE - show one or the other
-            if (isMyTurn && (gameState.wheelPhase === 'idle' || gameState.wheelPhase === 'choose_action')) {
-                spinBtn.disabled = false;
-                spinBtn.style.display = 'block';
-                consonantSection.style.display = 'none';
-            } else if (isMyTurn && gameState.wheelPhase === 'call_consonant') {
-                spinBtn.style.display = 'none';
-                consonantSection.style.display = 'block';
-                consonantInput.disabled = false;
-                consonantBtn.disabled = false;
-            } else {
-                spinBtn.disabled = true;
-                spinBtn.style.display = 'block';
-                consonantSection.style.display = 'none';
-            }
+            if (isMyTurn && !isMysteryVisible) {
+                if (actionCard) actionCard.style.display = 'block';
 
-            const canBuyVowel = isMyTurn && (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle') && myPartialScore >= 1000;
-            vowelInput.disabled = !canBuyVowel;
-            vowelBtn.disabled = !canBuyVowel;
+                const spinBtn = document.getElementById('spin-btn');
+                const consonantSection = document.getElementById('consonant-section');
+                const consonantInput = document.getElementById('consonant-input');
+                const consonantBtn = document.getElementById('consonant-btn');
+                const vowelInput = document.getElementById('vowel-input');
+                const vowelBtn = document.getElementById('vowel-btn');
+                const passSection = document.getElementById('pass-section');
 
-            // Solve button only for current player
-            const solveBtn = document.getElementById('solve-btn');
-            const solveInput = document.getElementById('solve-input');
-            if (solveBtn && solveInput) {
-                solveBtn.disabled = !isMyTurn;
-                solveInput.disabled = !isMyTurn;
-                if (!isMyTurn) {
-                    solveInput.placeholder = 'Non è il tuo turno';
+                // Spin button and consonant are EXCLUSIVE - show one or the other
+                if (gameState.wheelPhase === 'idle' || gameState.wheelPhase === 'choose_action') {
+                    spinBtn.disabled = false;
+                    spinBtn.style.display = 'block';
+                    consonantSection.style.display = 'none';
+                } else if (gameState.wheelPhase === 'call_consonant') {
+                    spinBtn.style.display = 'none';
+                    consonantSection.style.display = 'block';
+                    consonantInput.disabled = false;
+                    consonantBtn.disabled = false;
                 } else {
+                    spinBtn.disabled = true;
+                    spinBtn.style.display = 'block';
+                    consonantSection.style.display = 'none';
+                }
+
+                const canBuyVowel = (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle') && myPartialScore >= 1000;
+                vowelInput.disabled = !canBuyVowel;
+                vowelBtn.disabled = !canBuyVowel;
+
+                // Hide vowel section if player has less than 1000
+                const vowelSection = document.getElementById('vowel-section');
+                if (vowelSection) {
+                    if (myPartialScore < 1000) {
+                        vowelSection.classList.add('hidden');
+                    } else {
+                        vowelSection.classList.remove('hidden');
+                    }
+                }
+
+                // Solve button only for current player
+                const solveBtn = document.getElementById('solve-btn');
+                const solveInput = document.getElementById('solve-input');
+                if (solveBtn && solveInput) {
+                    solveBtn.disabled = false;
+                    solveInput.disabled = false;
                     solveInput.placeholder = 'Scrivi la soluzione...';
                 }
+
+                // Pass button - only when all consonants are revealed
+                if (gameState.allConsonantsRevealed && (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle')) {
+                    passSection.style.display = 'block';
+                } else {
+                    passSection.style.display = 'none';
+                }
+            } else {
+                // Not my turn - HIDE ACTION CARD
+                if (actionCard) actionCard.style.display = 'none';
             }
 
-            // Pass button - only when all consonants are revealed
-            if (isMyTurn && gameState.allConsonantsRevealed && (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle')) {
-                passSection.style.display = 'block';
-            } else {
-                passSection.style.display = 'none';
-            }
-            
-            // Show shield if player has it
+            // Show shield if player has it (always check)
             const shieldIcon = document.getElementById('player-shield');
-            if (shieldIcon && gameState.hasJolly && gameState.hasJolly[playerName]) {
-                shieldIcon.style.display = 'inline';
-            } else if (shieldIcon) {
-                shieldIcon.style.display = 'none';
+            if (shieldIcon) {
+                if (gameState.hasJolly && gameState.hasJolly[playerName]) {
+                    shieldIcon.style.display = 'inline-block';
+                } else {
+                    shieldIcon.style.display = 'none';
+                }
             }
         }
 
@@ -657,5 +822,5 @@
         setInterval(loadLobbies, 5000); // Refresh every 5 seconds
     </script>
 </body>
-</html>
 
+</html>

@@ -124,6 +124,15 @@ const soundManager = {
         // Play rotation.mp3 as requested
         const audio = new Audio('rotation.mp3');
         audio.play().catch(e => console.warn('Audio play error:', e));
+    },
+
+    // Aliases for missing methods
+    playSpin() {
+        this.playWheelTick();
+    },
+
+    playBonus() {
+        this.playCorrect();
     }
 };
 
@@ -153,7 +162,7 @@ const gameState = {
     usedLetters: new Set(),
     players: [],
     currentPlayerIndex: 0,
-    currentManche: 1,
+    currentManche: null,
     partialScores: {},
     totalScores: {},
     hasJolly: {}, // Track which players have Jolly shield
@@ -161,7 +170,8 @@ const gameState = {
     nextValueMultiplier: 1, // For Raddoppia (x2)
     wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
     allConsonantsRevealed: false,
-    wheelRotation: 0
+    wheelRotation: 0,
+    usedPhrases: new Set() // Track used phrases to avoid duplicates
 };
 
 // ===== Offline Phrases Database (Updated for Length) =====
@@ -193,6 +203,28 @@ const elements = {
     // Setup
     playerCountInput: document.getElementById('player-count-input'),
     playerNamesContainer: document.getElementById('player-names-container'),
+    // Setup - New Modes
+    modeSelection: document.getElementById('mode-selection'),
+    modeLocalBtn: document.getElementById('mode-local-btn'),
+    modeSmartphoneBtn: document.getElementById('mode-smartphone-btn'),
+    setupLocalPlayers: document.getElementById('setup-local-players'),
+    setupLocalNames: document.getElementById('setup-local-names'),
+    setupSmartphoneMode: document.getElementById('setup-smartphone-mode'),
+    startLocalGameBtn: document.getElementById('start-local-game-btn'),
+    startSmartphoneGameBtn: document.getElementById('start-smartphone-game-btn'),
+    backModeBtns: document.querySelectorAll('.btn-back-mode'),
+    nextLocalNamesBtn: document.getElementById('next-local-names-btn'),
+    backLocalPlayersBtn: document.getElementById('back-local-players-btn'),
+
+    // Local Mode
+    localNamesContainer: document.getElementById('local-names-container'),
+
+    // Smartphone Big View
+    bigLobbyIdDisplay: document.getElementById('big-lobby-id-display'),
+    bigMobileLink: document.getElementById('big-mobile-link'),
+    bigPlayersGrid: document.getElementById('big-players-grid'),
+
+    // Old elements kept if needed (or to avoid reference errors)
     setupStep1: document.getElementById('setup-step-1'),
     setupStep2: document.getElementById('setup-step-2'),
     nextStepBtn: document.getElementById('next-step-btn'),
@@ -214,7 +246,6 @@ const elements = {
     solutionInput: document.getElementById('solution-input'),
     solveBtn: document.getElementById('solve-btn'),
     passBtn: document.getElementById('pass-btn'),
-    passBtnCenter: document.getElementById('pass-btn-center'),
     messageDisplay: document.getElementById('message-display'),
     newGameBtn: document.getElementById('new-game-btn'),
     totalWinningsList: document.getElementById('total-winnings-list'),
@@ -232,7 +263,12 @@ function normalizeChar(char) {
 }
 
 function normalizePhrase(phrase) {
-    return phrase.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return phrase.toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/['’]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 function sanitizePhrase(p) {
@@ -242,8 +278,10 @@ function sanitizePhrase(p) {
         // Convert substitutes like E' or A' to real accented characters
         .replace(/\b([AEIOU])['’](\b|\s|$)/g, (match, char, boundary) => (map[char] || char) + boundary)
         .replace(/([AEIOU])['’]\b/g, (match, char) => map[char] || match)
-        // Clean characters but keep apostrophes that might be needed
-        .replace(/[^A-ZÀ-ÿ\s'’]/g, ' ')
+        // Convert all remaining apostrophes to spaces as requested
+        .replace(/['’]/g, ' ')
+        // Clean characters - keep only letters and spaces
+        .replace(/[^A-ZÀ-ÿ\s]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
 }
@@ -635,8 +673,8 @@ const WHEEL_SEGMENTS = [
     { value: 400, color: '#7e22ce', label: '400€' }, // Purple
     { value: 800, color: '#1e3a8a', label: '800€' }, // Dark Blue
     { value: 300, color: '#2563eb', label: '300€' }, // Blue
-    { value: 250, color: '#60a5fa', label: '250€' }, // Light Blue
-    { value: '?500', color: '#FFFFFF', label: '?500' }, // RESTORED MYSTERY
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // PASSA (added near ?500)
+    { value: '?500', color: '#14532D', label: '?500' }, // DARK GREEN MYSTERY
 
     // Group 4
     { value: 'SCUDO', color: '#9333EA', label: 'SCUDO' }, // SCUDO
@@ -976,40 +1014,23 @@ function onWheelStop(result) {
         showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
         setTimeout(passTurn, 2500);
     } else if (result.value === 'RADDOPPIA') {
-        // RADDOPPIA - Double current manche score and give another turn
-        soundManager.playCorrect();
-        const player = getCurrentPlayer();
-        const currentScore = gameState.partialScores[player.name] || 0;
-        gameState.partialScores[player.name] = currentScore * 2;
-        renderPlayersList();
+        // RADDOPPIA - Set special pending value and wait for consonant
         elements.currentWheelValue.textContent = 'RADDOPPIA';
         elements.currentWheelValue.className = 'wheel-value raddoppia';
-        showPopup(`<div class="popup-raddoppia">
-            <div>🔥 RADDOPPIA!</div>
-            <div>Il tuo montepremi è stato</div>
-            <div>RADDOPPIATO!</div>
-            <div>Da €${currentScore} a €${currentScore * 2}</div>
-            <div>Gira di nuovo!</div>
-        </div>`, 3500);
+        gameState.pendingWheelValue = 'RADDOPPIA';
+        gameState.wheelPhase = 'call_consonant';
+        updateUI();
         if (isMobileMode) syncGameState();
-        setTimeout(() => {
-            gameState.wheelPhase = 'idle';
-            updateUI();
-            showMessage('Il tuo montepremi è raddoppiato! Gira di nuovo!', 'success');
-        }, 3500);
+        showMessage('RADDOPPIA! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
     } else if (result.value === 'SCUDO') {
-        // SCUDO - Give player a shield
-        soundManager.playReveal();
-        gameState.hasJolly[player.name] = true;
+        // SCUDO - Set special pending value and wait for consonant
         elements.currentWheelValue.textContent = '🛡️';
         elements.currentWheelValue.className = 'wheel-value jolly';
-        renderPlayersList();
-        showPopup(`<div class="popup-jolly">🛡️ SCUDO!<br>${player.name} ha ottenuto uno scudo!</div>`, 2500);
-        setTimeout(() => {
-            gameState.wheelPhase = 'idle';
-            updateUI();
-            showMessage('Hai uno scudo! Ti proteggerà dalla Bancarotta!', 'success');
-        }, 2500);
+        gameState.pendingWheelValue = 'SCUDO';
+        gameState.wheelPhase = 'call_consonant';
+        updateUI();
+        if (isMobileMode) syncGameState();
+        showMessage('SCUDO! Chiama una consonante per ottenere la protezione!', 'info');
     } else if (result.value === 'BANCAROTTA') {
         // Check if player has Jolly shield
         if (gameState.hasJolly[player.name]) {
@@ -1111,6 +1132,19 @@ window.resolveJollyChoice = function (useJolly) {
 };
 
 function handleMysterySegment() {
+    // If mobile mode, ALSO offer choice on phone
+    if (isMobileMode && socket && currentLobbyId) {
+        const player = getCurrentPlayer();
+        const sockId = player.id || player.socketId;
+
+        if (sockId) {
+            console.log('Sending mystery offer to mobile player:', sockId);
+            socket.emit('host:mystery-offer', { lobbyId: currentLobbyId, playerId: sockId });
+        }
+    }
+
+    // Always show the selection cards on the host screen (web) as well
+
     const html = `
         <div class="popup-mystery-minimal">
             <div class="mystery-cards-container">
@@ -1135,6 +1169,13 @@ function handleMysterySegment() {
     showPopup(html, 0); // Permanent until clicked
 }
 
+// Setup listener for remote choice if we are host
+if (typeof socket !== 'undefined') {
+    // We need to listen to 'lobby:mystery-choice' IF we initialized the socket.
+    // The socket initialization happens in initSmartphoneLobby usually.
+    // We'll add a hook there or check here.
+}
+
 window.resolveMysteryChoice = function (choice) {
     elements.modalOverlay.style.display = 'none';
     elements.popupMessage.style.display = 'none';
@@ -1144,7 +1185,7 @@ window.resolveMysteryChoice = function (choice) {
         soundManager.playSpin();
         // Raffle: Random segment excluding special values (only numeric values)
         const eligible = WHEEL_SEGMENTS.filter(s => typeof s.value === 'number');
-        
+
         if (eligible.length === 0) {
             console.error('No eligible segments found for raffle!');
             finalValue = 500; // Fallback
@@ -1152,13 +1193,18 @@ window.resolveMysteryChoice = function (choice) {
             const selected = eligible[Math.floor(Math.random() * eligible.length)];
             finalValue = Number(selected.value);
         }
-        
+
         console.log('Raffle result:', finalValue, 'from', eligible.length, 'eligible segments');
         showPopup(`<div class="popup-mystery-result">ESTRATTO:<br><span class="popup-value">€${finalValue}</span></div>`, 2000);
     } else {
         soundManager.playReveal();
         finalValue = Number(choice);
         showPopup(`<div class="popup-mystery-result">HAI SCELTO:<br><span class="popup-value">€${finalValue}</span></div>`, 2000);
+    }
+
+    // Notify mobile players to close their modals if we are in mobile mode
+    if (isMobileMode && socket && currentLobbyId) {
+        socket.emit('host:mystery-resolved', currentLobbyId);
     }
 
     gameState.pendingWheelValue = finalValue;
@@ -1170,6 +1216,7 @@ window.resolveMysteryChoice = function (choice) {
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         showMessage(`Chiama una consonante (vale €${gameState.pendingWheelValue})`, 'info');
+        if (isMobileMode) syncGameState(); // Ensure mobile knows it's consonant phase
     }, 2000);
 };
 
@@ -1213,13 +1260,41 @@ function callConsonant() {
     const occurrences = countLetterOccurrences(letter);
 
     if (occurrences > 0) {
-        const earnings = gameState.pendingWheelValue * occurrences;
-        gameState.partialScores[getCurrentPlayer().name] += earnings;
-        // Moved cash sound to delay block (line 1162)
-        // Removed immediate sounds per user request (only reveal sounds play)
+        const player = getCurrentPlayer();
+        let earnings = 0;
+        let specialAction = null;
+
+        if (gameState.pendingWheelValue === 'RADDOPPIA') {
+            const currentScore = gameState.partialScores[player.name] || 0;
+            const doubled = currentScore * 2;
+            gameState.partialScores[player.name] = doubled;
+            specialAction = 'RADDOPPIA';
+            earnings = doubled - currentScore; // For display
+        } else if (gameState.pendingWheelValue === 'SCUDO') {
+            gameState.hasJolly[player.name] = true;
+            specialAction = 'SCUDO';
+            earnings = 0;
+        } else {
+            earnings = gameState.pendingWheelValue * occurrences;
+            gameState.partialScores[player.name] += earnings;
+        }
+
         revealLetter(letter);
         renderPlayersList();
         if (isMobileMode) syncGameState();
+
+        // Show special popups if needed
+        if (specialAction === 'RADDOPPIA') {
+            const currentScore = (gameState.partialScores[player.name] || 0) / 2;
+            showPopup(`<div class="popup-raddoppia">
+                <div class="popup-raddoppia-title">🔥 RADDOPPIA!</div>
+                <div class="popup-raddoppia-text">Il tuo montepremi è stato</div>
+                <div class="popup-raddoppia-highlight">RADDOPPIATO!</div>
+                <div class="popup-raddoppia-amount">Da €${currentScore} a €${currentScore * 2}</div>
+            </div>`, 3500);
+        } else if (specialAction === 'SCUDO') {
+            showPopup(`<div class="popup-jolly">🛡️ SCUDO!<br>${player.name} ha ottenuto uno scudo!</div>`, 2500);
+        }
 
         // Show popup AFTER all letters are revealed (1.5s per letter)
         const delay = occurrences * 1500;
@@ -1376,6 +1451,9 @@ function endManche() {
         <div class="popup-earnings">+€${winnings}</div>
     </div>`, 0);
 
+    // Clear board as requested: "cancella la frase che è stata indovinata"
+    if (elements.gameBoard) elements.gameBoard.innerHTML = '';
+
     setTimeout(() => {
         elements.popupMessage.style.display = 'none';
         elements.modalOverlay.style.display = 'none';
@@ -1432,12 +1510,16 @@ async function startNextManche() {
     // Selezione diretta da PUZZLE_DATABASE
     let valid = false;
     let attempts = 0;
-    while (!valid && attempts < 50) {
+    while (!valid && attempts < 100) {
         attempts++;
         const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
-        if (canFitOnBoard(randomPuzzle.phrase)) {
+        const normalized = normalizePhrase(randomPuzzle.phrase);
+
+        // Ensure it fits AND hasn't been used yet
+        if (canFitOnBoard(randomPuzzle.phrase) && !gameState.usedPhrases.has(normalized)) {
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
             gameState.hint = randomPuzzle.hint;
+            gameState.usedPhrases.add(normalized); // Mark as used
             console.log(`[DB] Frase Scelta: "${gameState.phrase}" - Hint: "${gameState.hint}"`);
             valid = true;
         }
@@ -1572,19 +1654,23 @@ function updateUI() {
         elements.consonantInput.classList.remove('input-blink');
     }
 
+    const isIdleOrAction = (phase === 'choose_action' || phase === 'idle');
+
     // Vowel input (available if player has money and it's their turn to choose)
     const player = getCurrentPlayer();
-    const canBuyVowel = (phase === 'choose_action' || phase === 'idle') && (gameState.partialScores[player?.name] >= VOWEL_COST);
+    const canBuyVowel = isIdleOrAction && (gameState.partialScores[player?.name] >= VOWEL_COST);
     elements.vowelInput.disabled = !canBuyVowel;
     elements.vowelBtn.disabled = !canBuyVowel;
 
     // Pass button (available only if consonants finished and it's player choice time)
-    const canPass = allConsRevealed && (phase === 'choose_action' || phase === 'idle');
-    elements.passBtn.style.display = allConsRevealed ? 'block' : 'none';
-    elements.passBtn.disabled = !canPass;
-    if (elements.passBtnCenter) {
-        elements.passBtnCenter.style.display = allConsRevealed ? 'block' : 'none';
-        elements.passBtnCenter.disabled = !canPass;
+    if (elements.passBtn) {
+        if (gameState.allConsonantsRevealed && isIdleOrAction) {
+            elements.passBtn.style.display = 'block';
+            elements.passBtn.disabled = false;
+        } else {
+            elements.passBtn.style.display = 'none';
+            elements.passBtn.disabled = true;
+        }
     }
 
     renderPlayersList();
@@ -1723,16 +1809,16 @@ async function createLobby() {
         const response = await fetch(`${API_URL}/api/lobby/create`, { method: 'POST' });
         const data = await response.json();
         currentLobbyId = data.lobbyId;
-        
+
         socket = io(API_URL);
         socket.on('connect', () => {
             socket.emit('host:join', currentLobbyId);
         });
-        
+
         socket.on('host:joined', () => {
             console.log('Host joined lobby:', currentLobbyId);
         });
-        
+
         socket.on('lobby:updated', (data) => {
             // Update players from lobby
             if (data.players) {
@@ -1744,36 +1830,36 @@ async function createLobby() {
                         gameState.totalScores[p.name] = 0;
                     }
                 });
-                
+
                 console.log('Lobby updated - Players:', gameState.players.length, gameState.players);
-                
+
                 console.log('Lobby updated - Players:', gameState.players.length, gameState.players);
-                
+
                 // Show message if new player joined
                 if (data.players.length > previousCount && previousCount > 0) {
                     const newPlayer = data.players[data.players.length - 1];
                     showMessage(`${newPlayer.name} si è unito!`, 'success');
                 }
-                
+
                 // Update connected players list in setup screen
                 const playersListEl = document.getElementById('connected-players-list');
                 if (playersListEl) {
                     if (data.players.length === 0) {
                         playersListEl.innerHTML = '<li style="color: #999; font-size: 12px;">Nessun giocatore ancora...</li>';
                     } else {
-                        playersListEl.innerHTML = data.players.map(p => 
+                        playersListEl.innerHTML = data.players.map(p =>
                             `<li style="color: #667eea; font-size: 14px; padding: 4px 0; font-weight: 600;">✓ ${p.name}</li>`
                         ).join('');
                     }
                 }
-                
+
                 // Show start button if players are connected and in mobile mode
                 const startBtnMobile = document.getElementById('start-game-btn-mobile');
                 const mobileModeCheckbox = document.getElementById('enable-mobile-mode');
                 const isMobileEnabled = mobileModeCheckbox && mobileModeCheckbox.checked;
-                
+
                 console.log('Checking start button - Mobile enabled:', isMobileEnabled, 'Players:', data.players.length);
-                
+
                 if (startBtnMobile && isMobileEnabled && data.players.length > 0) {
                     startBtnMobile.style.display = 'block';
                     console.log('Start button shown');
@@ -1785,17 +1871,17 @@ async function createLobby() {
                 } else if (startBtnMobile && (!isMobileEnabled || data.players.length === 0)) {
                     startBtnMobile.style.display = 'none';
                 }
-                
+
                 if (elements.gameScreen.classList.contains('active')) {
                     renderPlayersList();
                 }
             }
         });
-        
+
         socket.on('player:action', (action) => {
             handlePlayerAction(action);
         });
-        
+
         return currentLobbyId;
     } catch (error) {
         console.error('Error creating lobby:', error);
@@ -1805,7 +1891,7 @@ async function createLobby() {
 
 function syncGameState() {
     if (!socket || !currentLobbyId) return;
-    
+
     // Convert Sets to Arrays for JSON serialization
     const stateToSync = {
         ...gameState,
@@ -1813,22 +1899,22 @@ function syncGameState() {
         usedLetters: Array.from(gameState.usedLetters),
         players: gameState.players.map(p => ({ name: p.name }))
     };
-    
+
     socket.emit('host:sync-state', { lobbyId: currentLobbyId, gameState: stateToSync });
 }
 
 function handlePlayerAction(action) {
     const player = gameState.players.find(p => p.name === action.playerName);
     if (!player) return;
-    
+
     const playerIndex = gameState.players.indexOf(player);
     const isCurrentPlayer = gameState.currentPlayerIndex === playerIndex;
-    
+
     if (!isCurrentPlayer) {
         showMessage(`Azione da ${action.playerName} ignorata: non è il suo turno`, 'error');
         return;
     }
-    
+
     switch (action.type) {
         case 'spin-wheel':
             if (gameState.wheelPhase === 'idle' || gameState.wheelPhase === 'choose_action') {
@@ -1860,101 +1946,64 @@ function handlePlayerAction(action) {
 }
 
 // ===== Game Start =====
-async function startGame() {
-    soundManager.init();
-    soundManager.playClick();
 
-    // Check if mobile mode is enabled
-    const mobileModeCheckbox = document.getElementById('enable-mobile-mode');
-    isMobileMode = mobileModeCheckbox && mobileModeCheckbox.checked;
-    
-    if (isMobileMode) {
-        // In mobile mode, DON'T reset players - they come from lobby
-        // Just verify we have them
-        // In mobile mode, check if lobby already exists
-        if (!currentLobbyId || !socket) {
-            showMessage('Errore: lobby non creata. Abilita di nuovo la modalità mobile.', 'error');
-            return;
-        }
-        
-        // Check if players joined - get fresh data from lobby
-        console.log('Starting game - Current players in state:', gameState.players.length, gameState.players);
-        
-        // Fetch current lobby state to ensure we have latest players
-        try {
-            const response = await fetch(`${API_URL}/api/lobby/${currentLobbyId}`);
-            if (response.ok) {
-                const lobbyData = await response.json();
-                if (lobbyData.players && lobbyData.players.length > 0) {
-                    // Update gameState with fresh data
-                    gameState.players = lobbyData.players.map(p => ({ name: p.name }));
-                    gameState.players.forEach(p => {
-                        if (!gameState.partialScores[p.name]) {
-                            gameState.partialScores[p.name] = 0;
-                            gameState.totalScores[p.name] = 0;
-                        }
-                    });
-                    console.log('Updated players from lobby:', gameState.players.length, gameState.players);
-                } else {
-                    showMessage('Aspetta che almeno un giocatore si unisca alla lobby!', 'error');
-                    return;
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching lobby:', error);
-            if (gameState.players.length === 0) {
-                showMessage('Errore nel recuperare i giocatori. Riprova.', 'error');
-                return;
-            }
-        }
-        
-        if (gameState.players.length === 0) {
-            showMessage('Aspetta che almeno un giocatore si unisca alla lobby!', 'error');
-            return;
-        }
-        
-        // Start game - emit to server first
-        socket.emit('host:start-game', currentLobbyId);
-        console.log('Game start signal sent to server');
-    } else {
-        // Local mode - collect players from inputs
-        const nameInputs = document.querySelectorAll('.player-name-input');
-        gameState.players = [];
-        nameInputs.forEach((input, index) => {
-            const name = input.value.trim() || `Giocatore ${index + 1}`;
-            gameState.players.push({ name });
-            gameState.partialScores[name] = 0;
-            gameState.totalScores[name] = 0;
-        });
-    }
-    
-    startGameLocal();
-}
-
+// startGameLocal is now the main entry point for a new manche
 async function startGameLocal() {
 
-    // Random starting player
-    gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
-    gameState.currentManche = 1;
+    if (!gameState.currentManche) {
+        gameState.currentManche = 1;
+        // First game: random player
+        gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
+    } else {
+        // Next manches: Rotate starter (Round 1 -> Player 0, Round 2 -> Player 1, etc.)
+        // Logic: (Manche Number - 1) % Player Count
+        // Wait, user said "winner does not start".
+        // Usually, the one who STARTS the round is determined by rotation.
+        // Let's implement strict rotation based on manche number.
+        // Manche 1: Player 0 (or random)
+        // Manche 2: Player 1 (or next from previous start)
+        // We need to track who started the previous manche or just use rotation.
+
+        // Let's use simple rotation based on round number
+        gameState.currentManche++;
+        gameState.currentPlayerIndex = (gameState.currentManche - 1) % gameState.players.length;
+    }
 
     // Get phrase from DB (AI Disabled)
     showScreen('game-screen');
 
     // Selezione diretta da PUZZLE_DATABASE
+    // Selezione diretta da PUZZLE_DATABASE con pool di frasi usate
     let valid = false;
     let attempts = 0;
-    while (!valid && attempts < 50) {
+
+    // Ensure usedPhrases set exists
+    if (!gameState.usedPhrases) {
+        gameState.usedPhrases = new Set();
+    }
+
+    // Reset used phrases if all have been used
+    if (gameState.usedPhrases.size >= PUZZLE_DATABASE.length) {
+        console.log('All phrases used! Resetting pool.');
+        gameState.usedPhrases.clear();
+    }
+
+    while (!valid && attempts < 1000) {
         attempts++;
         const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
-        if (canFitOnBoard(randomPuzzle.phrase)) {
+
+        // Check uniqueness and size
+        if (!gameState.usedPhrases.has(randomPuzzle.phrase) && canFitOnBoard(randomPuzzle.phrase)) {
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
             gameState.hint = randomPuzzle.hint;
+            gameState.usedPhrases.add(randomPuzzle.phrase);
             console.log(`[DB] Frase Scelta: "${gameState.phrase}" - Hint: "${gameState.hint}"`);
             valid = true;
         }
     }
     if (!valid) {
-        const fallback = OFFLINE_PHRASES[0];
+        // Fallback: Pick any valid one if loop failed (shouldn't happen with reset)
+        const fallback = PUZZLE_DATABASE.find(p => canFitOnBoard(p.phrase)) || OFFLINE_PHRASES[0];
         gameState.phrase = sanitizePhrase(fallback.phrase);
         gameState.hint = fallback.hint;
     }
@@ -1969,7 +2018,7 @@ async function startGameLocal() {
     elements.popupMessage.style.display = 'none';
     elements.modalOverlay.style.display = 'none';
 
-    elements.mancheNumber.textContent = '1';
+    elements.mancheNumber.textContent = gameState.currentManche;
     elements.hintText.textContent = gameState.hint;
     elements.currentWheelValue.textContent = '-';
     elements.currentWheelValue.className = 'wheel-value';
@@ -1980,135 +2029,283 @@ async function startGameLocal() {
     updateUI();
 
     showPopup(`<div class="popup-manche-start">
-        <div class="popup-manche-number">MANCHE 1</div>
+        <div class="popup-manche-number">MANCHE ${gameState.currentManche}</div>
         <div class="popup-category-label">Categoria:</div>
         <div class="popup-manche-hint-large">${gameState.hint}</div>
         <div class="popup-turn-player">INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
     </div>`, 4000);
-    
+
     // Sync initial state if in mobile mode
     if (isMobileMode) {
         syncGameState();
     }
 }
 
+// function startNewManche is essentially the same as startGameLocal but implies a new round.
+// We can alias it or define it to handle round reset if needed.
+function startNewManche() {
+    startGameLocal();
+}
+
 function newGame() {
     soundManager.playClick();
     showScreen('setup-screen');
-    elements.setupStep1.style.display = 'block';
-    elements.setupStep2.style.display = 'none';
+    elements.modeSelection.style.display = 'block';
+
+    // Hide specific setup screens
+    if (elements.setupLocalPlayers) elements.setupLocalPlayers.style.display = 'none';
+    if (elements.setupLocalNames) elements.setupLocalNames.style.display = 'none';
+    if (elements.setupSmartphoneMode) elements.setupSmartphoneMode.style.display = 'none';
+
+    // Reset Game State for new game
+    gameState.currentManche = null;
+    gameState.players = [];
+    gameState.usedPhrases = new Set();
+    gameState.totalScores = {};
 }
 
-// ===== Event Listeners =====
-const mobileModeCheckbox = document.getElementById('enable-mobile-mode');
-if (mobileModeCheckbox) {
-    mobileModeCheckbox.addEventListener('change', async (e) => {
-        const isEnabled = e.target.checked;
-        const step2 = document.getElementById('setup-step-2');
-        const lobbyInfo = document.getElementById('lobby-info');
-        
-        if (isEnabled) {
-            step2.style.display = 'none';
-            lobbyInfo.style.display = 'none';
-            // Create lobby immediately when enabled
-            const lobbyId = await createLobby();
-            if (lobbyId) {
-                isMobileMode = true; // Set mobile mode flag
-                document.getElementById('lobby-id-display').textContent = lobbyId;
-                const mobileLink = `${API_URL}/mobile.html`;
-                document.getElementById('mobile-link').textContent = mobileLink;
-                document.getElementById('mobile-link').style.cursor = 'pointer';
-                document.getElementById('mobile-link').onclick = () => {
-                    navigator.clipboard.writeText(mobileLink);
-                    showMessage('Link copiato!', 'success');
-                };
-                lobbyInfo.style.display = 'block';
-                // Hide "Avanti" button in mobile mode
-                const nextBtn = document.getElementById('next-step-btn');
-                if (nextBtn) {
-                    nextBtn.style.display = 'none';
-                }
-            }
-        } else {
-            if (elements.setupStep2.style.display === 'block') {
-                step2.style.display = 'block';
-            }
-            lobbyInfo.style.display = 'none';
-            // Disconnect if connected
+// ===== Setup Logic =====
+let setupPlayerCount = 2; // Default for local mode
+
+// --- Mode Selection ---
+if (elements.modeLocalBtn) {
+    elements.modeLocalBtn.addEventListener('click', () => {
+        soundManager.playClick();
+        isMobileMode = false;
+        elements.modeSelection.style.display = 'none';
+        elements.setupLocalPlayers.style.display = 'flex';
+    });
+}
+
+if (elements.nextLocalNamesBtn) {
+    elements.nextLocalNamesBtn.addEventListener('click', () => {
+        soundManager.playClick();
+        elements.setupLocalPlayers.style.display = 'none';
+        elements.setupLocalNames.style.display = 'flex';
+        renderLocalNameInputs();
+    });
+}
+
+if (elements.backLocalPlayersBtn) {
+    elements.backLocalPlayersBtn.addEventListener('click', () => {
+        soundManager.playClick();
+        elements.setupLocalNames.style.display = 'none';
+        elements.setupLocalPlayers.style.display = 'flex';
+    });
+}
+
+if (elements.modeSmartphoneBtn) {
+    elements.modeSmartphoneBtn.addEventListener('click', () => {
+        isMobileMode = true;
+        elements.modeSelection.style.display = 'none';
+        elements.setupSmartphoneMode.style.display = 'flex';
+        initSmartphoneLobby();
+    });
+}
+
+if (elements.backModeBtns) {
+    elements.backModeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            soundManager.playClick();
+            // Reset to mode selection
+            if (elements.setupLocalPlayers) elements.setupLocalPlayers.style.display = 'none';
+            if (elements.setupLocalNames) elements.setupLocalNames.style.display = 'none';
+            elements.setupSmartphoneMode.style.display = 'none';
+            elements.modeSelection.style.display = 'block';
+
+            // Clean up lobby if needed
             if (socket) {
                 socket.disconnect();
                 socket = null;
-                currentLobbyId = null;
+            }
+        });
+    });
+}
+
+// --- Local Mode Logic ---
+// Player Count Input
+if (elements.playerCountInput) {
+    elements.playerCountInput.addEventListener('change', (e) => {
+        let val = parseInt(e.target.value);
+        if (val < 2) val = 2;
+        if (val > 10) val = 10;
+        setupPlayerCount = val;
+        renderLocalNameInputs();
+    });
+}
+
+function renderLocalNameInputs() {
+    if (!elements.localNamesContainer) return;
+    elements.localNamesContainer.innerHTML = '';
+
+    for (let i = 1; i <= setupPlayerCount; i++) {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.innerHTML = `<input type="text" id="player-name-${i}" placeholder="Giocatore ${i}">`;
+        elements.localNamesContainer.appendChild(div);
+    }
+}
+
+if (elements.startLocalGameBtn) {
+    elements.startLocalGameBtn.addEventListener('click', () => {
+        const players = [];
+        for (let i = 1; i <= setupPlayerCount; i++) {
+            const nameInput = document.getElementById(`player-name-${i}`);
+            let name = nameInput.value.trim() || nameInput.placeholder;
+            players.push({ name: name, id: 'local-' + i });
+        }
+
+        startGameDirectly(players);
+    });
+}
+
+// --- Smartphone Mode Logic ---
+function initSmartphoneLobby() {
+    socket = io(API_URL);
+
+    // Create Lobby
+    // Create Lobby
+    fetch(`${API_URL}/api/lobby/create`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            currentLobbyId = data.lobbyId;
+            if (elements.bigLobbyIdDisplay) elements.bigLobbyIdDisplay.textContent = currentLobbyId;
+
+            // Use detected IP from server if available, otherwise fallback to localhost
+            const host = data.localIp ? `${data.localIp}:${data.port || 3000}` : window.location.host;
+            // Use http specifically as mobile safari might block mixed content if we were https (we aren't generally but good to be explicit)
+            // But actually better to match protocol
+            const protocol = window.location.protocol;
+            const mobileLink = `${protocol}//${host}/mobile.html`;
+
+            if (elements.bigMobileLink) {
+                elements.bigMobileLink.innerHTML = `<a href="${mobileLink}" target="_blank" style="color: #00d4ff; text-decoration: none;">${mobileLink}</a>`;
+            }
+
+            // Host joins
+            socket.emit('host:join', currentLobbyId);
+        });
+
+    socket.on('host:joined', () => {
+        console.log('Host joined lobby:', currentLobbyId);
+    });
+
+    socket.on('lobby:updated', (data) => {
+        console.log('Lobby updated:', data);
+        renderBigLobbyPlayers(data.players);
+
+        // Enable start button if at least 2 players
+        if (elements.startSmartphoneGameBtn) {
+            elements.startSmartphoneGameBtn.disabled = data.players.length < 2;
+            if (data.players.length >= 2) {
+                elements.startSmartphoneGameBtn.innerHTML = `AVVIA PARTITA (${data.players.length}) 🚀`;
+            } else {
+                elements.startSmartphoneGameBtn.innerHTML = `IN ATTESA DI GIOCATORI... (${data.players.length}/2)`;
             }
         }
+
+        // Auto-refresh players if needed for game state
+        gameState.players = data.players;
+    });
+
+    socket.on('game:started', () => {
+        console.log('Game started by server, transitioning host UI...');
+        console.log('Players for game:', gameState.players);
+        if (gameState.players && gameState.players.length > 0) {
+            startGameDirectly(gameState.players);
+        } else {
+            console.error('CRITICAL: Received game:started but gameState.players is empty!');
+            showMessage('Errore: nessun giocatore rilevato nel sistema. Riprova.', 'error');
+        }
+    });
+
+    socket.on('player:action', handlePlayerAction);
+
+    // Host receives mystery choice from player
+    socket.on('lobby:mystery-choice', (choice) => {
+        console.log('Received mystery choice from mobile player:', choice);
+        // We can just call the resolve function directly, it will close the popup on host too
+        resolveMysteryChoice(choice);
+        syncGameState(); // Ensure state is synced after mystery choice is resolved
     });
 }
 
-elements.nextStepBtn?.addEventListener('click', () => {
-    soundManager.playClick();
-    const mobileModeEnabled = mobileModeCheckbox && mobileModeCheckbox.checked;
-    
-    if (mobileModeEnabled) {
-        // In mobile mode, don't proceed to step 2
-        // User should see lobby info and wait for players, then click "Inizia Partita"
+function renderBigLobbyPlayers(players) {
+    if (!elements.bigPlayersGrid) return;
+    elements.bigPlayersGrid.innerHTML = '';
+
+    if (players.length === 0) {
+        elements.bigPlayersGrid.innerHTML = '<p style="grid-column: 1/-1; color: #aaa; font-style: italic; font-size: 1.2rem;">In attesa di giocatori...</p>';
         return;
     }
-    
-    const count = parseInt(elements.playerCountInput.value) || 2;
-    const playerCount = Math.max(1, Math.min(10, count));
 
-    elements.playerNamesContainer.innerHTML = '';
-    for (let i = 0; i < playerCount; i++) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'player-name-input';
-        input.placeholder = `Giocatore ${i + 1}`;
-        elements.playerNamesContainer.appendChild(input);
-    }
-
-    elements.setupStep1.style.display = 'none';
-    elements.setupStep2.style.display = 'block';
-});
-
-elements.backStepBtn?.addEventListener('click', () => {
-    soundManager.playClick();
-    elements.setupStep2.style.display = 'none';
-    elements.setupStep1.style.display = 'block';
-});
-
-// Mobile mode start button
-const startGameBtnMobile = document.getElementById('start-game-btn-mobile');
-if (startGameBtnMobile) {
-    startGameBtnMobile.addEventListener('click', () => {
-        console.log('Mobile start button clicked - Current players:', gameState.players.length, gameState.players);
-        startGame();
+    players.forEach(player => {
+        const card = document.createElement('div');
+        card.className = 'big-player-card new'; // Always new animation for re-renders for now
+        card.innerHTML = `
+            <div class="big-player-avatar">👤</div>
+            <div class="big-player-name">${player.name}</div>
+        `;
+        elements.bigPlayersGrid.appendChild(card);
     });
 }
 
-elements.startGameBtn?.addEventListener('click', () => {
-    if (isMobileMode && currentLobbyId) {
-        // In mobile mode, check if players joined
-        if (gameState.players.length === 0) {
-            showMessage('Aspetta che almeno un giocatore si unisca alla lobby!', 'error');
+if (elements.startSmartphoneGameBtn) {
+    elements.startSmartphoneGameBtn.addEventListener('click', () => {
+        console.log('Start Smartphone Game Button CLICKED');
+        if (!socket || !currentLobbyId) {
+            console.error('Socket or Lobby ID missing when start button clicked');
             return;
         }
+
+        if (gameState.players.length < 2) {
+            console.warn('Click ignored: not enough players');
+            return;
+        }
+
+        console.log('Emitting host:start-game for lobby:', currentLobbyId);
         socket.emit('host:start-game', currentLobbyId);
+    });
+}
+
+// Common Start Game Function
+function startGameDirectly(players) {
+    console.log('startGameDirectly called with:', players);
+    if (!players || players.length === 0) {
+        console.error('Cannot start game directly with 0 players');
+        return;
     }
-    startGame();
-});
+
+    gameState.players = players;
+    gameState.currentPlayerIndex = 0;
+    gameState.totalScores = {};
+    gameState.partialScores = {};
+
+    players.forEach(p => {
+        gameState.totalScores[p.name] = 0;
+        gameState.partialScores[p.name] = 0;
+    });
+
+    console.log('Transitioning screens...');
+    if (elements.setupScreen) elements.setupScreen.classList.remove('active');
+    if (elements.gameScreen) elements.gameScreen.classList.add('active');
+
+    console.log('Starting manche...');
+    startNewManche();
+    renderPlayersList();
+}
+
+// Socket game start handler for smartphone mode
+if (socket) {
+    // This part is inside initSmartphoneLobby usually, but we need to handle the transition
+}
+// Note: 'game:started' is emitted to players, host now listens for it too to transition.
 elements.spinBtn?.addEventListener('click', spinWheel);
 elements.consonantBtn?.addEventListener('click', callConsonant);
 elements.vowelBtn?.addEventListener('click', buyVowel);
 elements.solveBtn?.addEventListener('click', trySolve);
-elements.passBtn?.addEventListener('click', () => {
-    soundManager.playClick();
-    passTurn();
-});
+elements.passBtn?.addEventListener('click', passTurn);
 
-elements.passBtnCenter?.addEventListener('click', () => {
-    soundManager.playClick();
-    passTurn();
-});
 elements.newGameBtn?.addEventListener('click', newGame);
 
 elements.consonantInput?.addEventListener('keypress', (e) => {
