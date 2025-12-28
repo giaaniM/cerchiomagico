@@ -17,7 +17,6 @@ const PUZZLE_DATABASE = [
     { hint: "MUSEI", phrase: "LE TESTE DI MODIGLIANI A LIVORNO" },
     { hint: "TECNICA", phrase: "UN ACQUARELLO SU CARTA COTONE" },
     { hint: "FOTOGRAFIA", phrase: "UNA POLAROID CON L'EFFETTO VINTAGE" },
-    { hint: "DECORAZIONE", phrase: "MOSAICI DI VETRO NELLA BASILICA" },
     { hint: "CERAMICA", phrase: "UN VASO DI PORCELLANA DI CAPODIMONTE" },
 
     // --- SCIENZA, NATURA E CURIOSITÀ ---
@@ -126,7 +125,6 @@ const PUZZLE_DATABASE = [
 
     // --- VIAGGI E GEOGRAFIA ---
     { hint: "GIAPPONE", phrase: "I FIORI DI CILIEGIO NEL PARCO DI UENO" },
-    { hint: "FRANCIA", phrase: "UN GIRO SUL BATEAU MOUCHE SULLA SENNA" },
     { hint: "EGITTO", phrase: "IL TEMPIO DI ABU SIMBEL SUL NILO" },
     { hint: "USA", phrase: "IL GRAND CANYON NELLO STATO DELL'ARIZONA" },
     { hint: "ISOLE", phrase: "LE SPIAGGE BIANCHE DELLE SEYCHELLES" },
@@ -160,7 +158,6 @@ const PUZZLE_DATABASE = [
     { hint: "SLANG", phrase: "FARE UNA FIGURA DI MERDA EPICA" },
     { hint: "INTERNET", phrase: "LO SHITPOSTING DI ALTA QUALITA SU REDDIT" },
     { hint: "LIFESTYLE", phrase: "UN WEEKEND DISAGIATO CON LO ZAINO IN SPALLA" },
-    { hint: "TRAGUARDI", phrase: "LA PATENTE PRESA DOPO MILLE TENTATIVI" },
     { hint: "FESTE", phrase: "UN DJ SET ABUSIVO SULLA SPIAGGIA LIBERA" },
     { hint: "SHOPPING", phrase: "UN ORDINE DI VINTED ARRIVATO IN RITARDO" },
     { hint: "ESTATE", phrase: "IL FALO IN SPIAGGIA CON LA CHITARRA SCORDATA" },
@@ -207,7 +204,6 @@ const PUZZLE_DATABASE = [
     { hint: "FAMIGLIA", phrase: "IL PRANZO DI NATALE CON TUTTI I PARENTI" },
     { hint: "AMICIZIA", phrase: "UN SEGRETO CONFIDATO ALL'AMICA DEL CUORE" },
     { hint: "TEMPO", phrase: "IL TICCHETTIO DI UN VECCHIO PENDOLO" },
-    { hint: "ESTATE", phrase: "IL PROFUMO DI SALSEDINE SULLA PELLE" },
     { hint: "GIOCHI", phrase: "UN REBUS DIABOLICO SULLA RIVISTA" },
 
     // --- SCIENZA E TECNICA (40) ---
@@ -318,7 +314,6 @@ const PUZZLE_DATABASE = [
     { hint: "APERITIVO", phrase: "UN COCKTAIL MARGARITA AL SALE" },
     { hint: "CURIOSITÀ", phrase: "ZIBIBBO CON I CANTUCCI DURI" },
     { hint: "SALSE", phrase: "UN'EMULSIONE DI OLIO E LIMONE" },
-    { hint: "PASTA", phrase: "GNOCCHI AL CASTELMAGNO E NOCI" },
     { hint: "CAFFÈ", phrase: "ESPRESSO RISTRETTO IN TAZZA" },
     { hint: "LIEVITATI", phrase: "FOCACCIA BARESE CON POMODORO" },
     { hint: "CARNE", phrase: "BISTECCA ALLA FIORENTINA ALTA" },
@@ -375,7 +370,6 @@ const PUZZLE_DATABASE = [
     { hint: "METEO", phrase: "TSUNAMI DI EMOZIONI NEL CUORE" },
     { hint: "NATURA", phrase: "ODORE DI OZONO DOPO TEMPORALE" },
     { hint: "GEOGRAFIA", phrase: "ZIGGURAT UR NELLA MESOPOTAMIA" },
-    { hint: "GHIACCIO", phrase: "CALOTTA POLARE CHE SI ROMPE" },
     { hint: "SABBIA", phrase: "DUNA SINUOSA NEL DESERTO CALDO" },
     { hint: "FIUMI", phrase: "L'ESTUARIO DEL FIUME CHE SFOCIA" },
     { hint: "GROTTE", phrase: "STALATTITE CHE GOCCIOLA ACQUA" },

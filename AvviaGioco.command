@@ -3,6 +3,9 @@
 # Vai alla cartella dove si trova questo script
 cd "$(dirname "$0")"
 
+echo "🧹 Pulizia processi precedenti..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null
+
 echo "🚀 Avvio della Ruota della Fortuna..."
 
 # Caricamento NVM (Node Version Manager)

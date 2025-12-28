@@ -100,6 +100,11 @@ const soundManager = {
         setTimeout(() => this.playTone(200, 'sine', 0.4, 0.15), 300);
     },
 
+    playGameOver() {
+        const audio = new Audio('gameover.mp3');
+        audio.play().catch(e => console.warn('Audio play error:', e));
+    },
+
     playWin() {
         // 1. Play external MP3 (Voice/Jingle)
         const winAudio = new Audio('fraseindovinata.mp3');
@@ -157,6 +162,8 @@ const API_URL = window.location.origin;
 const gameState = {
     phrase: '',
     originalPhrase: '', // Original phrase for file removal
+    pendingPenalty: null, // Track BANCAROTTA or PASSA for jolly choice
+    pointerAngle: 0, // Pointer oscillation angle for animation
     hint: '',
     normalizedPhrase: '',
     revealedLetters: new Set(),
@@ -172,7 +179,8 @@ const gameState = {
     wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
     allConsonantsRevealed: false,
     wheelRotation: 0,
-    usedPhrases: new Set() // Track used phrases to avoid duplicates
+    usedPhrases: new Set(), // Track used phrases in current session
+    excludedPhrases: new Set() // Track phrases won and saved in localStorage
 };
 
 // ===== Offline Phrases Database (Updated for Length) =====
@@ -869,6 +877,7 @@ function renderWheelToCache() {
         }
         ctx.restore();
     });
+    // Pegs removed per user request
 }
 
 function drawWheel(rotation = 0) {
@@ -901,6 +910,7 @@ function drawWheel(rotation = 0) {
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 3 * scale;
     ctx.stroke();
+    // Pointer is handled by HTML element .wheel-pointer
 }
 
 // ===== Wheel Spinning =====
@@ -908,93 +918,72 @@ let wheelAnimationId = null;
 
 function spinWheel() {
     if (gameState.wheelPhase !== 'idle' && gameState.wheelPhase !== 'choose_action') return;
-    if (gameState.players[gameState.currentPlayerIndex].score < VOWEL_COST && gameState.wheelPhase === 'choose_action') {
-        // ...
-    }
 
     gameState.wheelPhase = 'spinning';
     updateUI();
 
-    // Show Overlay
     const overlay = document.getElementById('wheel-overlay');
     if (overlay) overlay.classList.add('active');
 
-    // Random target segment
+    const pointerEl = document.querySelector('.wheel-pointer');
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
     const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
     const resultFragment = WHEEL_SEGMENTS[randomSegmentIndex];
 
-    // Calculate precise target rotation
-    // We want the center of the selected segment to end up at 270 degrees (Top)
-    // Segment Center relative to 0 rotation = index * angle + angle/2
+    // Stop near the EDGE of the segment (in bilico)
+    // 0.4 to 0.5 = right edge, -0.4 to -0.5 = left edge
+    const edgeSide = Math.random() > 0.5 ? 1 : -1;
+    const edgeOffset = edgeSide * (0.4 + Math.random() * 0.08); // 40-48% from center
+
     const segmentCenter = randomSegmentIndex * segmentAngle + segmentAngle / 2;
-
-    // Required rotation to bring segmentCenter to 270:
-    // TargetPos (270) = CurrentPos (segmentCenter) + Rotation
-    // Rotation = 270 - segmentCenter
-    let targetRotationDelta = 270 - segmentCenter;
-
-    // Normalize delta to be positive [0, 360) for clockwise rotation logic consistency
+    let targetRotationDelta = 270 - segmentCenter + (edgeOffset * segmentAngle);
     targetRotationDelta = (targetRotationDelta % 360 + 360) % 360;
 
-    // We want to add at least 5 full spins
-    const minSpins = 5;
-    const currentRotation = gameState.wheelRotation;
-
-    // Calculate current position within the 0-360 cycle
-    const currentMod = currentRotation % 360;
-
-    // Calculate distance to target from current position
-    // We want to go from currentMod to targetRotationDelta in clockwise direction
-    let distance = targetRotationDelta - currentMod;
-
-    // If distance is negative (target is behind current), add 360 to go forward
-    if (distance < 0) distance += 360;
-
-    // Total target rotation
-    const targetRotation = currentRotation + distance + (minSpins * 360);
-
-    const startRotation = currentRotation;
+    const minSpins = 3 + Math.floor(Math.random() * 2);
+    const startRotation = gameState.wheelRotation;
+    const targetRotation = startRotation + targetRotationDelta + (minSpins * 360);
     const totalRotation = targetRotation - startRotation;
-    const duration = 5000; // Slower, more suspenseful spin
-    const startTime = performance.now();
 
-    // Play tick sounds during spin
+    const duration = 8000;
+    const startTime = performance.now();
     let lastTickSegment = -1;
+    let pointerAngle = 0;
+    let pointerVelocity = 0;
+    let lastRotation = startRotation;
 
     function animate(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
 
-        // REVERTED EASING: Standard Cubic Ease-Out
-        const easeOut = 1 - Math.pow(1 - progress, 3);
+        // Single smooth ease-out curve - NO phases, NO jumps
+        // Using quartic easing that naturally slows down at the end
+        const ease = 1 - Math.pow(1 - progress, 5); // Quintic ease out
 
-        const currentRotation = startRotation + totalRotation * easeOut;
+        const currentRotation = startRotation + totalRotation * ease;
+        const rotationDelta = currentRotation - lastRotation;
+        lastRotation = currentRotation;
 
         gameState.wheelRotation = currentRotation;
         drawWheel(currentRotation);
 
-        // Play tick sound when passing segments
-        // Pointer is at 270 degrees. We check what segment is currently under 270.
-        // Segment at 270 = (270 - rotation) normalized
-        const pointerAngle = 270;
-        const angleUnderPointer = (pointerAngle - currentRotation) % 360;
-        const normalizedAngle = (angleUnderPointer + 360) % 360;
-        const currentSegment = Math.floor(normalizedAngle / segmentAngle);
+        const currentSegment = Math.floor(((270 - currentRotation) % 360 + 360) % 360 / segmentAngle);
 
-        if (currentSegment !== lastTickSegment) {
+        if (currentSegment !== lastTickSegment && rotationDelta > 0.02) {
             soundManager.playWheelTick();
             lastTickSegment = currentSegment;
         }
+        // Pointer is fixed - no animation
 
         if (progress < 1) {
             wheelAnimationId = requestAnimationFrame(animate);
         } else {
-            gameState.wheelRotation = targetRotation;
-            drawWheel(targetRotation);
-            onWheelStop(resultFragment);
+            // Calculate the ACTUAL segment from final position
+            const finalAngle = ((270 - currentRotation) % 360 + 360) % 360;
+            const actualSegmentIndex = Math.floor(finalAngle / segmentAngle);
+            const actualResult = WHEEL_SEGMENTS[actualSegmentIndex];
 
-            // Hide Overlay after spin
+            onWheelStop(actualResult);
+
             setTimeout(() => {
                 const overlay = document.getElementById('wheel-overlay');
                 if (overlay) overlay.classList.remove('active');
@@ -1009,11 +998,16 @@ function onWheelStop(result) {
     const player = getCurrentPlayer();
 
     if (result.value === 'PASSA') {
-        soundManager.playError();
-        elements.currentWheelValue.textContent = 'PASSA';
-        elements.currentWheelValue.className = 'wheel-value passa';
-        showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
-        setTimeout(passTurn, 2500);
+        if (gameState.hasJolly[player.name]) {
+            // Use Jolly to avoid PASSA
+            handlePenaltyWithJolly(player, 'PASSA');
+        } else {
+            soundManager.playError();
+            elements.currentWheelValue.textContent = 'PASSA';
+            elements.currentWheelValue.className = 'wheel-value passa';
+            showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
+            setTimeout(passTurn, 2500);
+        }
     } else if (result.value === 'RADDOPPIA') {
         // RADDOPPIA - Set special pending value and wait for consonant
         elements.currentWheelValue.textContent = 'RADDOPPIA';
@@ -1036,10 +1030,10 @@ function onWheelStop(result) {
         // Check if player has Jolly shield
         if (gameState.hasJolly[player.name]) {
             // Offer choice: use Jolly or accept Bancarotta
-            handleBancarottaWithJolly(player);
+            handlePenaltyWithJolly(player, 'BANCAROTTA');
         } else {
             // Normal Bancarotta - lose ALL scores (partial + total)
-            soundManager.playError();
+            soundManager.playGameOver();
             elements.currentWheelValue.textContent = 'BANCAROTTA';
             elements.currentWheelValue.className = 'wheel-value bancarotta';
             gameState.partialScores[player.name] = 0;
@@ -1076,11 +1070,17 @@ function onWheelStop(result) {
     }
 }
 
-function handleBancarottaWithJolly(player) {
+function handlePenaltyWithJolly(player, penaltyType) {
+    gameState.pendingPenalty = penaltyType; // Track if it was BANCAROTTA or PASSA
+    const title = penaltyType === 'BANCAROTTA' ? '💥 BANCAROTTA!' : '⏭️ PASSA';
+    const penaltyText = penaltyType === 'BANCAROTTA'
+        ? 'Hai uno scudo Jolly 🛡️<br>Vuoi usarlo per salvarti dalla Bancarotta?'
+        : 'Hai uno scudo Jolly 🛡️<br>Vuoi usarlo per non perdere il turno?';
+
     const html = `
         <div class="popup-jolly-choice">
-            <div class="jolly-choice-title">⚠️ BANCAROTTA!</div>
-            <p class="jolly-choice-text">Hai uno scudo Jolly 🛡️<br>Vuoi usarlo per salvarti?</p>
+            <div class="jolly-choice-title">${title}</div>
+            <p class="jolly-choice-text">${penaltyText}</p>
             <div class="mystery-cards-container">
                 <!-- Use Jolly -->
                 <div class="mystery-card left" onclick="resolveJollyChoice(true)">
@@ -1090,11 +1090,11 @@ function handleBancarottaWithJolly(player) {
                     </div>
                 </div>
 
-                <!-- Accept Bancarotta -->
+                <!-- Accept Penalty -->
                 <div class="mystery-card right" onclick="resolveJollyChoice(false)">
                     <div class="card-content">
-                        <span class="card-icon">💥</span>
-                        <span class="card-text">ACCETTA<br>BANCAROTTA</span>
+                        <span class="card-icon">${penaltyType === 'BANCAROTTA' ? '💥' : '⏭️'}</span>
+                        <span class="card-text">ACCETTA<br>${penaltyType}</span>
                     </div>
                 </div>
             </div>
@@ -1105,11 +1105,12 @@ function handleBancarottaWithJolly(player) {
 
 window.resolveJollyChoice = function (useJolly) {
     const player = getCurrentPlayer();
+    const penaltyType = gameState.pendingPenalty;
     elements.modalOverlay.style.display = 'none';
     elements.popupMessage.style.display = 'none';
 
     if (useJolly) {
-        // Use Jolly - keep money, lose shield, KEEP TURN
+        // Use Jolly - keep money/turn, lose shield, KEEP TURN
         soundManager.playReveal();
         gameState.hasJolly[player.name] = false;
         renderPlayersList();
@@ -1121,15 +1122,23 @@ window.resolveJollyChoice = function (useJolly) {
             showMessage('Sei salvo! Gira di nuovo!', 'success');
         }, 2500);
     } else {
-        // Accept Bancarotta - lose ALL money (partial + total), keep shield
-        soundManager.playError();
-        gameState.partialScores[player.name] = 0;
-        gameState.totalScores[player.name] = 0; // Lose global score too
-        renderPlayersList();
-        showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0<br><br>(Jolly conservato)</div>`, 4000);
-        if (isMobileMode) syncGameState();
-        setTimeout(passTurn, 4500);
+        // Accept Penalty
+        if (penaltyType === 'BANCAROTTA') {
+            soundManager.playGameOver();
+            gameState.partialScores[player.name] = 0;
+            gameState.totalScores[player.name] = 0;
+            renderPlayersList();
+            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Totali gara: €0<br><br>(Jolly conservato)</div>`, 4000);
+            if (isMobileMode) syncGameState();
+            setTimeout(passTurn, 4500);
+        } else {
+            // It was PASSA
+            soundManager.playError();
+            showPopup(`<div class="popup-passa">⏭️ CHIUDI IL TURNO<br>${player.name} passa la mano.<br><br>(Jolly conservato)</div>`, 2500);
+            setTimeout(passTurn, 3000);
+        }
     }
+    delete gameState.pendingPenalty;
 };
 
 function handleMysterySegment() {
@@ -1217,7 +1226,7 @@ window.resolveMysteryChoice = function (choice) {
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         showMessage(`Chiama una consonante (vale €${gameState.pendingWheelValue})`, 'info');
-        if (isMobileMode) syncGameState(); // Ensure mobile knows it's consonant phase
+        if (isMobileMode) syncGameState();
     }, 2000);
 };
 
@@ -1243,17 +1252,11 @@ function callConsonant() {
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
         soundManager.playError();
-        const nextPlayer = gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length];
-        showPopup(`<div class="popup-error-letter">
-            <div>❌ LETTERA GIÀ CHIAMATA!</div>
-            <div class="popup-letter-wrong-small">${letter}</div>
+        showPopup(`<div class="popup-error">
+            <div>Lettera già chiamata!</div>
             <div>Turno perso</div>
-            <div class="popup-turn-info">Tocca a: ${nextPlayer.name}</div>
         </div>`, 3000);
-        setTimeout(() => {
-            showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2500);
-            setTimeout(passTurn, 2800);
-        }, 3000);
+        setTimeout(passTurn, 3000);
         return;
     }
 
@@ -1326,16 +1329,13 @@ function callConsonant() {
         gameState.pendingWheelValue = null; // Clear value
         elements.currentWheelValue.textContent = '-';
         const nextPlayer = gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length];
-        // Show error popup with larger letter, then turn popup
+        // Show error popup with larger letter
         showPopup(`<div class="popup-error-large">
             <div>LETTERA ASSENTE</div>
             <span class="popup-letter-wrong">${letter}</span>
             <div>non c'è nella frase</div>
         </div>`, 3000);
-        setTimeout(() => {
-            showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2500);
-            setTimeout(passTurn, 2800);
-        }, 3000);
+        setTimeout(passTurn, 3000);
     }
 }
 
@@ -1439,6 +1439,10 @@ function endManche() {
     const winner = getCurrentPlayer();
     const winnings = Number(gameState.partialScores[winner.name]) || 0;
     gameState.totalScores[winner.name] = (Number(gameState.totalScores[winner.name]) || 0) + winnings;
+
+    // Store winner index to exclude them from starting the next manche
+    gameState.lastMancheWinnerIndex = gameState.currentPlayerIndex;
+
     updateUI();
     if (isMobileMode) syncGameState();
 
@@ -1450,26 +1454,58 @@ function endManche() {
         <div class="popup-title">MANCHE ${gameState.currentManche} VINTA!</div>
         <div class="popup-winner">${winner.name}</div>
         <div class="popup-earnings">+€${winnings}</div>
-    </div>`, 0);
+    </div>`, 3000);
 
     // Clear board as requested: "cancella la frase che è stata indovinata"
     if (elements.gameBoard) elements.gameBoard.innerHTML = '';
 
-    // Remove phrase from puzzles.js file permanently
-    removePhraseFromFile(gameState.originalPhrase || gameState.phrase);
+    // Mark phrase as won locally (replaces server-side removal)
+    markPhraseAsWon(gameState.originalPhrase || gameState.phrase);
 
     setTimeout(() => {
-        elements.popupMessage.style.display = 'none';
-        elements.modalOverlay.style.display = 'none';
+        // Show partial ranking
+        showPartialRanking();
 
-        if (gameState.currentManche >= TOTAL_MANCHES) {
-            showFinalResults();
-        } else {
-            // Reset for next manche
-            gameState.currentManche++;
-            startNextManche();
-        }
-    }, 3000);
+        setTimeout(() => {
+            elements.popupMessage.style.display = 'none';
+            elements.modalOverlay.style.display = 'none';
+
+            if (gameState.currentManche >= TOTAL_MANCHES) {
+                showFinalResults();
+            } else {
+                // Reset for next manche
+                gameState.currentManche++;
+                startNextManche();
+            }
+        }, 4000); // Wait for ranking
+    }, 3000); // Wait for win popup
+}
+
+function showPartialRanking() {
+    const sortedPlayers = [...gameState.players].sort((a, b) =>
+        (Number(gameState.totalScores[b.name]) || 0) - (Number(gameState.totalScores[a.name]) || 0)
+    );
+
+    let html = `
+        <div class="popup-ranking-partial">
+            <div class="ranking-header">CLASSIFICA PARZIALE</div>
+            <div class="ranking-list">
+    `;
+
+    sortedPlayers.forEach((p, i) => {
+        const score = gameState.totalScores[p.name] || 0;
+        const trophy = i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+        html += `
+            <div class="ranking-item ${i === 0 ? 'top-rank' : ''}">
+                <span class="rank-pos">${i + 1}</span>
+                <span class="rank-name">${trophy} ${p.name}</span>
+                <span class="rank-val">€${score}</span>
+            </div>
+        `;
+    });
+
+    html += `</div></div>`;
+    showPopup(html, 0); // Display until timeout in endManche
 }
 
 async function startNextManche() {
@@ -1483,8 +1519,17 @@ async function startNextManche() {
     // Reset partial scores
     gameState.players.forEach(p => gameState.partialScores[p.name] = 0);
 
-    // Random starting player
-    gameState.currentPlayerIndex = Math.floor(Math.random() * gameState.players.length);
+    // Random starting player, excluding the last manche winner
+    let startIdx;
+    if (gameState.players.length > 1 && gameState.lastMancheWinnerIndex !== undefined) {
+        do {
+            startIdx = Math.floor(Math.random() * gameState.players.length);
+        } while (startIdx === gameState.lastMancheWinnerIndex);
+    } else {
+        startIdx = Math.floor(Math.random() * gameState.players.length);
+    }
+    gameState.currentPlayerIndex = startIdx;
+    delete gameState.lastMancheWinnerIndex; // Reset for next time
 
     showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
 
@@ -1514,13 +1559,24 @@ async function startNextManche() {
     // Selezione diretta da PUZZLE_DATABASE
     let valid = false;
     let attempts = 0;
-    while (!valid && attempts < 100) {
+
+    // Load permanently excluded phrases from localStorage
+    const saved = localStorage.getItem('won_phrases');
+    if (saved) {
+        const list = JSON.parse(saved);
+        gameState.excludedPhrases = new Set(list.map(p => normalizePhrase(p)));
+    }
+
+    while (!valid && attempts < 200) {
         attempts++;
         const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
 
-        // Ensure it fits AND hasn't been used yet
-        if (canFitOnBoard(randomPuzzle.phrase) && !gameState.usedPhrases.has(normalized)) {
+        // Ensure it fits AND hasn't been used yet AND is not excluded permanently
+        const isNotUsed = !gameState.usedPhrases.has(normalized);
+        const isNotExcluded = !gameState.excludedPhrases.has(normalized);
+
+        if (canFitOnBoard(randomPuzzle.phrase) && isNotUsed && isNotExcluded) {
             gameState.originalPhrase = randomPuzzle.phrase;
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
             gameState.hint = randomPuzzle.hint;
@@ -2332,8 +2388,26 @@ elements.solutionInput?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') trySolve();
 });
 
-function removePhraseFromFile(phrase) {
+function markPhraseAsWon(phrase) {
     if (!phrase) return;
+    const normalized = normalizePhrase(phrase);
+    gameState.excludedPhrases.add(normalized);
+
+    // Save to localStorage
+    try {
+        const saved = localStorage.getItem('won_phrases');
+        let list = saved ? JSON.parse(saved) : [];
+        if (!list.includes(phrase)) {
+            list.push(phrase);
+            localStorage.setItem('won_phrases', JSON.stringify(list));
+            console.log(`[LOCAL] Phrase marked as won permanently: "${phrase}"`);
+        }
+    } catch (e) {
+        console.error("Error saving won phrase to localStorage:", e);
+    }
+
+    // NEW: Also call server to remove from puzzles.js file
+    console.log(`[CLIENT] Requesting server to remove: "${phrase}"`);
     fetch(`${API_URL}/api/puzzle/remove`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2342,10 +2416,13 @@ function removePhraseFromFile(phrase) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                console.log(`[FILE] Phrase permanently removed from puzzles.js: "${phrase}"`);
+                console.log(`[SERVER SUCCESS] Phrase removed from puzzles.js: "${phrase}"`);
             } else {
-                console.warn(`[FILE] Failed to remove phrase or phrase not found: "${phrase}"`);
+                console.warn(`[SERVER FAIL] Phrase not found in file: "${phrase}"`);
             }
         })
-        .catch(err => console.error('[FILE] Error calling remove API:', err));
+        .catch(err => {
+            console.error('[SERVER ERROR] Error removing phrase:', err);
+            console.info('%cTIP: Se ricevi 404, RIAVVIA il server (sh start_game.sh) e FORZA il refresh (CMD+SHIFT+R)!', 'background: #222; color: #bada55');
+        });
 }

@@ -1932,13 +1932,28 @@ body {
 
 .wheel-pointer {
     position: absolute;
-    top: -15px;
+    top: -10px;
     left: 50%;
-    transform: translateX(-50%);
-    font-size: 2rem;
-    color: var(--accent-gold);
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    margin-left: -20px;
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 50px solid #fbbf24;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
     z-index: 10;
+}
+
+.wheel-pointer::after {
+    content: '';
+    position: absolute;
+    top: -48px;
+    left: -14px;
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 35px solid #f59e0b;
 }
 
 .btn-spin {
@@ -3052,4 +3067,102 @@ body {
     width: 100%;
     max-width: 300px;
     margin-bottom: 15px;
+}
+
+/* Partial Ranking Popup */
+.popup-ranking-partial {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    padding: 10px;
+}
+
+.ranking-header {
+    font-size: 2rem;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+    padding-bottom: 15px;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px 25px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    animation: slideInRight 0.4s ease-out backwards;
+}
+
+.ranking-item.top-rank {
+    background: linear-gradient(90deg, rgba(234, 179, 8, 0.2), rgba(0, 0, 0, 0.2));
+    border-color: rgba(234, 179, 8, 0.5);
+    transform: scale(1.02);
+}
+
+.rank-pos {
+    font-size: 1.5rem;
+    font-weight: 900;
+    width: 45px;
+    color: var(--text-secondary);
+}
+
+.rank-name {
+    flex-grow: 1;
+    text-align: left;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.rank-val {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--accent-gold);
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Delay items for sequential look */
+.ranking-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.ranking-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.ranking-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.ranking-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.ranking-item:nth-child(5) {
+    animation-delay: 0.5s;
 }

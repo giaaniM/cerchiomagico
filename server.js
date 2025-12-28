@@ -130,17 +130,24 @@ app.post('/api/puzzle/remove', (req, res) => {
         // We handle both simple quotes and double quotes.
         // We also need to be careful with apostrophes in the phrase being escaped or not.
         // Since we sanitizePhrase before selecting, the phrase on disk and the phrase in memory should match.
+        // Escape special regex characters in the phrase
         const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\{[^}]*phrase:\\s*["']${escapedPhrase}["'][^}]*\\},?\\s*`, 'g');
+
+        // This regex is very flexible but precise:
+        // - \{[^{]*? ensures we start at the opening brace of the target object
+        // - phrase:\s*["']${escapedPhrase}["'] finds the exact phrase
+        // - [^}]*?\} ensures we end at the closing brace of the same object
+        const regex = new RegExp(`\\{[^{]*?phrase:\\s*["']${escapedPhrase}["'][^}]*?\\},?\\s*`, 'g');
 
         const newContent = content.replace(regex, '');
 
         if (content !== newContent) {
             fs.writeFileSync(puzzlesPath, newContent, 'utf8');
-            console.log(`[FILE] Removed phrase from puzzles.js: "${phrase}"`);
+            console.log(`[FILE SUCCESS] Removed phrase from puzzles.js: "${phrase}"`);
             res.json({ success: true });
         } else {
-            console.warn(`[FILE] Phrase not found in puzzles.js: "${phrase}"`);
+            console.warn(`[FILE WARNING] Phrase NOT found in puzzles.js: "${phrase}"`);
+            console.warn(`[FILE INFO] Search term (escaped): ${escapedPhrase}`);
             res.json({ success: false, message: 'Phrase not found' });
         }
     } catch (err) {
@@ -410,6 +417,10 @@ const HOST = '0.0.0.0'; // Listen on all network interfaces
 server.listen(PORT, HOST, () => {
     localIP = getLocalIp();
 
+    console.log(`\n==========================================`);
+    console.log(`🚀 Ruota della Fortuna SERVER ATTIVO`);
+    console.log(`✅ Route /api/puzzle/remove REGISTRATA`);
+    console.log(`==========================================\n`);
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Server accessible from network on http://${localIP}:${PORT}`);
     console.log(`Mobile page: http://${localIP}:${PORT}/mobile.html`);
