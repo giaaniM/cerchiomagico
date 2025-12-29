@@ -441,6 +441,29 @@ body {
             92.86% 100%, 7.14% 100%,
             7.14% 75%, 0% 75%,
             0% 25%, 7.14% 25%);
+    transition: background 1s ease;
+}
+
+.game-board-inner.express-active {
+    background:
+        /* Repeating dense glitter layers */
+        radial-gradient(circle, #fff 1px, transparent 1.5px) 0 0 / 40px 40px,
+        radial-gradient(circle, rgba(251, 191, 36, 0.4) 1px, transparent 2px) 20px 20px / 60px 60px,
+        radial-gradient(circle, rgba(255, 255, 255, 0.3) 0.5px, transparent 1.5px) 10px 30px / 30px 30px,
+        /* Bronzier antique gold gradient */
+        linear-gradient(to right, #451a03 0%, #92400e 50%, #451a03 100%);
+    box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.8);
+    animation: goldGlimmer 2s infinite alternate ease-in-out;
+}
+
+@keyframes goldGlimmer {
+    0% {
+        filter: brightness(1) contrast(1);
+    }
+
+    100% {
+        filter: brightness(1.1) contrast(1.1);
+    }
 }
 
 .game-board-inner::before {
@@ -566,6 +589,10 @@ body {
     border: 3px solid #000;
     animation: flipIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Express Mode - Revealed Tiles remain standard or can be styled if requested */
+/* User requested: "durante l express le celle del tabellone invece di vuola puoi farle oro" */
+/* This likely refers to unrevealed ones, but let's check context. Usually revealed are white. */
 
 .tile.letter.revealed::before {
     display: none;
@@ -1684,6 +1711,7 @@ body {
     margin-bottom: 30px;
     background: linear-gradient(to bottom, #fff, var(--accent-gold));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
     letter-spacing: -1px;
@@ -2485,6 +2513,128 @@ body {
     text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
 }
 
+/* ===== EXPRESS MODE POPUP ===== */
+.popup-express {
+    background: linear-gradient(135deg, #1e1b4b 0%, #0c0a09 100%);
+    border: 4px solid #facc15;
+    border-radius: 30px;
+    padding: 40px;
+    color: white;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(250, 204, 21, 0.3);
+    text-align: center;
+    max-width: 550px;
+    position: relative;
+    overflow: hidden;
+}
+
+.popup-express::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(250, 204, 21, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.popup-express-title {
+    font-size: 2.8rem;
+    font-weight: 900;
+    margin-bottom: 25px;
+    color: #facc15;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.popup-express-title .rocket {
+    font-size: 3.5rem;
+    animation: launch 1s infinite alternate cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes launch {
+    from {
+        transform: translateY(0) scale(1.1);
+    }
+
+    to {
+        transform: translateY(-10px) scale(1.2);
+    }
+}
+
+.popup-express-body {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.popup-express-body b {
+    color: #facc15;
+    font-size: 1.4rem;
+}
+
+.popup-express-body .warning {
+    display: block;
+    margin-top: 20px;
+    background: rgba(239, 68, 68, 0.2);
+    padding: 10px 20px;
+    border-radius: 12px;
+    color: #f87171;
+    font-weight: 800;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    text-transform: uppercase;
+    animation: pulseRed 2s infinite;
+}
+
+@keyframes pulseRed {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+}
+
+.express-benefit-list {
+    text-align: left;
+    display: inline-block;
+    margin: 20px 0;
+}
+
+.express-benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.express-benefit-icon {
+    width: 32px;
+    height: 32px;
+    background: #facc15;
+    color: #1e1b4b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+
 /* ===== Central Action Area (Spin / Consonant) ===== */
 .central-action-area {
     width: 100%;
@@ -3165,4 +3315,223 @@ body {
 
 .ranking-item:nth-child(5) {
     animation-delay: 0.5s;
+}
+
+/* ===== EXPRESS MODE SPECIALIZED UI ===== */
+.express-call-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+    animation: slideUp 0.4s ease-out;
+}
+
+.express-input-capsule {
+    background: linear-gradient(135deg, #7e22ce, #4c1d95);
+    border: 3px solid #facc15;
+    border-radius: 60px;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(126, 34, 206, 0.5);
+}
+
+.express-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.express-input-label {
+    color: #facc15;
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.express-field {
+    width: 50px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    color: white;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.express-field:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #facc15;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.express-field-btn {
+    background: #facc15;
+    color: #4c1d95;
+    border: none;
+    border-radius: 12px;
+    padding: 0 15px;
+    height: 45px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.express-field-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    background: #fff;
+}
+
+.express-field-btn.vowel {
+    background: #fff;
+    color: #4c1d95;
+    border: 2px solid #facc15;
+}
+
+.express-field-btn.vowel:hover {
+    background: #facc15;
+}
+
+.express-input-divider {
+    width: 2px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== PREMIUM EXPRESS WINNINGS BANNER ===== */
+.express-banner {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #7e22ce 0%, #4c1d95 100%);
+    border: 4px solid #facc15;
+    border-radius: 80px;
+    padding: 15px 40px;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6), 0 0 30px rgba(126, 34, 206, 0.4);
+    z-index: 10000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: bannerEntrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.express-banner-icon {
+    font-size: 2.2rem;
+    animation: rocketShake 2s infinite ease-in-out;
+}
+
+.express-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-family: inherit;
+}
+
+.express-banner-title {
+    color: #facc15;
+    font-weight: 900;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.express-banner-divider {
+    width: 3px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.express-banner-player {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.6rem;
+}
+
+.express-banner-amount {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 5px 20px;
+    border-radius: 15px;
+    color: #fff;
+    font-weight: 900;
+    font-size: 2.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 180px;
+    text-align: center;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes bannerEntrance {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -100px) scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
+@keyframes rocketShake {
+
+    0%,
+    100% {
+        transform: rotate(0deg) translateY(0);
+    }
+
+    25% {
+        transform: rotate(-10deg) translateY(-2px);
+    }
+
+    75% {
+        transform: rotate(10deg) translateY(2px);
+    }
+}
+
+/* Update express-active wheel value to match */
+.wheel-value.express-active {
+    background: #7e22ce;
+    color: #facc15 !important;
+    animation: expressPulse 1s infinite;
+    border: 3px solid #facc15;
+    font-weight: 900;
+}
+
+@keyframes expressPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(251, 191, 36, 0.8);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+    }
 }
