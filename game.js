@@ -719,7 +719,7 @@ const WHEEL_SEGMENTS = [
 
     // Group 3
     { value: 'RADDOPPIA', color: 'GOLD', label: 'RADDOPPIA', glowing: true }, // Near PASSA 1
-    { value: 400, color: '#7e22ce', label: '400€' }, // Purple
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // Replaced 400 with PASSA as requested
     { value: 800, color: '#1e3a8a', label: '800€' }, // Dark Blue
     { value: 300, color: '#2563eb', label: '300€' }, // Blue
     { value: 'EXPRESS', color: 'EXPRESS', label: 'EXPRESS', glowing: true }, // EXPRESS near ?500
@@ -1013,8 +1013,7 @@ function spinWheel() {
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
     // Unified probability for all segments as requested
-    // TEST HACK: Always land on EXPRESS
-    const randomSegmentIndex = WHEEL_SEGMENTS.findIndex(s => s.value === 'EXPRESS');
+    const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
     const resultFragment = WHEEL_SEGMENTS[randomSegmentIndex];
 
     // Stop near the EDGE of the segment (in bilico)
@@ -1397,19 +1396,19 @@ function callConsonant() {
             earnings = gameState.pendingWheelValue * occurrences;
         }
 
-        revealLetter(letter, true, () => {
-            // Apply incremental score
-            if (specialAction !== 'RADDOPPIA' && specialAction !== 'RADDOPPIA_ZERO' && specialAction !== 'SCUDO') {
-                gameState.partialScores[player.name] += gameState.pendingWheelValue;
-                renderPlayersList();
-                soundManager.playCash();
-            }
-        });
+        revealLetter(letter, true, null); // Don't update score incrementally during reveal
         if (isMobileMode) syncGameState();
 
         // Delay popup and final cleanup until letters are revealed
         const delay = occurrences * 1500;
         setTimeout(() => {
+            // User request: Winnings and cash sound at the end of reveal
+            if (specialAction !== 'RADDOPPIA' && specialAction !== 'RADDOPPIA_ZERO' && specialAction !== 'SCUDO') {
+                gameState.partialScores[player.name] += earnings;
+                renderPlayersList();
+                soundManager.playCash();
+            }
+
             // Apply special actions (Raddoppia/Scudo) after reveal
             if (specialAction === 'RADDOPPIA' || specialAction === 'RADDOPPIA_ZERO') {
                 gameState.partialScores[player.name] = raddoppiaData.final;
@@ -1506,11 +1505,7 @@ function buyVowel() {
     const occurrences = countLetterOccurrences(letter);
 
     if (occurrences > 0) {
-        soundManager.playCorrect();
-        revealLetter(letter, true, () => {
-            // Vowels don't give money, so just keep sidebar updated if needed
-            renderPlayersList();
-        });
+        revealLetter(letter, true, null);
         showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e!`, 'success');
 
         if (checkWin()) {
@@ -1541,22 +1536,23 @@ function callExpressConsonant() {
     }
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        showMessage('Lettera già chiamata!', 'error');
+        triggerExpressBankruptcy("Lettera già chiamata!");
         return;
     }
 
     gameState.usedLetters.add(normalized);
     const occurrences = countLetterOccurrences(letter);
     if (occurrences > 0) {
-        revealLetter(letter, true, () => {
-            gameState.expressAccumulated += 500;
-            soundManager.playCash();
-            checkExpressBanner();
-        });
+        revealLetter(letter, true, null); // No incremental updates during reveal
 
         setTimeout(() => {
+            // User request: Incremental gain and cash sound at the end
+            gameState.expressAccumulated += (occurrences * 500);
+            soundManager.playCash();
+
             // Message removed as per user request (banner is enough)
             checkExpressBanner();
+            renderPlayersList();
 
             if (checkWin()) {
                 endManche();
@@ -1592,7 +1588,7 @@ function buyExpressVowel() {
 
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        showMessage('Vocale già chiamata!', 'error');
+        triggerExpressBankruptcy("Vocale già chiamata!");
         return;
     }
 
@@ -1610,11 +1606,7 @@ function buyExpressVowel() {
     const occurrences = countLetterOccurrences(letter);
 
     if (occurrences > 0) {
-        revealLetter(letter, true, () => {
-            // No incremental gain for vowels as they are a cost already deducted
-            // But we can update the banner just in case
-            checkExpressBanner();
-        });
+        revealLetter(letter, true, null);
         setTimeout(() => {
             showMessage(`EXPRESS VOCALE: -€${cost}.`, 'info');
             checkExpressBanner();
@@ -1707,6 +1699,12 @@ function endManche() {
 
     const winner = getCurrentPlayer();
 
+    // User request: quando si da la soluzione e si hanno 0 euro prendi mille euro.
+    const currentBank = (Number(gameState.partialScores[winner.name]) || 0) + (Number(gameState.expressAccumulated) || 0);
+    if (currentBank === 0) {
+        gameState.partialScores[winner.name] = 1000;
+    }
+
     // Support for EXPRESS winnings
     if (gameState.expressAccumulated > 0) {
         gameState.partialScores[winner.name] += gameState.expressAccumulated;
@@ -1796,8 +1794,7 @@ async function startNextManche() {
     // Reset partial scores
     gameState.players.forEach(p => gameState.partialScores[p.name] = 0);
 
-    // Clear shields at the start of each manche
-    gameState.hasJolly = {};
+    // Shields (hasJolly) are now preserved across rounds as requested.
 
     // Increase the "1000" segment value each manche (1000, 2000, 3000, 4000, 5000)
     const base1000Value = 1000;
@@ -1810,6 +1807,11 @@ async function startNextManche() {
 
     // Fixed rotation for starting player: Manche 1 -> Player 0, Manche 2 -> Player 1, etc.
     gameState.currentPlayerIndex = (gameState.currentManche - 1) % gameState.players.length;
+
+    // User request: chi vince la manche non inizia il turno dopo
+    if (gameState.lastMancheWinnerIndex !== undefined && gameState.currentPlayerIndex === gameState.lastMancheWinnerIndex) {
+        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+    }
     delete gameState.lastMancheWinnerIndex; // Reset for next time
 
     showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
