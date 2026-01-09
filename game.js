@@ -382,23 +382,18 @@ function createBoard() {
     elements.gameBoard.innerHTML = '';
     const words = gameState.phrase.split(' ');
     const BOARD_ROWS = 4;
+    const ROW_CAPACITIES = [12, 14, 14, 12];
     const FIXED_CAPACITY = 14;
 
-    // Tentativo 1: Area ristretta (per mantenere la forma a scalino 12-10-10-12)
-    let contentRows = splitPhraseIntoRows(words, [12, 10, 10, 12]);
-    let mode = 'restricted';
-
-    // Tentativo 2: Area estesa (se non ci sta in quella ristretta)
-    if (!contentRows) {
-        contentRows = splitPhraseIntoRows(words, [12, 14, 14, 12]);
-        mode = 'extended';
-    }
+    // Tentativo: Area completa (12-14-14-12)
+    let contentRows = splitPhraseIntoRows(words, ROW_CAPACITIES);
 
     if (!contentRows) {
         console.error("Frase troppo lunga per il tabellone!");
         return;
     }
 
+    // Centramento verticale se le righe usate sono meno di 4
     const verticalOffset = Math.floor((BOARD_ROWS - contentRows.length) / 2);
 
     for (let row = 0; row < BOARD_ROWS; row++) {
@@ -408,21 +403,27 @@ function createBoard() {
         const contentRowIndex = row - verticalOffset;
         const contentRow = (contentRowIndex >= 0 && contentRowIndex < contentRows.length) ? contentRows[contentRowIndex] : null;
 
-        // Offset di partenza dinamico:
-        // Righe 0 e 3: sempre 1 (centrate 12 in 14)
-        // Righe 1 e 2: partono dalla 2ª casella (index 1) se il contenuto <= 12, altrimenti da 0
+        const rowLimit = ROW_CAPACITIES[row];
+
+        // Allineamento a sinistra (coerente con la forma 12-14-14-12)
+        // La casella 1 è l'inizio "standard" per tutte le righe.
+        // Solo per le righe 1 e 2 usiamo la casella 0 se la parola è più lunga di 12.
         let startCol;
         if (row === 0 || row === 3) {
             startCol = 1;
         } else {
-            startCol = (contentRow && contentRow.length <= 12) ? 1 : 0;
+            // Righe centrali (14 caselle)
+            if (contentRow && contentRow.length > 12) {
+                startCol = 0;
+            } else {
+                startCol = 1;
+            }
         }
 
         for (let col = 0; col < FIXED_CAPACITY; col++) {
             const tileElement = document.createElement('div');
             tileElement.className = 'tile';
 
-            // Celle fisicamente non esistenti per la forma a scalino
             const isRowEdge = (row === 0 || row === 3) && (col === 0 || col === 13);
 
             if (isRowEdge) {
@@ -448,12 +449,8 @@ function createBoard() {
 // Verifica se la frase può entrare nel tabellone
 function canFitOnBoard(phrase) {
     const words = phrase.split(' ');
-    // Prova prima l'area ristretta (forma a scalino 12-10-10-12)
-    let contentRows = splitPhraseIntoRows(words, [12, 10, 10, 12]);
-    if (contentRows) return true;
-
-    // Prova l'area estesa (12-14-14-12)
-    contentRows = splitPhraseIntoRows(words, [12, 14, 14, 12]);
+    // Prova l'area completa (12-14-14-12)
+    const contentRows = splitPhraseIntoRows(words, [12, 14, 14, 12]);
     return !!contentRows;
 }
 
