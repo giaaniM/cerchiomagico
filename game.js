@@ -207,8 +207,11 @@ const gameState = {
     wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
     allConsonantsRevealed: false,
     wheelRotation: 0,
+    wheelRotation: 0,
     usedPhrases: new Set(), // Track used phrases in current session
-    excludedPhrases: new Set() // Track phrases won and saved in localStorage
+    excludedPhrases: new Set(), // Track phrases won and saved in localStorage
+    finalSpinComplete: false, // For Manhattan/Final Round 
+    finalRoundValue: 0 // Secured value for final round
 };
 
 // ===== Offline Phrases Database (Updated for Length) =====
@@ -294,6 +297,13 @@ const elements = {
     expressConsonantBtn: document.getElementById('express-consonant-btn'),
     expressVowelInput: document.getElementById('express-vowel-input'),
     expressVowelBtn: document.getElementById('express-vowel-btn'),
+
+    // Final Round Specialized UI
+    finalRoundContainer: document.getElementById('final-round-input-container'),
+    finalConsonantInput: document.getElementById('final-consonant-input'),
+    finalConsonantBtn: document.getElementById('final-consonant-btn'),
+    finalVowelInput: document.getElementById('final-vowel-input'),
+    finalVowelBtn: document.getElementById('final-vowel-btn'),
 
     // Win
     winTitle: document.getElementById('win-title'),
@@ -676,9 +686,23 @@ function getCurrentPlayer() {
 function passTurn() {
     gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
     gameState.pendingWheelValue = null;
-    gameState.wheelPhase = 'idle';
+
+    // Logic for Final Round (Manche 5)
+    if (gameState.currentManche === 5) {
+        gameState.wheelPhase = 'final_play'; // Always input mode, never spin
+        checkFinalRoundBanner();
+    } else {
+        // Normal Rounds
+        gameState.wheelPhase = 'idle';
+    }
+
     elements.currentWheelValue.textContent = '-';
     elements.currentWheelValue.className = 'wheel-value';
+    if (gameState.currentManche === 5) {
+        elements.currentWheelValue.textContent = `€${gameState.finalRoundValue}`;
+        elements.currentWheelValue.className = 'wheel-value final-round-active';
+    }
+
     updateUI();
     if (isMobileMode) syncGameState();
 
@@ -998,7 +1022,12 @@ function drawWheel(rotation = 0) {
 let wheelAnimationId = null;
 
 function spinWheel() {
-    if (gameState.wheelPhase !== 'idle' && gameState.wheelPhase !== 'choose_action') return;
+    // Special handling for Final Spin Phase
+    if (gameState.wheelPhase === 'final_spin') {
+        // Proceed to spin logic below...
+    } else if (gameState.wheelPhase !== 'idle' && gameState.wheelPhase !== 'choose_action') {
+        return;
+    }
 
     gameState.wheelPhase = 'spinning';
     updateUI();
@@ -1077,6 +1106,55 @@ function spinWheel() {
     wheelAnimationId = requestAnimationFrame(animate);
 }
 function onWheelStop(result) {
+    // --- FINAL ROUND INITIAL SPIN (TOP PRIORITY) ---
+    // This is the global spin to set the value before ANY player turn
+    if (gameState.currentManche === 5 && !gameState.finalSpinComplete) {
+        const baseValue = typeof result.value === 'number' ? result.value : 0;
+
+        if (baseValue > 0) {
+            // Success: Numerical value hit
+            gameState.finalRoundValue = baseValue + 1000;
+            gameState.finalSpinComplete = true;
+            gameState.wheelPhase = 'final_play';
+
+            elements.currentWheelValue.textContent = `€${gameState.finalRoundValue}`;
+            elements.currentWheelValue.className = 'wheel-value final-round-active';
+
+            checkFinalRoundBanner();
+
+            showPopup(`<div class="popup-info">
+                <div class="popup-title">VALORE FISSATO!</div>
+                <div class="popup-text">
+                    Ogni consonante vale<br>
+                    <span style="color:#fbbf24; font-size:1.6em; font-weight:900">€${gameState.finalRoundValue}</span>
+                </div>
+                <div class="popup-turn-player" style="margin-top:20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                    INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span>
+                </div>
+            </div>`, 5000);
+
+            setTimeout(() => {
+                updateUI();
+                if (isMobileMode) syncGameState();
+            }, 3000);
+        } else {
+            // Failure: Special segment hit (Passa, Bancarotta, etc.)
+            soundManager.playError();
+            gameState.wheelPhase = 'final_spin'; // Allow re-spin
+            elements.currentWheelValue.textContent = 'GIRA ANCORA';
+            updateUI();
+
+            const label = result.label || result.value;
+            showPopup(`<div class="popup-error">
+                <div style="font-size:0.8em; opacity:0.8">RISULTATO: ${label}</div>
+                <div style="margin-top:10px">VALORE NON VALIDO!</div>
+                <div style="font-size:0.7em; margin-top:5px">Bisogna colpire un valore numerico.</div>
+                <div class="pulse-action" style="margin-top:15px; color:#fbbf24; font-weight:800">GIRA DI NUOVO</div>
+            </div>`, 3000);
+        }
+        return; // Important: Consume the event
+    }
+
     if (result.value === 'EXPRESS') {
         soundManager.playExpress();
         elements.currentWheelValue.textContent = 'EXPRESS';
@@ -1389,6 +1467,9 @@ function callConsonant() {
         } else if (gameState.pendingWheelValue === 'SCUDO') {
             specialAction = 'SCUDO';
             earnings = 0;
+        } else if (gameState.wheelPhase === 'final_play') {
+            // Final Round Logic
+            earnings = gameState.finalRoundValue * occurrences;
         } else {
             earnings = gameState.pendingWheelValue * occurrences;
         }
@@ -1446,6 +1527,8 @@ function callConsonant() {
                 if (isMobileMode) syncGameState();
             }
         }, delay + 500);
+
+        // ----------------------------
     } else {
         soundManager.playError();
         gameState.pendingWheelValue = null; // Clear value
@@ -1478,7 +1561,8 @@ function buyVowel() {
         return;
     }
 
-    if (gameState.partialScores[player.name] < VOWEL_COST) {
+    // Free Vowels in Final Round
+    if (gameState.wheelPhase !== 'final_play' && gameState.partialScores[player.name] < VOWEL_COST) {
         showMessage(`Non hai abbastanza soldi! Servono €${VOWEL_COST}`, 'error');
         soundManager.playError();
         return;
@@ -1493,8 +1577,10 @@ function buyVowel() {
         return;
     }
 
-    // Deduct cost
-    gameState.partialScores[player.name] -= VOWEL_COST;
+    // Deduct cost (unless Final Round)
+    if (gameState.wheelPhase !== 'final_play') {
+        gameState.partialScores[player.name] -= VOWEL_COST;
+    }
     gameState.usedLetters.add(normalized);
     renderPlayersList();
     if (isMobileMode) syncGameState();
@@ -1508,9 +1594,16 @@ function buyVowel() {
         if (checkWin()) {
             setTimeout(endManche, 1500);
         } else {
-            gameState.wheelPhase = 'choose_action';
-            updateUI();
-            if (isMobileMode) syncGameState();
+            // Final Round?
+            if (gameState.wheelPhase === 'final_play') {
+                gameState.wheelPhase = 'final_decision';
+                updateUI();
+                if (isMobileMode) syncGameState();
+            } else {
+                gameState.wheelPhase = 'choose_action';
+                updateUI();
+                if (isMobileMode) syncGameState();
+            }
         }
     } else {
         soundManager.playError();
@@ -1690,6 +1783,7 @@ function trySolve() {
 function endManche() {
     soundManager.stopExpress();
     hideExpressBanner();
+    hideFinalRoundBanner();
 
     // Remove Gold board style
     if (elements.boardInner) elements.boardInner.classList.remove('express-active');
@@ -1787,6 +1881,16 @@ async function startNextManche() {
     gameState.pendingWheelValue = null;
     gameState.wheelPhase = 'idle';
     // Nota: allConsonantsRevealed verrà calcolato dopo il caricamento della frase
+
+    // --- FINAL ROUND INIT ---
+    if (gameState.currentManche === 5) {
+        gameState.wheelPhase = 'final_spin';
+        gameState.finalSpinComplete = false;
+        gameState.finalRoundValue = 0;
+        // The popup in 'startNextManche' will announce it generally, 
+        // but SpinWheel logic handles the "Value Spin" phase flow.
+    }
+    // ------------------------
 
     // Reset partial scores
     gameState.players.forEach(p => gameState.partialScores[p.name] = 0);
@@ -1890,10 +1994,15 @@ async function startNextManche() {
     if (isMobileMode) syncGameState();
 
     showPopup(`<div class="popup-manche-start">
-        <div class="popup-manche-number">MANCHE ${gameState.currentManche}</div>
+        <div class="popup-manche-number">MANCHE ${gameState.currentManche} ${gameState.currentManche === 5 ? '- FINALE' : ''}</div>
         <div class="popup-category-label">Categoria:</div>
         <div class="popup-manche-hint-large">${gameState.hint}</div>
-        <div class="popup-turn-player">INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
+        <div class="popup-turn-player">
+            ${gameState.currentManche === 5 ?
+            '<span class="pulse-action" style="color:#fbbf24">GIRATE PER IL VALORE DEL ROUND</span>' :
+            `INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span>`
+        }
+        </div>
     </div>`, 4000);
 }
 
@@ -1971,8 +2080,61 @@ function updateUI() {
 
     const spinBtn = document.getElementById('spin-btn');
     const consonantContainer = document.getElementById('consonant-call-container');
+    const vowelGroup = document.getElementById('vowel-group');
+    const solveGroup = document.getElementById('solve-group');
 
-    // Central Main Action: Toggle between Spin and Specialized Areas
+    // --- MANCHE 5 (FINAL ROUND) SPECIFIC UI ---
+    if (gameState.currentManche === 5) {
+        // Hide standard vowel group
+        if (vowelGroup) vowelGroup.style.display = 'none';
+
+        if (phase === 'final_spin') {
+            spinBtn.style.display = 'block';
+            spinBtn.textContent = 'GIRA PER IL VALORE';
+            spinBtn.disabled = false;
+            consonantContainer.style.display = 'none';
+            elements.expressContainer.style.display = 'none';
+            if (elements.finalRoundContainer) elements.finalRoundContainer.style.display = 'none';
+            if (elements.passBtn) elements.passBtn.style.display = 'none';
+            hideFinalRoundBanner();
+            return; // EXIT EARLY
+        } else if (phase === 'final_play') {
+            spinBtn.style.display = 'none';
+            consonantContainer.style.display = 'none';
+            elements.expressContainer.style.display = 'none';
+            if (elements.finalRoundContainer) elements.finalRoundContainer.style.display = 'flex';
+
+            // Enable inputs
+            if (elements.finalConsonantInput) elements.finalConsonantInput.disabled = false;
+            if (elements.finalConsonantBtn) elements.finalConsonantBtn.disabled = false;
+            if (elements.finalVowelInput) elements.finalVowelInput.disabled = false;
+            if (elements.finalVowelBtn) elements.finalVowelBtn.disabled = false;
+
+            // Auto-focus consonant input
+            if (elements.finalConsonantInput) {
+                setTimeout(() => elements.finalConsonantInput.focus(), 50);
+            }
+
+            // Always allow "Passa" and "Risolvi"
+            if (elements.passBtn) {
+                elements.passBtn.style.display = 'inline-block';
+                elements.passBtn.disabled = false;
+                elements.passBtn.textContent = 'PASSA';
+            }
+            if (solveGroup) solveGroup.style.display = 'block';
+
+            checkFinalRoundBanner();
+            renderPlayersList();
+            return; // EXIT EARLY
+        }
+    } else {
+        // Global resets for normal rounds
+        if (vowelGroup) vowelGroup.style.display = 'flex';
+        if (elements.finalRoundContainer) elements.finalRoundContainer.style.display = 'none';
+        hideFinalRoundBanner();
+    }
+    // ------------------------------------------
+
     if (phase === 'express') {
         spinBtn.style.display = 'none';
         consonantContainer.style.display = 'none';
@@ -1995,6 +2157,7 @@ function updateUI() {
         spinBtn.style.display = 'block';
         consonantContainer.style.display = 'none';
         elements.expressContainer.style.display = 'none';
+        if (spinBtn) spinBtn.textContent = 'GIRA IL CERCHIO';
 
         // Enable Spin if allowed
         spinBtn.disabled = !(phase === 'idle' || phase === 'choose_action') || allConsRevealed;
@@ -2005,14 +2168,15 @@ function updateUI() {
 
     const isIdleOrAction = (phase === 'choose_action' || phase === 'idle');
 
-    // Vowel input (Hide standard during express, it's in the dedicated UI)
-    const vowelGroup = document.getElementById('vowel-group');
-    if (phase === 'express') {
-        vowelGroup.style.opacity = '0.3';
-        vowelGroup.style.pointerEvents = 'none';
-    } else {
-        vowelGroup.style.opacity = '1';
-        vowelGroup.style.pointerEvents = 'auto';
+    // Vowel input (Hide standard during express)
+    if (vowelGroup) {
+        if (phase === 'express') {
+            vowelGroup.style.opacity = '0.3';
+            vowelGroup.style.pointerEvents = 'none';
+        } else {
+            vowelGroup.style.opacity = '1';
+            vowelGroup.style.pointerEvents = 'auto';
+        }
     }
 
     const player = getCurrentPlayer();
@@ -2353,10 +2517,12 @@ async function startGameLocal() {
         const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
 
         // Check uniqueness and size
-        if (!gameState.usedPhrases.has(randomPuzzle.phrase) && canFitOnBoard(randomPuzzle.phrase)) {
+        const normalized = normalizePhrase(randomPuzzle.phrase);
+        if (!gameState.usedPhrases.has(normalized) && canFitOnBoard(randomPuzzle.phrase)) {
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
+            gameState.originalPhrase = randomPuzzle.phrase;
             gameState.hint = randomPuzzle.hint;
-            gameState.usedPhrases.add(randomPuzzle.phrase);
+            gameState.usedPhrases.add(normalized);
             console.log(`[DB] Frase Scelta: "${gameState.phrase}" - Hint: "${gameState.hint}"`);
             valid = true;
         }
@@ -2365,6 +2531,7 @@ async function startGameLocal() {
         // Fallback: Pick any valid one if loop failed (shouldn't happen with reset)
         const fallback = PUZZLE_DATABASE.find(p => canFitOnBoard(p.phrase)) || OFFLINE_PHRASES[0];
         gameState.phrase = sanitizePhrase(fallback.phrase);
+        gameState.originalPhrase = fallback.phrase;
         gameState.hint = fallback.hint;
     }
 
@@ -2372,6 +2539,15 @@ async function startGameLocal() {
     gameState.revealedLetters = new Set();
     gameState.usedLetters = new Set();
     gameState.wheelPhase = 'idle';
+
+    // --- FINAL ROUND INIT (LOCAL) ---
+    if (gameState.currentManche === 5) {
+        gameState.wheelPhase = 'final_spin';
+        gameState.finalSpinComplete = false;
+        gameState.finalRoundValue = 0;
+    }
+    // -------------------------------
+
     gameState.pendingWheelValue = null;
     gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
 
@@ -2422,6 +2598,7 @@ function newGame() {
     gameState.players = [];
     gameState.usedPhrases = new Set();
     gameState.totalScores = {};
+    hideFinalRoundBanner();
 }
 
 // ===== Setup Logic =====
@@ -2699,6 +2876,23 @@ elements.expressVowelInput?.addEventListener('keypress', (e) => {
 elements.expressConsonantInput?.addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
 elements.expressVowelInput?.addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
 
+// Final Round Listeners
+if (elements.finalConsonantBtn) elements.finalConsonantBtn.addEventListener('click', callFinalConsonant);
+if (elements.finalConsonantInput) {
+    elements.finalConsonantInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') callFinalConsonant();
+    });
+    elements.finalConsonantInput.addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
+}
+
+if (elements.finalVowelBtn) elements.finalVowelBtn.addEventListener('click', callFinalVowel);
+if (elements.finalVowelInput) {
+    elements.finalVowelInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') callFinalVowel();
+    });
+    elements.finalVowelInput.addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
+}
+
 function markPhraseAsWon(phrase) {
     if (!phrase) return;
     const normalized = normalizePhrase(phrase);
@@ -2764,5 +2958,112 @@ function checkExpressBanner() {
 
 function hideExpressBanner() {
     const banner = document.getElementById('express-banner');
+    if (banner) banner.style.display = 'none';
+}
+
+// ===== Final Round Functions =====
+function callFinalConsonant() {
+    const letter = elements.finalConsonantInput.value.trim().toUpperCase();
+    elements.finalConsonantInput.value = '';
+    const player = getCurrentPlayer();
+
+    if (!letter) return;
+    if (isVowel(letter)) {
+        showMessage('Solo CONSONANTI qui!', 'error');
+        return;
+    }
+    const normalized = normalizeChar(letter);
+    if (gameState.usedLetters.has(normalized)) {
+        showMessage(`Lettera "${letter}" già chiamata!`, 'error');
+        return;
+    }
+
+    gameState.usedLetters.add(normalized);
+    if (isMobileMode) syncGameState();
+
+    const occurrences = countLetterOccurrences(letter);
+    if (occurrences > 0) {
+        // Correct Guess
+        const earnings = occurrences * gameState.finalRoundValue;
+        gameState.partialScores[player.name] += earnings;
+
+        revealLetter(letter, true, null);
+        soundManager.playCorrect();
+        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (+€${earnings})`, 'success');
+
+        // Show solved letters 
+        setTimeout(() => {
+            if (checkWin()) {
+                endManche();
+            } else {
+                // Stay in final_play to allow another choice!
+                updateUI();
+                if (isMobileMode) syncGameState();
+            }
+        }, 1500);
+    } else {
+        // Incorrect Guess -> Invalid turn -> Pass
+        soundManager.playError();
+        showMessage(`❌ "${letter}" non c'è. Turno perso.`, 'error');
+        showPopup(`<div class="popup-error">LETTERA ASSENTE!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+    }
+}
+
+function callFinalVowel() {
+    const letter = elements.finalVowelInput.value.trim().toUpperCase();
+    elements.finalVowelInput.value = '';
+    const player = getCurrentPlayer();
+
+    if (!letter) return;
+    if (!isVowel(letter)) {
+        showMessage('Solo VOCALI qui!', 'error');
+        return;
+    }
+    const normalized = normalizeChar(letter);
+    if (gameState.usedLetters.has(normalized)) {
+        showMessage(`Vocale "${letter}" già chiamata!`, 'error');
+        return;
+    }
+
+    gameState.usedLetters.add(normalized);
+    if (isMobileMode) syncGameState();
+
+    const occurrences = countLetterOccurrences(letter);
+    if (occurrences > 0) {
+        // Correct Guess (Free)
+        revealLetter(letter, true, null);
+        soundManager.playCorrect();
+        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (Gratis)`, 'success');
+
+        setTimeout(() => {
+            if (checkWin()) {
+                endManche();
+            } else {
+                // Stay in final_play
+                updateUI();
+                if (isMobileMode) syncGameState();
+            }
+        }, 1500);
+    } else {
+        // Incorrect Guess -> Pass
+        soundManager.playError();
+        showMessage(`❌ "${letter}" non c'è. Turno perso.`, 'error');
+        showPopup(`<div class="popup-error">VOCALE ASSENTE!<br>Turno perso</div>`, 2000);
+        setTimeout(passTurn, 2500);
+    }
+}
+
+function checkFinalRoundBanner() {
+    let banner = document.getElementById('final-round-banner');
+    if (banner) {
+        banner.style.display = 'flex';
+        const valEl = document.getElementById('final-banner-value');
+        if (valEl) valEl.textContent = `€${gameState.finalRoundValue}`;
+    }
+}
+
+function hideFinalRoundBanner() {
+    const banner = document.getElementById('final-round-banner');
     if (banner) banner.style.display = 'none';
 }

@@ -203,6 +203,26 @@
                             </div>
                         </div>
 
+                        <!-- State 4: FINAL ROUND Mode (Dedicated UI) -->
+                        <div id="final-round-input-container" class="final-round-input-container"
+                            style="display: none;">
+                            <div class="final-round-input-capsule">
+                                <div class="final-input-group">
+                                    <span class="final-input-label">CONSONANTE</span>
+                                    <input type="text" id="final-consonant-input" maxlength="1" autocomplete="off"
+                                        class="final-field">
+                                    <button id="final-consonant-btn" class="final-field-btn">CHIAMA</button>
+                                </div>
+                                <div class="final-input-divider"></div>
+                                <div class="final-input-group">
+                                    <span class="final-input-label">VOCALE (0€)</span>
+                                    <input type="text" id="final-vowel-input" maxlength="1" autocomplete="off"
+                                        class="final-field">
+                                    <button id="final-vowel-btn" class="final-field-btn vowel">CHIAMA</button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -251,6 +271,17 @@
             <!-- New Game Button -->
             <div class="game-footer">
                 <button id="new-game-btn" class="btn-secondary">🔄 Nuovo Gioco</button>
+            </div>
+        </div>
+
+        <!-- Final Round Banner Overlay -->
+        <div id="final-round-banner" class="final-round-banner" style="display: none;">
+            <div class="final-banner-content">
+                <span class="final-banner-icon">💎</span>
+                <div class="final-banner-text">
+                    <div class="final-banner-title">VALORE ROUND</div>
+                    <div id="final-banner-value" class="final-banner-value">€0</div>
+                </div>
             </div>
         </div>
 
