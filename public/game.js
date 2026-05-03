@@ -222,7 +222,6 @@ const gameState = {
     wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
     allConsonantsRevealed: false,
     wheelRotation: 0,
-    wheelRotation: 0,
     usedPhrases: new Set(), // Track used phrases in current session
     excludedPhrases: new Set(), // Track phrases won and saved in localStorage
     finalSpinComplete: false, // For Manhattan/Final Round 
@@ -749,28 +748,37 @@ function passTurn() {
 
 // ===== Wheel Segments =====
 const WHEEL_SEGMENTS = [
-    { value: 'PASSA', color: '#f8fafc', label: 'PASSA' }, // TOP
-    { value: 'SCUDO', color: '#ffaa00', label: 'SCUDO', glowing: true }, // Gold
-    { value: 'PASSA', color: '#f8fafc', label: 'PASSA' },
-    { value: 800, color: '#5a189a', label: '800€' },
-    { value: 300, color: '#3c096c', label: '300€' },
-    { value: 'SCUDO_START', color: '#ffaa00', label: 'SCUDO', glowing: true }, // Gold
-    { value: 'MEGATURNO', color: '#ff00d4', label: 'MEGATURNO', glowing: true }, // Magenta
-    { value: 300, color: '#5a189a', label: '300€' },
-    { value: 'RADDOPPIA', color: '#00f2ff', label: 'RADDOPPIA' },
-    { value: 200, color: '#3c096c', label: '200€' },
-    { value: 'PASSA', color: '#f8fafc', label: 'PASSA' },
-    { value: 200, color: '#5a189a', label: '200€' },
-    { value: 500, color: '#5a189a', label: '500€' },
-    { value: '?500', color: '#00f2ff', label: '?500' },
-    { value: 700, color: '#5a189a', label: '700€' },
-    { value: 'BANCAROTTA', color: '#10002b', label: 'BANCAROTTA' },
-    { value: 600, color: '#5a189a', label: '600€' },
-    { value: 1000, color: '#ffaa00', label: '1000€', isTopValue: true, glowing: true },
-    { value: 300, color: '#3c096c', label: '300€' },
-    { value: 450, color: '#5a189a', label: '450€' },
-    { value: 700, color: '#00f2ff', label: '700€' },
-    { value: 500, color: '#5a189a', label: '500€' }
+    // Group 1
+    { value: 300, color: '#7e22ce', label: '300€' }, // Purple
+    { value: 200, color: '#172554', label: '200€' }, // Deep Blue
+    { value: 700, color: '#1e3a8a', label: '700€' }, // Dark Blue
+    { value: 500, color: '#2563eb', label: '500€' }, // Blue
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
+    { value: 1000, color: 'RAINBOW', label: '1000€', glowing: true }, // 1000 Rainbow
+
+    // Group 2
+    { value: 'BANCAROTTA', color: '#111827', label: 'BANCAROTTA' },
+    { value: 350, color: '#7e22ce', label: '350€' }, // Purple
+    { value: 300, color: '#172554', label: '300€' }, // Deep Blue
+    { value: 450, color: '#1e3a8a', label: '450€' }, // Dark Blue
+    { value: 700, color: '#2563eb', label: '700€' }, // Blue
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
+
+    // Group 3
+    { value: 'RADDOPPIA', color: 'GOLD', label: 'RADDOPPIA', glowing: true },
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
+    { value: 800, color: '#1e3a8a', label: '800€' }, // Dark Blue
+    { value: 300, color: '#2563eb', label: '300€' }, // Blue
+    { value: 'MEGATURNO', color: 'EXPRESS', label: 'MEGATURNO', glowing: true }, // stesso gradiente EXPRESS
+    { value: '?500', color: '#14532D', label: '?500' }, // Dark Green
+
+    // Group 4
+    { value: 'SCUDO', color: '#9333EA', label: 'SCUDO' }, // Purple
+    { value: 300, color: '#172554', label: '300€' }, // Deep Blue
+    { value: 500, color: '#2563eb', label: '500€' }, // Blue
+    { value: 200, color: '#60a5fa', label: '200€' }, // Light Blue
+    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
+    { value: 200, color: '#7e22ce', label: '200€' } // Purple
 ];
 
 // ===== Wheel Drawing =====
@@ -829,11 +837,20 @@ function renderWheelToCache() {
         } else if (segment.color === 'EXPRESS') {
             const expGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
             expGrad.addColorStop(0, '#c084fc'); // Bright center (Fuchsia/Purple)
-            expGrad.addColorStop(0.5, '#9333ea'); // CRISTALLO Purple
+            expGrad.addColorStop(0.5, '#9333ea'); // Purple
             expGrad.addColorStop(1, '#3b0764'); // Very dark rim for contrast
             fillStyle = expGrad;
             ctx.shadowColor = '#d946ef'; // Fuchsia glow
             ctx.shadowBlur = 15 * scale;
+        } else if (segment.color === '#9333EA') {
+            // SCUDO - violet radial gradient
+            const scudoGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+            scudoGrad.addColorStop(0, '#c084fc');
+            scudoGrad.addColorStop(0.5, '#9333ea');
+            scudoGrad.addColorStop(1, '#3b0764');
+            fillStyle = scudoGrad;
+            ctx.shadowColor = '#a855f7';
+            ctx.shadowBlur = 10 * scale;
         } else if (segment.color === 'GOLD' || segment.glowing) {
             // INVERTED GOLD GRADIENT (Radial, Bright Center -> Dark Rim)
             const goldGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
@@ -867,7 +884,7 @@ function renderWheelToCache() {
         ctx.fill();
 
         // ADD GLITTER (BRILLANTINATO) FOR SPECIAL SEGMENTS
-        if (segment.color === 'EXPRESS' || segment.color === 'RAINBOW' || segment.label === 'MEGATURNO' || segment.label === 'EXPRESS') {
+        if (segment.color === 'EXPRESS' || segment.color === 'RAINBOW') {
             ctx.save();
             const sparkleCount = segment.color === 'RAINBOW' ? 200 : 150;
             for (let j = 0; j < sparkleCount * scale; j++) {
@@ -876,7 +893,7 @@ function renderWheelToCache() {
                 const gx = centerX + r * Math.cos(a);
                 const gy = centerY + r * Math.sin(a);
 
-                if (segment.color === 'EXPRESS' || segment.label === 'MEGATURNO' || segment.label === 'EXPRESS') {
+                if (segment.color === 'EXPRESS') {
                     // Random white/silver/violet sparkles
                     ctx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#e9d5ff';
                 } else {
@@ -928,14 +945,14 @@ function renderWheelToCache() {
             ctx.shadowBlur = 3 * scale;
         }
         else if (label === 'SCUDO') {
-            ctx.fillStyle = '#0f172a'; // Dark text on gold background
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#FFFFFF'; // White text on purple background
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 3 * scale;
         }
         else if (label === '?500') {
-            ctx.fillStyle = '#0f172a'; // Dark on cyan background
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#FFFF00'; // Yellow text on dark green
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 4 * scale;
         }
         else if (label === 'RADDOPPIA') ctx.fillStyle = '#FFFFFF';
         else {
@@ -956,7 +973,7 @@ function renderWheelToCache() {
         else if (label === 'RADDOPPIA') fontSize = 9 * scale;
         else if (label === 'MEGATURNO') fontSize = 10 * scale;
         else if (label === 'SCUDO') fontSize = 13 * scale;
-        else if (label === '?500') fontSize = 14 * scale;
+        else if (label === '?500') fontSize = 18 * scale;
         else if (label === 'EXPRESS') fontSize = 14 * scale;
 
         ctx.font = `bold ${fontSize}px Lexend, sans-serif`;
@@ -970,7 +987,7 @@ function renderWheelToCache() {
         if (label === 'EXPRESS') baseRadius = 0.88;
         if (label === 'BANCAROTTA') baseRadius = 0.89;
         if (label === 'SCUDO') baseRadius = 0.87;
-        if (label === '?500') baseRadius = 0.88;
+        if (label === '?500') baseRadius = 0.86;
 
         let currentRadius = radius * baseRadius;
 
@@ -1011,13 +1028,6 @@ function renderWheelToCache() {
             ctx.rotate(Math.PI / 2);
             ctx.font = `${14 * scale}px Lexend, sans-serif`;
             ctx.fillText('🚀', 0, 0);
-            ctx.restore();
-        } else if (label === '?500') {
-            ctx.save();
-            ctx.translate(currentRadius - (6 * scale), 0);
-            ctx.rotate(Math.PI / 2);
-            ctx.font = `${14 * scale}px Lexend, sans-serif`;
-            ctx.fillText('🎲', 0, 0);
             ctx.restore();
         }
 
@@ -1246,7 +1256,7 @@ function onWheelStop(result) {
         updateUI();
         if (isMobileMode) syncGameState();
         showMessage('RADDOPPIA! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
-    } else if (result.value === 'SCUDO' || result.value === 'SCUDO_START') {
+    } else if (result.value === 'SCUDO') {
         // SCUDO - Set special pending value and wait for consonant
         elements.currentWheelValue.textContent = 'SCUDO';
         elements.currentWheelValue.className = 'wheel-value megaturno';
@@ -1473,8 +1483,7 @@ function callConsonant() {
     if (isVowel(letter)) {
         soundManager.playError();
         showMessage('Devi chiamare una CONSONANTE, non una vocale!', 'error');
-        showPopup(`HAI CHIAMATO UNA VOCALE!<br><span style="font-size:0.8em; opacity:0.8;">Le vocali si comprano a €1000</span><br>Turno perso`, 2500, 'error');
-        setTimeout(passTurn, 2500);
+        showPopup(`HAI CHIAMATO UNA VOCALE!<br><span style="font-size:0.8em; opacity:0.8;">Le vocali si comprano a €1000</span>`, 2500, 'error');
         return;
     }
 
@@ -2163,7 +2172,8 @@ function updateUI() {
                 if (elements.finalConsonantInput) {
                     setTimeout(() => elements.finalConsonantInput.focus(), 50);
                 }
-                hideMessage(); // Clear decision message
+                elements.messageDisplay.textContent = '';
+                elements.messageDisplay.className = 'message-display';
             } else {
                 showMessage('RISOLVI O PASSA!', 'info');
             }
