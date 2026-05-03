@@ -198,7 +198,7 @@ const API_URL = window.location.origin;
 const gameState = {
     phrase: '',
     originalPhrase: '', // Original phrase for file removal
-    pendingPenalty: null, // Track BANCAROTTA or PASSA for jolly choice
+    pendingPenalty: null, // Track CROLLO or SALTA for jolly choice
     pointerAngle: 0, // Pointer oscillation angle for animation
     hint: '',
     normalizedPhrase: '',
@@ -736,32 +736,33 @@ const WHEEL_SEGMENTS = [
     { value: 200, color: '#172554', label: '200€' }, // Deep Blue
     { value: 700, color: '#1e3a8a', label: '700€' }, // Dark Blue
     { value: 500, color: '#2563eb', label: '500€' }, // Blue
-    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // Restore PASSA
-    { value: 1000, color: 'RAINBOW', label: '1000€', glowing: true }, // 1000 Rainbow
+    { value: 500, color: '#1e3a8a', label: '500€' }, // Navy
+    { value: 900, color: '#f59e0b', label: '900€' }, // Amber
+    { value: 700, color: '#1e3a8a', label: '700€' }, // Navy
+    { value: 'CROLLO', color: '#020617', label: 'CROLLO' }, // Black/Deep Navy
+    { value: 600, color: '#1e3a8a', label: '600€' }, // Navy
+    { value: 500, color: '#f59e0b', label: '500€' }, // Amber
 
     // Group 2
-    { value: 'BANCAROTTA', color: '#111827', label: 'BANCAROTTA' }, // Near 1000
-    { value: 350, color: '#7e22ce', label: '350€' }, // Purple
-    { value: 300, color: '#172554', label: '300€' }, // Deep Blue
-    { value: 450, color: '#1e3a8a', label: '450€' }, // Dark Blue
-    { value: 700, color: '#2563eb', label: '700€' }, // Blue
-    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // PASSA 1
+    { value: 300, color: '#0f172a', label: '300€' }, // Slate
+    { value: 450, color: '#1e3a8a', label: '450€' }, // Navy
+    { value: 700, color: '#f59e0b', label: '700€' }, // Amber
+    { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
 
     // Group 3
-    { value: 'RADDOPPIA', color: 'GOLD', label: 'RADDOPPIA', glowing: true }, // Near PASSA 1
-    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // Replaced 400 with PASSA as requested
-    { value: 800, color: '#1e3a8a', label: '800€' }, // Dark Blue
-    { value: 300, color: '#2563eb', label: '300€' }, // Blue
-    { value: 'EXPRESS', color: 'EXPRESS', label: 'EXPRESS', glowing: true }, // EXPRESS near ?500
-    { value: '?500', color: '#14532D', label: '?500' }, // DARK GREEN MYSTERY
+    { value: 'TURBO', color: '#fde047', label: 'TURBO', glowing: true }, // Gold
+    { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
+    { value: 800, color: '#1e3a8a', label: '800€' }, // Navy
+    { value: 300, color: '#0f172a', label: '300€' }, // Slate
+    { value: 'TURBO_START', color: '#fde047', label: 'TURBO', glowing: true }, // Gold
 
     // Group 4
-    { value: 'SCUDO', color: '#9333EA', label: 'SCUDO' }, // SCUDO
-    { value: 300, color: '#172554', label: '300€' }, // Deep Blue
-    { value: 500, color: '#2563eb', label: '500€' }, // Blue
-    { value: 200, color: '#60a5fa', label: '200€' }, // Light Blue
-    { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' }, // PASSA 2
-    { value: 200, color: '#7e22ce', label: '200€' } // Extra value
+    { value: 'CRISTALLO', color: '#fde047', label: 'CRISTALLO' }, // Gold
+    { value: 300, color: '#1e3a8a', label: '300€' }, // Navy
+    { value: 500, color: '#f59e0b', label: '500€' }, // Amber
+    { value: 200, color: '#0f172a', label: '200€' }, // Slate
+    { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
+    { value: 200, color: '#1e3a8a', label: '200€' } // Navy
 ];
 
 // ===== Wheel Drawing =====
@@ -820,7 +821,7 @@ function renderWheelToCache() {
         } else if (segment.color === 'EXPRESS') {
             const expGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
             expGrad.addColorStop(0, '#c084fc'); // Bright center (Fuchsia/Purple)
-            expGrad.addColorStop(0.5, '#9333ea'); // SCUDO Purple
+            expGrad.addColorStop(0.5, '#9333ea'); // CRISTALLO Purple
             expGrad.addColorStop(1, '#3b0764'); // Very dark rim for contrast
             fillStyle = expGrad;
             ctx.shadowColor = '#d946ef'; // Fuchsia glow
@@ -842,7 +843,7 @@ function renderWheelToCache() {
             const baseColor = segment.color;
             const vignetteGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
             if (baseColor === '#FFFFFF') {
-                // For White segments (PASSA, ?500, SCUDO), keep center bright
+                // For White segments (SALTA, ?500, CRISTALLO), keep center bright
                 vignetteGrad.addColorStop(0, '#FFFFFF'); // Bright center
                 vignetteGrad.addColorStop(0.6, '#f8fafc'); // Mostly white
                 vignetteGrad.addColorStop(1, '#cbd5e1'); // Light gray rim
@@ -906,15 +907,15 @@ function renderWheelToCache() {
 
         // Text Color Logic
         const label = segment.label;
-        if (label === 'PASSA') {
+        if (label === 'SALTA') {
             ctx.fillStyle = '#000000';
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.strokeStyle = 'transparent'; // No stroke either
         }
-        else if (label === 'BANCAROTTA') ctx.fillStyle = '#FFFFFF';
-        else if (label === 'SCUDO') ctx.fillStyle = '#FFFFFF';
-        else if (label === 'RADDOPPIA') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'CROLLO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'CRISTALLO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'TURBO') ctx.fillStyle = '#FFFFFF';
         else if (label === 'EXPRESS') {
             ctx.fillStyle = '#FFFFFF'; // White text
             ctx.shadowColor = '#000';
@@ -926,16 +927,16 @@ function renderWheelToCache() {
         }
 
         ctx.textAlign = 'center';
-        if (label !== 'PASSA') ctx.lineWidth = 3 * scale;
+        if (label !== 'SALTA') ctx.lineWidth = 3 * scale;
 
         const chars = label.replace(/\s/g, '').split('');
 
         // Text Styling (Refined)
         let fontSize = 21 * scale;
-        if (label === 'BANCAROTTA') fontSize = 11 * scale;
-        else if (label === 'PASSA') fontSize = 16 * scale;
-        else if (label === 'RADDOPPIA') fontSize = 12 * scale;
-        else if (label === 'SCUDO') fontSize = 16 * scale;
+        if (label === 'CROLLO') fontSize = 11 * scale;
+        else if (label === 'SALTA') fontSize = 16 * scale;
+        else if (label === 'TURBO') fontSize = 12 * scale;
+        else if (label === 'CRISTALLO') fontSize = 16 * scale;
         else if (label === 'EXPRESS') fontSize = 14 * scale;
 
         ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
@@ -946,11 +947,11 @@ function renderWheelToCache() {
         let baseRadius = 0.86;
 
         // Adjust for smaller fonts so the *top* edge aligns at the rim
-        if (label === 'SCUDO') baseRadius = 0.87; // 16px
-        if (label === 'PASSA') baseRadius = 0.87; // 16px
-        if (label === 'RADDOPPIA') baseRadius = 0.88; // 12px
+        if (label === 'CRISTALLO') baseRadius = 0.87; // 16px
+        if (label === 'SALTA') baseRadius = 0.87; // 16px
+        if (label === 'TURBO') baseRadius = 0.88; // 12px
         if (label === 'EXPRESS') baseRadius = 0.88; // 14px
-        if (label === 'BANCAROTTA') baseRadius = 0.89; // 11px (Lower font = higher radius)
+        if (label === 'CROLLO') baseRadius = 0.89; // 11px (Lower font = higher radius)
 
         let currentRadius = radius * baseRadius;
 
@@ -979,8 +980,8 @@ function renderWheelToCache() {
             currentRadius -= fontSize * currentSpacing;
         });
 
-        // "Scudo: Prima testo poi simbolo, piccolo"
-        if (label === 'SCUDO') {
+        // "Cristallo: Prima testo poi simbolo, piccolo"
+        if (label === 'CRISTALLO') {
             ctx.save();
             // Position after text (currentRadius is now lower/inner)
             ctx.translate(currentRadius - (5 * scale), 0);
@@ -1147,7 +1148,7 @@ function onWheelStop(result) {
                 if (isMobileMode) syncGameState();
             }, 3000);
         } else {
-            // Failure: Special segment hit (Passa, Bancarotta, etc.)
+            // Failure: Special segment hit (SALTA, CROLLO, etc.)
             soundManager.playError();
             gameState.wheelPhase = 'final_spin'; // Allow re-spin
             elements.currentWheelValue.textContent = 'GIRA ANCORA';
@@ -1182,7 +1183,7 @@ function onWheelStop(result) {
                     <div class="express-benefit-item"><div class="express-benefit-icon">+</div> <b>Consonante:</b> +€500 per ogni occorrenza</div>
                     <div class="express-benefit-item"><div class="express-benefit-icon">-</div> <b>Vocale:</b> Costa €500 del tuo bottino</div>
                 </div>
-                <span class="warning">Sbagliare significa BANCAROTTA IMMEDIATA!</span>
+                <span class="warning">Sbagliare significa CROLLO IMMEDIATO!</span>
             </div>
         </div>`, 5000);
         return;
@@ -1190,49 +1191,49 @@ function onWheelStop(result) {
 
     const player = getCurrentPlayer();
 
-    if (result.value === 'PASSA') {
+    if (result.value === 'SALTA') {
         if (gameState.hasJolly[player.name]) {
-            // Use Jolly to avoid PASSA
-            handlePenaltyWithJolly(player, 'PASSA');
+            // Use Cristallo to avoid SALTA
+            handlePenaltyWithJolly(player, 'SALTA');
         } else {
             soundManager.playError();
-            elements.currentWheelValue.textContent = 'PASSA';
-            elements.currentWheelValue.className = 'wheel-value passa';
-            showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
+            elements.currentWheelValue.textContent = 'SALTA';
+            elements.currentWheelValue.className = 'wheel-value salta';
+            showPopup(`<div class="popup-salta">SALTA!<br>Turno perso</div>`, 2000);
             setTimeout(passTurn, 2500);
         }
-    } else if (result.value === 'RADDOPPIA') {
-        // RADDOPPIA - Set special pending value and wait for consonant
-        elements.currentWheelValue.textContent = 'RADDOPPIA';
-        elements.currentWheelValue.className = 'wheel-value raddoppia';
-        gameState.pendingWheelValue = 'RADDOPPIA';
+    } else if (result.value === 'TURBO') {
+        // TURBO - Set special pending value and wait for consonant
+        elements.currentWheelValue.textContent = 'TURBO';
+        elements.currentWheelValue.className = 'wheel-value turbo';
+        gameState.pendingWheelValue = 'TURBO';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         if (isMobileMode) syncGameState();
-        showMessage('RADDOPPIA! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
-    } else if (result.value === 'SCUDO') {
-        // SCUDO - Set special pending value and wait for consonant
+        showMessage('TURBO! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
+    } else if (result.value === 'CRISTALLO') {
+        // CRISTALLO - Set special pending value and wait for consonant
         elements.currentWheelValue.textContent = '🛡️';
         elements.currentWheelValue.className = 'wheel-value jolly';
-        gameState.pendingWheelValue = 'SCUDO';
+        gameState.pendingWheelValue = 'CRISTALLO';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         if (isMobileMode) syncGameState();
-        showMessage('SCUDO! Chiama una consonante per ottenere la protezione!', 'info');
-    } else if (result.value === 'BANCAROTTA') {
-        // Check if player has Jolly shield
+        showMessage('CRISTALLO! Chiama una consonante per ottenere la protezione!', 'info');
+    } else if (result.value === 'CROLLO') {
+        // Check if player has Cristallo shield
         if (gameState.hasJolly[player.name]) {
-            // Offer choice: use Jolly or accept Bancarotta
-            handlePenaltyWithJolly(player, 'BANCAROTTA');
+            // Offer choice: use Cristallo or accept Crollo
+            handlePenaltyWithJolly(player, 'CROLLO');
         } else {
-            // Normal Bancarotta - lose ALL scores (partial + total)
+            // Normal Crollo - lose ALL scores (partial + total)
             soundManager.playGameOver();
-            elements.currentWheelValue.textContent = 'BANCAROTTA';
-            elements.currentWheelValue.className = 'wheel-value bancarotta';
+            elements.currentWheelValue.textContent = 'CROLLO';
+            elements.currentWheelValue.className = 'wheel-value crollo';
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0; // Lose global score too
             renderPlayersList();
-            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0</div>`, 4000);
+            showPopup(`<div class="popup-crollo">💥 CROLLO!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0</div>`, 4000);
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         }
@@ -1264,11 +1265,11 @@ function onWheelStop(result) {
 }
 
 function handlePenaltyWithJolly(player, penaltyType) {
-    gameState.pendingPenalty = penaltyType; // Track if it was BANCAROTTA or PASSA
-    const title = penaltyType === 'BANCAROTTA' ? '💥 BANCAROTTA!' : '⏭️ PASSA';
-    const penaltyText = penaltyType === 'BANCAROTTA'
-        ? 'Hai uno scudo Jolly 🛡️<br>Vuoi usarlo per salvarti dalla Bancarotta?'
-        : 'Hai uno scudo Jolly 🛡️<br>Vuoi usarlo per non perdere il turno?';
+    gameState.pendingPenalty = penaltyType; // Track if it was CROLLO or SALTA
+    const title = penaltyType === 'CROLLO' ? '💥 CROLLO!' : '⏭️ SALTA';
+    const penaltyText = penaltyType === 'CROLLO'
+        ? 'Hai un Cristallo Magico 🛡️<br>Vuoi usarlo per salvarti dal Crollo?'
+        : 'Hai un Cristallo Magico 🛡️<br>Vuoi usarlo per non saltare il turno?';
 
     const html = `
         <div class="popup-jolly-choice">
