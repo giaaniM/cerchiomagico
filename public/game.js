@@ -730,39 +730,36 @@ function passTurn() {
 // Specials: 1000, PASSA, BANCAROTTA, RADDOPPIA
 // Note: SCUDO replaces the "Purple" slot in the last group to fit.
 
+// ===== Wheel Segments =====
 const WHEEL_SEGMENTS = [
     // Group 1
-    { value: 300, color: '#7e22ce', label: '300€' }, // Purple
-    { value: 200, color: '#172554', label: '200€' }, // Deep Blue
-    { value: 700, color: '#1e3a8a', label: '700€' }, // Dark Blue
-    { value: 500, color: '#2563eb', label: '500€' }, // Blue
-    { value: 500, color: '#1e3a8a', label: '500€' }, // Navy
-    { value: 900, color: '#f59e0b', label: '900€' }, // Amber
-    { value: 700, color: '#1e3a8a', label: '700€' }, // Navy
-    { value: 'CROLLO', color: '#020617', label: 'CROLLO' }, // Black/Deep Navy
-    { value: 600, color: '#1e3a8a', label: '600€' }, // Navy
-    { value: 500, color: '#f59e0b', label: '500€' }, // Amber
+    { value: 500, color: '#5a189a', label: '500€' }, // Violet
+    { value: 900, color: '#00f2ff', label: '900€' }, // Cyan
+    { value: 700, color: '#5a189a', label: '700€' }, // Violet
+    { value: 'CROLLO', color: '#10002b', label: 'CROLLO' }, // Deepest Violet
+    { value: 600, color: '#5a189a', label: '600€' }, // Violet
+    { value: 500, color: '#ff00d4', label: '500€' }, // Magenta
 
     // Group 2
-    { value: 300, color: '#0f172a', label: '300€' }, // Slate
-    { value: 450, color: '#1e3a8a', label: '450€' }, // Navy
-    { value: 700, color: '#f59e0b', label: '700€' }, // Amber
+    { value: 300, color: '#3c096c', label: '300€' }, // Mid Violet
+    { value: 450, color: '#5a189a', label: '450€' }, // Violet
+    { value: 700, color: '#00f2ff', label: '700€' }, // Cyan
     { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
 
     // Group 3
-    { value: 'TURBO', color: '#fde047', label: 'TURBO', glowing: true }, // Gold
+    { value: 'TURBO', color: '#ffaa00', label: 'TURBO', glowing: true }, // Amber Gold
     { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
-    { value: 800, color: '#1e3a8a', label: '800€' }, // Navy
-    { value: 300, color: '#0f172a', label: '300€' }, // Slate
-    { value: 'TURBO_START', color: '#fde047', label: 'TURBO', glowing: true }, // Gold
+    { value: 800, color: '#5a189a', label: '800€' }, // Violet
+    { value: 300, color: '#3c096c', label: '300€' }, // Mid Violet
+    { value: 'TURBO_START', color: '#ffaa00', label: 'TURBO', glowing: true }, // Amber Gold
 
     // Group 4
-    { value: 'JOLLY', color: '#fde047', label: 'JOLLY' }, // Gold
-    { value: 300, color: '#1e3a8a', label: '300€' }, // Navy
-    { value: 500, color: '#f59e0b', label: '500€' }, // Amber
-    { value: 200, color: '#0f172a', label: '200€' }, // Slate
+    { value: 'JOLLY', color: '#ff00d4', label: 'JOLLY' }, // Magenta
+    { value: 300, color: '#5a189a', label: '300€' }, // Violet
+    { value: 500, color: '#00f2ff', label: '500€' }, // Cyan
+    { value: 200, color: '#3c096c', label: '200€' }, // Mid Violet
     { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
-    { value: 200, color: '#1e3a8a', label: '200€' } // Navy
+    { value: 200, color: '#5a189a', label: '200€' } // Violet
 ];
 
 // ===== Wheel Drawing =====

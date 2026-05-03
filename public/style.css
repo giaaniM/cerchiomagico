@@ -8,20 +8,20 @@
 }
 
 :root {
-    /* Primary Palette - Gold-Night (Deep Navy + Gold + Neon Amber) */
-    --bg-dark: #020617; /* Slate 950 */
-    --bg-panel: #0f172a; /* Slate 900 */
-    --accent-gold: #fde047; /* Yellow 300 */
-    --accent-amber: #f59e0b; /* Amber 500 */
-    --accent-navy: #1e3a8a; /* Blue 900 */
-    --accent-blue: #38bdf8; /* Sky 400 */
+    /* New Identity Palette - Midnight Magic (Indigo + Neon Cyan + Magenta) */
+    --bg-dark: #030014; /* Deep Space */
+    --bg-panel: rgba(15, 0, 40, 0.7); /* Deep Violet Glass */
+    --accent-primary: #00f2ff; /* Electric Cyan */
+    --accent-secondary: #ff00d4; /* Neon Magenta */
+    --accent-tertiary: #9d4edd; /* Radiant Violet */
+    --accent-gold: #ffaa00; /* Amber Gold (warm) */
     
-    --text-primary: #f8fafc;
+    --text-primary: #e0e0ff;
     --text-secondary: #94a3b8;
     
-    --tile-bg: rgba(30, 41, 59, 0.4);
-    --tile-border: rgba(255, 255, 255, 0.1);
-    --tile-glow: rgba(56, 189, 248, 0.2);
+    --tile-bg: rgba(20, 0, 60, 0.4);
+    --tile-border: rgba(0, 242, 255, 0.3);
+    --tile-glow: rgba(0, 242, 255, 0.2);
     
     --font-main: 'Lexend', sans-serif;
     --font-display: 'Lexend', sans-serif;
@@ -58,8 +58,9 @@ body {
     font-family: var(--font-main);
     background-color: var(--bg-dark);
     background-image: 
-        radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 0% 0%, rgba(245, 158, 11, 0.05) 0%, transparent 30%);
+        radial-gradient(circle at 50% 20%, rgba(157, 78, 221, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(0, 242, 255, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 100% 0%, rgba(255, 0, 212, 0.05) 0%, transparent 40%);
     color: var(--text-primary);
     margin: 0;
     padding: 0;
@@ -99,19 +100,19 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     font-size: clamp(1.2rem, 3.5vw, 2.2rem);
     margin-top: 0;
     margin-bottom: 2px;
-    background: radial-gradient(circle, #ffe681 0%, #d4af37 60%, #8a6e18 100%);
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
     font-weight: 800;
 }
 
 .subtitle {
-    color: var(--text-secondary);
+    color: var(--accent-tertiary);
     font-size: 0.8rem;
     text-transform: uppercase;
-    opacity: 0.7;
+    font-weight: 600;
 }
 
 /* ===== Screens ===== */
@@ -206,18 +207,25 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .mode-card {
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 0, 40, 0.6);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(0, 242, 255, 0.1);
     border-radius: 28px;
     padding: 30px;
     flex: 1;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .mode-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-10px);
+    border-color: var(--accent-secondary);
+    box-shadow: 0 30px 80px rgba(255, 0, 212, 0.2);
+}
+
+.mode-card h2 {
+    color: var(--accent-primary);
+    margin-bottom: 10px;
 }
 
 .mode-card.special {
@@ -465,11 +473,10 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .board-frame {
-    /* Italian Wheel of Fortune Style - Stepped Shape */
-    background: #fff;
-    /* This forms the white border */
-    padding: 10px;
-    /* Border thickness */
+    /* Magic Board Style - Neon Outline */
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    box-shadow: 0 0 40px rgba(0, 242, 255, 0.2), 0 20px 80px rgba(0, 0, 0, 0.8);
+    padding: 3px; /* Very thin neon border */
     position: relative;
     clip-path: polygon(7.14% 0%, 92.86% 0%,
             92.86% 25%, 100% 25%,
@@ -480,8 +487,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .game-board-inner {
-    background: linear-gradient(to right, #6d28d9 0%, #311361 50%, #6d28d9 100%);
-    /* Deeper purple, rich but not too dark */
+    background: linear-gradient(135deg, #0f0028 0%, #030014 50%, #0f0028 100%);
+    /* Very deep violet-black background for tiles */
     width: 100%;
     height: 100%;
     padding: 12px;
@@ -586,16 +593,17 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 /* ===== Tiles (Italian Style) ===== */
 .tile {
-    width: 44px; /* Further reduced from 48px to avoid sidebar overlap */
-    height: 58px; /* Further reduced from 64px */
+    /* Responsive sizing based on viewport height to ensure it fits big screens */
+    width: clamp(35px, 4.2vh, 55px); 
+    height: clamp(50px, 6.5vh, 85px); /* More rectangular vertically */
     flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.8rem; /* Scaled font to match smaller tile */
+    font-size: clamp(1.2rem, 3.5vh, 2.5rem);
     font-weight: 800;
     font-family: var(--font-main);
-    border-radius: 3px;
+    border-radius: 4px;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border: 2px solid #000;
     background: transparent;
@@ -1098,41 +1106,38 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     border: 3px solid var(--accent-gold);
     border-radius: 20px;
     box-shadow: 0 0 100px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 191, 36, 0.3);
-
-    animation: popCenter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 3000;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent-amber), var(--accent-gold));
-    color: var(--bg-dark);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+    color: #000;
     font-weight: 800;
-    font-family: var(--font-display);
     border: none;
     padding: 14px 28px;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3), 0 0 15px rgba(253, 224, 71, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 242, 255, 0.3);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
 }
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4), 0 0 25px rgba(253, 224, 71, 0.3);
+    box-shadow: 0 15px 35px rgba(0, 242, 255, 0.5);
 }
 
 .btn-secondary {
-    background: rgba(30, 41, 59, 0.6);
-    color: var(--accent-gold);
-    border: 1px solid rgba(253, 224, 71, 0.3);
+    background: rgba(157, 78, 221, 0.1);
+    color: var(--accent-primary);
+    border: 1px solid rgba(0, 242, 255, 0.3);
     padding: 12px 24px;
     border-radius: 50px;
     backdrop-filter: blur(10px);
 }
 
 .btn-secondary:hover {
-    background: rgba(30, 41, 59, 0.8);
-    border-color: var(--accent-gold);
+    background: rgba(157, 78, 221, 0.2);
+    border-color: var(--accent-secondary);
 }
 }
 
@@ -1463,10 +1468,10 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .tile.revealed {
-    background: rgba(255, 255, 255, 0.95);
-    color: #0f172a;
-    border-color: #fff;
-    box-shadow: 0 0 20px var(--tile-glow);
+    background: #fff;
+    color: var(--bg-dark);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 25px var(--accent-primary), 0 0 50px rgba(0, 242, 255, 0.3);
     transform: scale(1.05);
 }
 
@@ -1475,9 +1480,9 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 @keyframes revealPulse {
-    0% { transform: scale(1); box-shadow: 0 0 0 rgba(56, 189, 248, 0); }
-    50% { transform: scale(1.2); box-shadow: 0 0 30px rgba(56, 189, 248, 0.8); }
-    100% { transform: scale(1.05); box-shadow: 0 0 20px var(--tile-glow); }
+    0% { transform: scale(1); box-shadow: 0 0 0 rgba(0, 242, 255, 0); }
+    50% { transform: scale(1.15); box-shadow: 0 0 40px var(--accent-primary); }
+    100% { transform: scale(1.05); box-shadow: 0 0 25px var(--accent-primary); }
 }
 
 .reveal-tile.active {
@@ -1704,13 +1709,12 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 /* Main Game Layout */
 .game-main-layout {
     display: flex;
-    justify-content: space-between;
+    justify-content: center; /* Center everything to avoid gaps on huge screens */
     align-items: center;
     width: 100%;
-    max-width: 1500px;
     margin: 0 auto;
-    gap: 30px; /* Increased gap to prevent board overlap */
-    padding: 0 10px;
+    gap: clamp(20px, 4vw, 80px); /* Responsive gap */
+    padding: 0 20px;
 }
 
 /* Ensure Sidebars don't shrink too much */
@@ -1738,20 +1742,21 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 /* Players Sidebar */
 .players-sidebar {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    padding: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .players-sidebar h3 {
-    font-size: clamp(1rem, 2vw, 1.5rem);
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     letter-spacing: 2px;
-    color: var(--text-secondary);
+    color: var(--accent-gold);
     margin-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 10px;
 }
 
@@ -1807,12 +1812,14 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .wheel-value-display {
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 16px;
-    padding: 20px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 25px;
     text-align: center;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    min-width: 120px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    min-width: 150px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .value-label {
@@ -2107,43 +2114,42 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     height: 0;
     border-left: 14px solid transparent;
     border-right: 14px solid transparent;
-    border-top: 35px solid #f59e0b;
+    border-top: 35px solid var(--accent-secondary);
 }
 
 .btn-spin {
     padding: 22px 50px;
     font-size: 1.5rem;
-    font-weight: 900;
-    background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
-    color: #451a03;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
+    color: white;
     border: none;
-    border-radius: 50px;
+    border-radius: 60px;
     cursor: pointer;
-    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 8px 0 #b45309, 0 12px 25px rgba(251, 191, 36, 0.4);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 0 #7b2cbf, 0 12px 30px rgba(255, 0, 212, 0.3);
     text-transform: uppercase;
-    letter-spacing: 2.5px;
     animation: spinPulse 2s infinite ease-in-out;
 }
 
 @keyframes spinPulse {
     0%, 100% {
-        box-shadow: 0 8px 0 #b45309, 0 12px 25px rgba(251, 191, 36, 0.4);
+        box-shadow: 0 8px 0 #7b2cbf, 0 12px 30px rgba(255, 0, 212, 0.3);
     }
     50% {
-        box-shadow: 0 8px 0 #b45309, 0 16px 40px rgba(251, 191, 36, 0.6), 0 0 30px rgba(251, 191, 36, 0.3);
+        box-shadow: 0 8px 0 #7b2cbf, 0 20px 45px rgba(255, 0, 212, 0.5), 0 0 30px rgba(157, 78, 221, 0.3);
     }
 }
 
 .btn-spin:hover:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: 0 6px 0 #b45309, 0 10px 20px rgba(251, 191, 36, 0.5);
-    background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%);
+    transform: translateY(2px) scale(1.02);
+    box-shadow: 0 6px 0 #7b2cbf, 0 10px 20px rgba(255, 0, 212, 0.4);
+    background: linear-gradient(135deg, var(--accent-secondary), #c77dff);
 }
 
 .btn-spin:active:not(:disabled) {
     transform: translateY(8px);
-    box-shadow: 0 0 0 #b45309, 0 4px 10px rgba(251, 191, 36, 0.4);
+    box-shadow: 0 0 0 #7b2cbf, 0 4px 10px rgba(255, 0, 212, 0.2);
 }
 
 .btn-spin:disabled {
@@ -2151,6 +2157,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     cursor: not-allowed;
     animation: none;
     transform: translateY(8px);
+    box-shadow: none;
+}
     box-shadow: 0 0 0 #b45309;
 }
 
