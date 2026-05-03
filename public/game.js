@@ -757,7 +757,7 @@ const WHEEL_SEGMENTS = [
     { value: 'TURBO_START', color: '#fde047', label: 'TURBO', glowing: true }, // Gold
 
     // Group 4
-    { value: 'CRISTALLO', color: '#fde047', label: 'CRISTALLO' }, // Gold
+    { value: 'JOLLY', color: '#fde047', label: 'JOLLY' }, // Gold
     { value: 300, color: '#1e3a8a', label: '300€' }, // Navy
     { value: 500, color: '#f59e0b', label: '500€' }, // Amber
     { value: 200, color: '#0f172a', label: '200€' }, // Slate
@@ -914,7 +914,7 @@ function renderWheelToCache() {
             ctx.strokeStyle = 'transparent'; // No stroke either
         }
         else if (label === 'CROLLO') ctx.fillStyle = '#FFFFFF';
-        else if (label === 'CRISTALLO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'JOLLY') ctx.fillStyle = '#FFFFFF';
         else if (label === 'TURBO') ctx.fillStyle = '#FFFFFF';
         else if (label === 'EXPRESS') {
             ctx.fillStyle = '#FFFFFF'; // White text
@@ -936,10 +936,10 @@ function renderWheelToCache() {
         if (label === 'CROLLO') fontSize = 11 * scale;
         else if (label === 'SALTA') fontSize = 16 * scale;
         else if (label === 'TURBO') fontSize = 12 * scale;
-        else if (label === 'CRISTALLO') fontSize = 16 * scale;
+        else if (label === 'JOLLY') fontSize = 16 * scale;
         else if (label === 'EXPRESS') fontSize = 14 * scale;
 
-        ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
+        ctx.font = `bold ${fontSize}px Lexend, sans-serif`;
 
         // Text Radius Logic
         // "I testi devono partire in cima come i numeri" 
@@ -947,7 +947,7 @@ function renderWheelToCache() {
         let baseRadius = 0.86;
 
         // Adjust for smaller fonts so the *top* edge aligns at the rim
-        if (label === 'CRISTALLO') baseRadius = 0.87; // 16px
+        if (label === 'JOLLY') baseRadius = 0.87; // 16px
         if (label === 'SALTA') baseRadius = 0.87; // 16px
         if (label === 'TURBO') baseRadius = 0.88; // 12px
         if (label === 'EXPRESS') baseRadius = 0.88; // 14px
@@ -956,9 +956,7 @@ function renderWheelToCache() {
         let currentRadius = radius * baseRadius;
 
         // "Letterspacing minimo" -> 0.95
-        const charSpacing = 0.95;
-
-        // (Removed Top-Emoji block)
+        const charSpacing = 0.85; // Reduced from 0.95 for even tighter fit
 
         // Draw Characters
         chars.forEach(char => {
@@ -968,26 +966,26 @@ function renderWheelToCache() {
 
             // "Euro piu piccolino" e Avvicinalo moltissimo allo zero
             if (char === '€') {
-                ctx.font = `bold ${fontSize * 0.55}px Outfit, sans-serif`;
+                ctx.font = `bold ${fontSize * 0.55}px Lexend, sans-serif`;
             } else {
-                ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
+                ctx.font = `bold ${fontSize}px Lexend, sans-serif`;
             }
 
             ctx.fillText(char, 0, 0);
             ctx.restore();
-            // Extremely tight spacing for the Euro symbol
+            // Extremely tight spacing
             const currentSpacing = (char === '€') ? charSpacing * 0.2 : charSpacing;
             currentRadius -= fontSize * currentSpacing;
         });
 
-        // "Cristallo: Prima testo poi simbolo, piccolo"
-        if (label === 'CRISTALLO') {
+        // "JOLLY: Prima testo poi simbolo, piccolo"
+        if (label === 'JOLLY') {
             ctx.save();
             // Position after text (currentRadius is now lower/inner)
             ctx.translate(currentRadius - (5 * scale), 0);
             ctx.rotate(Math.PI / 2);
-            ctx.font = `${14 * scale}px serif`; // "Piccolo"
-            ctx.fillText('🛡️', 0, 0);
+            ctx.font = `${14 * scale}px Lexend, sans-serif`;
+            ctx.fillText('💎', 0, 0);
             ctx.restore();
         }
         ctx.restore();
@@ -1211,15 +1209,15 @@ function onWheelStop(result) {
         updateUI();
         if (isMobileMode) syncGameState();
         showMessage('TURBO! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
-    } else if (result.value === 'CRISTALLO') {
-        // CRISTALLO - Set special pending value and wait for consonant
-        elements.currentWheelValue.textContent = '🛡️';
+    } else if (result.value === 'JOLLY') {
+        // JOLLY - Set special pending value and wait for consonant
+        elements.currentWheelValue.textContent = '💎';
         elements.currentWheelValue.className = 'wheel-value jolly';
-        gameState.pendingWheelValue = 'CRISTALLO';
+        gameState.pendingWheelValue = 'JOLLY';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         if (isMobileMode) syncGameState();
-        showMessage('CRISTALLO! Chiama una consonante per ottenere la protezione!', 'info');
+        showMessage('JOLLY! Chiama una consonante per ottenere la protezione!', 'info');
     } else if (result.value === 'CROLLO') {
         // Check if player has Cristallo shield
         if (gameState.hasJolly[player.name]) {
