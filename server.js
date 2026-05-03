@@ -14,7 +14,7 @@ const io = socketIo(server, {
     }
 });
 
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 // Set CSP header to allow Socket.io
@@ -120,7 +120,7 @@ app.post('/api/puzzle/remove', (req, res) => {
     if (!phrase) return res.status(400).json({ error: 'Phrase required' });
 
     const fs = require('fs');
-    const puzzlesPath = path.join(__dirname, 'puzzles.js');
+    const puzzlesPath = path.join(__dirname, 'public', 'puzzles.js');
 
     try {
         let content = fs.readFileSync(puzzlesPath, 'utf8');

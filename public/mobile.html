@@ -304,6 +304,47 @@
             width: 100%;
         }
 
+        .btn-express-vowel {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245,158,11,0.4);
+        }
+        .btn-final-vowel {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.4);
+        }
+        .express-mode-section {
+            background: rgba(245,158,11,0.08) !important;
+            border: 1px solid rgba(245,158,11,0.3) !important;
+        }
+        .express-mode-section h3 { color: #fbbf24 !important; }
+        .final-mode-section {
+            background: rgba(59,130,246,0.08) !important;
+            border: 1px solid rgba(59,130,246,0.3) !important;
+        }
+        .final-mode-section h3 { color: #60a5fa !important; }
+
         #mystery-modal .card {
             border: 2px solid #fbbf24;
             box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
@@ -394,7 +435,7 @@
             <div class="card">
                 <div class="game-actions">
                     <!-- Spin Wheel -->
-                    <div class="action-section">
+                    <div class="action-section" id="spin-section">
                         <h3>🎡 Gira la Ruota</h3>
                         <button id="spin-btn" class="btn btn-primary" disabled>GIRA</button>
                     </div>
@@ -403,8 +444,7 @@
                     <div class="action-section" id="consonant-section" style="display: none;">
                         <h3>Chiama Consonante</h3>
                         <div class="input-group">
-                            <input type="text" id="consonant-input" maxlength="1" placeholder="A-Z"
-                                style="text-transform: uppercase;">
+                            <input type="text" id="consonant-input" maxlength="1" placeholder="A-Z" style="text-transform: uppercase;">
                             <button id="consonant-btn" class="btn btn-action">CHIAMA</button>
                         </div>
                     </div>
@@ -413,9 +453,36 @@
                     <div class="action-section" id="vowel-section">
                         <h3>Compra Vocale (€1000)</h3>
                         <div class="input-group">
-                            <input type="text" id="vowel-input" maxlength="1" placeholder="A, E, I, O, U"
-                                style="text-transform: uppercase;" disabled>
+                            <input type="text" id="vowel-input" maxlength="1" placeholder="A, E, I, O, U" style="text-transform: uppercase;" disabled>
                             <button id="vowel-btn" class="btn btn-action" disabled>COMPRA</button>
+                        </div>
+                    </div>
+
+                    <!-- EXPRESS MODE -->
+                    <div class="action-section express-mode-section" id="express-section" style="display: none;">
+                        <h3>⚡ EXPRESS MODE</h3>
+                        <p style="font-size:0.78rem; color:#fbbf24; margin:-8px 0 10px; text-align:center;">Consonante +€500 per lettera &nbsp;|&nbsp; Vocale -€500</p>
+                        <div class="input-group" style="margin-bottom:10px;">
+                            <input type="text" id="express-consonant-mobile" maxlength="1" placeholder="Consonante" style="text-transform:uppercase;">
+                            <button id="express-consonant-btn-mobile" class="btn btn-action">CHIAMA</button>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="express-vowel-mobile" maxlength="1" placeholder="Vocale (-€500)" style="text-transform:uppercase;">
+                            <button id="express-vowel-btn-mobile" class="btn btn-express-vowel">COMPRA</button>
+                        </div>
+                    </div>
+
+                    <!-- FINAL ROUND -->
+                    <div class="action-section final-mode-section" id="final-round-section" style="display: none;">
+                        <h3>💎 ROUND FINALE</h3>
+                        <p style="font-size:0.78rem; color:#60a5fa; margin:-8px 0 10px; text-align:center;">Consonante gratis &nbsp;|&nbsp; Vocale gratis</p>
+                        <div class="input-group" style="margin-bottom:10px;">
+                            <input type="text" id="final-consonant-mobile" maxlength="1" placeholder="Consonante" style="text-transform:uppercase;">
+                            <button id="final-consonant-btn-mobile" class="btn btn-action">CHIAMA</button>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="final-vowel-mobile" maxlength="1" placeholder="Vocale" style="text-transform:uppercase;">
+                            <button id="final-vowel-btn-mobile" class="btn btn-final-vowel">CHIAMA</button>
                         </div>
                     </div>
 
@@ -689,93 +756,108 @@
             const currentPlayer = gameState.players[gameState.currentPlayerIndex];
             const isMyTurn = currentPlayer && currentPlayer.name === playerName;
             const myPartialScore = gameState.partialScores[playerName] || 0;
-            const myTotalScore = gameState.totalScores[playerName] || 0;
 
             document.getElementById('game-player-score').textContent = `€${myPartialScore}`;
 
             const statusEl = document.getElementById('game-status');
-            if (gameState.wheelPhase === 'spinning') {
+            const phase = gameState.wheelPhase;
+
+            if (phase === 'spinning') {
                 statusEl.textContent = 'La ruota sta girando...';
+            } else if (phase === 'express' && isMyTurn) {
+                statusEl.textContent = '⚡ EXPRESS MODE — è il tuo turno!';
+                statusEl.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.3), rgba(217,119,6,0.3))';
+                statusEl.style.borderColor = 'rgba(245,158,11,0.5)';
+            } else if (phase === 'final_play' && isMyTurn) {
+                statusEl.textContent = '💎 ROUND FINALE — è il tuo turno!';
+                statusEl.style.background = 'linear-gradient(135deg, rgba(59,130,246,0.3), rgba(29,78,216,0.3))';
+                statusEl.style.borderColor = 'rgba(59,130,246,0.5)';
             } else if (isMyTurn) {
                 statusEl.textContent = 'È IL TUO TURNO!';
+                statusEl.style.background = '';
+                statusEl.style.borderColor = '';
             } else {
-                statusEl.textContent = `Turno di: ${currentPlayer.name}`;
+                statusEl.textContent = `Turno di: ${currentPlayer ? currentPlayer.name : '...'}`;
+                statusEl.style.background = '';
+                statusEl.style.borderColor = '';
             }
 
-            // Update buttons based on game state
-            const actionCard = document.getElementById('action-card') || document.querySelector('#game-screen .card:not(#mystery-modal .card)');
+            const actionCard = document.querySelector('#game-screen .card:not(#mystery-modal .card)');
             const mysteryModal = document.getElementById('mystery-modal');
             const isMysteryVisible = mysteryModal && (mysteryModal.style.display === 'block' || mysteryModal.classList.contains('active'));
 
+            // --- Sections ---
+            const spinSection      = document.getElementById('spin-section');
+            const consonantSection = document.getElementById('consonant-section');
+            const vowelSection     = document.getElementById('vowel-section');
+            const expressSection   = document.getElementById('express-section');
+            const finalSection     = document.getElementById('final-round-section');
+            const passSection      = document.getElementById('pass-section');
+            const spinBtn          = document.getElementById('spin-btn');
+            const vowelInput       = document.getElementById('vowel-input');
+            const vowelBtn         = document.getElementById('vowel-btn');
+
+            // Helper: hide all action sections
+            function hideAllSections() {
+                spinSection.style.display      = 'none';
+                consonantSection.style.display = 'none';
+                vowelSection.style.display     = 'none';
+                expressSection.style.display   = 'none';
+                finalSection.style.display     = 'none';
+                passSection.style.display      = 'none';
+            }
+
             if (isMyTurn && !isMysteryVisible) {
                 if (actionCard) actionCard.style.display = 'block';
+                hideAllSections();
 
-                const spinBtn = document.getElementById('spin-btn');
-                const consonantSection = document.getElementById('consonant-section');
-                const consonantInput = document.getElementById('consonant-input');
-                const consonantBtn = document.getElementById('consonant-btn');
-                const vowelInput = document.getElementById('vowel-input');
-                const vowelBtn = document.getElementById('vowel-btn');
-                const passSection = document.getElementById('pass-section');
-
-                // Spin button and consonant are EXCLUSIVE - show one or the other
-                if (gameState.wheelPhase === 'idle' || gameState.wheelPhase === 'choose_action') {
-                    spinBtn.disabled = false;
-                    spinBtn.style.display = 'block';
-                    consonantSection.style.display = 'none';
-                } else if (gameState.wheelPhase === 'call_consonant') {
-                    spinBtn.style.display = 'none';
+                if (phase === 'express') {
+                    // EXPRESS: dedicated UI only
+                    expressSection.style.display = 'block';
+                } else if (phase === 'final_play') {
+                    // FINAL ROUND: dedicated UI only
+                    finalSection.style.display = 'block';
+                } else if (phase === 'idle' || phase === 'choose_action') {
+                    // Normal: spin + vowel + pass
+                    spinSection.style.display  = 'block';
+                    spinBtn.disabled           = false;
+                    const canBuyVowel = myPartialScore >= 1000;
+                    vowelSection.style.display = canBuyVowel ? 'block' : 'none';
+                    if (canBuyVowel) { vowelInput.disabled = false; vowelBtn.disabled = false; }
+                    // Pass button when all consonants revealed
+                    if (gameState.allConsonantsRevealed) passSection.style.display = 'block';
+                } else if (phase === 'call_consonant') {
                     consonantSection.style.display = 'block';
-                    consonantInput.disabled = false;
-                    consonantBtn.disabled = false;
-                } else {
-                    spinBtn.disabled = true;
-                    spinBtn.style.display = 'block';
-                    consonantSection.style.display = 'none';
-                }
-
-                const canBuyVowel = (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle') && myPartialScore >= 1000;
-                vowelInput.disabled = !canBuyVowel;
-                vowelBtn.disabled = !canBuyVowel;
-
-                // Hide vowel section if player has less than 1000
-                const vowelSection = document.getElementById('vowel-section');
-                if (vowelSection) {
-                    if (myPartialScore < 1000) {
-                        vowelSection.classList.add('hidden');
-                    } else {
-                        vowelSection.classList.remove('hidden');
+                    document.getElementById('consonant-input').disabled = false;
+                    document.getElementById('consonant-btn').disabled   = false;
+                    // Vowel if affordable
+                    const canBuyVowel = myPartialScore >= 1000;
+                    if (canBuyVowel) {
+                        vowelSection.style.display = 'block';
+                        vowelInput.disabled = false;
+                        vowelBtn.disabled   = false;
                     }
-                }
-
-                // Solve button only for current player
-                const solveBtn = document.getElementById('solve-btn');
-                const solveInput = document.getElementById('solve-input');
-                if (solveBtn && solveInput) {
-                    solveBtn.disabled = false;
-                    solveInput.disabled = false;
-                    solveInput.placeholder = 'Scrivi la soluzione...';
-                }
-
-                // Pass button - only when all consonants are revealed
-                if (gameState.allConsonantsRevealed && (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle')) {
-                    passSection.style.display = 'block';
                 } else {
-                    passSection.style.display = 'none';
+                    // Spinning or other: only show spin disabled
+                    spinSection.style.display = 'block';
+                    spinBtn.disabled = true;
                 }
+
+                // Solve always visible on your turn
+                const solveBtn   = document.getElementById('solve-btn');
+                const solveInput = document.getElementById('solve-input');
+                if (solveBtn)   solveBtn.disabled   = false;
+                if (solveInput) solveInput.disabled = false;
+
             } else {
-                // Not my turn - HIDE ACTION CARD
+                // Not my turn
                 if (actionCard) actionCard.style.display = 'none';
             }
 
-            // Show shield if player has it (always check)
+            // Shield icon
             const shieldIcon = document.getElementById('player-shield');
             if (shieldIcon) {
-                if (gameState.hasJolly && gameState.hasJolly[playerName]) {
-                    shieldIcon.style.display = 'inline-block';
-                } else {
-                    shieldIcon.style.display = 'none';
-                }
+                shieldIcon.style.display = (gameState.hasJolly && gameState.hasJolly[playerName]) ? 'inline-block' : 'none';
             }
         }
 
@@ -796,6 +878,50 @@
             if (!letter) return;
             socket.emit('player:buy-vowel', { lobbyId: currentLobbyId, playerId, letter });
             document.getElementById('vowel-input').value = '';
+        });
+
+        // EXPRESS: consonant
+        document.getElementById('express-consonant-btn-mobile').addEventListener('click', () => {
+            const letter = document.getElementById('express-consonant-mobile').value.trim();
+            if (!letter) return;
+            socket.emit('player:call-consonant', { lobbyId: currentLobbyId, playerId, letter });
+            document.getElementById('express-consonant-mobile').value = '';
+        });
+        document.getElementById('express-consonant-mobile').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('express-consonant-btn-mobile').click();
+        });
+
+        // EXPRESS: vowel
+        document.getElementById('express-vowel-btn-mobile').addEventListener('click', () => {
+            const letter = document.getElementById('express-vowel-mobile').value.trim();
+            if (!letter) return;
+            socket.emit('player:buy-vowel', { lobbyId: currentLobbyId, playerId, letter });
+            document.getElementById('express-vowel-mobile').value = '';
+        });
+        document.getElementById('express-vowel-mobile').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('express-vowel-btn-mobile').click();
+        });
+
+        // FINAL ROUND: consonant
+        document.getElementById('final-consonant-btn-mobile').addEventListener('click', () => {
+            const letter = document.getElementById('final-consonant-mobile').value.trim();
+            if (!letter) return;
+            socket.emit('player:call-consonant', { lobbyId: currentLobbyId, playerId, letter });
+            document.getElementById('final-consonant-mobile').value = '';
+        });
+        document.getElementById('final-consonant-mobile').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('final-consonant-btn-mobile').click();
+        });
+
+        // FINAL ROUND: vowel
+        document.getElementById('final-vowel-btn-mobile').addEventListener('click', () => {
+            const letter = document.getElementById('final-vowel-mobile').value.trim();
+            if (!letter) return;
+            socket.emit('player:buy-vowel', { lobbyId: currentLobbyId, playerId, letter });
+            document.getElementById('final-vowel-mobile').value = '';
+        });
+        document.getElementById('final-vowel-mobile').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('final-vowel-btn-mobile').click();
         });
 
         document.getElementById('solve-btn').addEventListener('click', () => {

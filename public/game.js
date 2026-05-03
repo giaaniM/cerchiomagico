@@ -1,6 +1,22 @@
 // ===== Sound Manager =====
 const soundManager = {
     audioCtx: null,
+    isMuted: false,
+
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        if (this.isMuted && this.expressAudio) {
+            this.stopExpress();
+        }
+        return this.isMuted;
+    },
+
+    _playAudio(src) {
+        if (this.isMuted) return null;
+        const audio = new Audio(src);
+        audio.play().catch(e => console.warn('Audio play error:', e));
+        return audio;
+    },
 
     init() {
         if (!this.audioCtx) {
@@ -16,6 +32,7 @@ const soundManager = {
     },
 
     playTone(freq, type, duration, vol = 0.1) {
+        if (this.isMuted) return;
         if (!this.audioCtx) this.init();
         if (!this.audioCtx) return;
 
@@ -36,20 +53,15 @@ const soundManager = {
     },
 
     playCorrect() {
-        const audio = new Audio('foundletter.mp3');
-        audio.play().catch(e => console.warn('Audio play error:', e));
+        this._playAudio('assets/sounds/foundletter.mp3');
     },
 
     playCash() {
-        // Requested sound for money gain
-        const audio = new Audio('cash.mp3');
-        audio.play().catch(e => console.warn('Audio play error:', e));
+        this._playAudio('assets/sounds/cash.mp3');
     },
 
     playError() {
-        // Play external MP3
-        const audio = new Audio('notfoundletter.mp3');
-        audio.play().catch(e => console.warn('Audio play error:', e));
+        this._playAudio('assets/sounds/notfoundletter.mp3');
     },
 
     playReveal() {
@@ -57,13 +69,13 @@ const soundManager = {
     },
 
     playClick() {
-        const audio = new Audio('click.mp3');
-        audio.play().catch(e => console.warn('Audio play error:', e));
+        this._playAudio('assets/sounds/click.mp3');
     },
 
     // CROWD REACTIONS
     playCrowdApplause() {
         // Applause: white noise burst
+        if (this.isMuted) return;
         if (!this.audioCtx) this.init();
         if (!this.audioCtx) return;
 
@@ -101,14 +113,12 @@ const soundManager = {
     },
 
     playGameOver() {
-        const audio = new Audio('gameover.mp3');
-        audio.play().catch(e => console.warn('Audio play error:', e));
+        this._playAudio('assets/sounds/gameover.mp3');
     },
 
     playWin() {
         // 1. Play external MP3 (Voice/Jingle)
-        const winAudio = new Audio('fraseindovinata.mp3');
-        winAudio.play().catch(e => console.warn("Audio play error:", e));
+        this._playAudio('assets/sounds/fraseindovinata.mp3');
 
         // 2. Play Synthetic Victory Fanfare (Together)
         // Arpeggio C Major: C5 - E5 - G5 - C6
@@ -127,8 +137,7 @@ const soundManager = {
 
     playWheelTick() {
         // Play rotation.mp3 as requested
-        const audio = new Audio('rotation.mp3');
-        audio.play().catch(e => console.warn('Audio play error:', e));
+        this._playAudio('assets/sounds/rotation.mp3');
     },
 
     // Aliases for missing methods
@@ -141,20 +150,19 @@ const soundManager = {
     },
 
     playWinner() {
-        const audio = new Audio('winner.mp3');
-        audio.play().catch(e => console.warn('Audio play error:', e));
+        this._playAudio('assets/sounds/winner.mp3');
     },
 
     playFinalWin() {
         // Final victory sound: cheers.mp3
-        const audio = new Audio('cheers.mp3');
-        audio.play().catch(e => console.warn('Audio play error:', e));
+        this._playAudio('assets/sounds/cheers.mp3');
     },
 
     expressAudio: null,
     playExpress() {
+        if (this.isMuted) return;
         if (!this.expressAudio) {
-            this.expressAudio = new Audio('express.mp3');
+            this.expressAudio = new Audio('assets/sounds/express.mp3');
             this.expressAudio.loop = true;
         }
         this.expressAudio.currentTime = 0;
@@ -262,6 +270,7 @@ const elements = {
     // Smartphone Big View
     bigLobbyIdDisplay: document.getElementById('big-lobby-id-display'),
     bigMobileLink: document.getElementById('big-mobile-link'),
+    lobbyQrContainer: document.getElementById('lobby-qr-container'),
     bigPlayersGrid: document.getElementById('big-players-grid'),
 
     // Old elements kept if needed (or to avoid reference errors)
@@ -1145,12 +1154,10 @@ function onWheelStop(result) {
             updateUI();
 
             const label = result.label || result.value;
-            showPopup(`<div class="popup-error">
-                <div style="font-size:0.8em; opacity:0.8">RISULTATO: ${label}</div>
-                <div style="margin-top:10px">VALORE NON VALIDO!</div>
-                <div style="font-size:0.7em; margin-top:5px">Bisogna colpire un valore numerico.</div>
-                <div class="pulse-action" style="margin-top:15px; color:#fbbf24; font-weight:800">GIRA DI NUOVO</div>
-            </div>`, 3000);
+            showPopup(`<div style="font-size:0.8em; opacity:0.8">RISULTATO: ${label}</div>
+                        <div style="margin-top:10px; font-weight:800; color:#f87171;">VALORE NON VALIDO!</div>
+                        <div style="font-size:0.7em; margin-top:5px">Bisogna colpire un valore numerico.</div>
+                        <div class="pulse-action" style="margin-top:15px; color:#fbbf24; font-weight:800">GIRA DI NUOVO</div>`, 3500, 'error');
         }
         return; // Important: Consume the event
     }
@@ -1428,7 +1435,7 @@ function callConsonant() {
     if (isVowel(letter)) {
         soundManager.playError();
         showMessage('Devi chiamare una CONSONANTE, non una vocale!', 'error');
-        showPopup(`<div class="popup-error">HAI CHIAMATO UNA VOCALE!<br>Turno perso</div>`, 2000);
+        showPopup(`HAI CHIAMATO UNA VOCALE!<br><span style="font-size:0.8em; opacity:0.8;">Le vocali si comprano a €1000</span><br>Turno perso`, 2500, 'error');
         setTimeout(passTurn, 2500);
         return;
     }
@@ -1436,10 +1443,8 @@ function callConsonant() {
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
         soundManager.playError();
-        showPopup(`<div class="popup-error">
-            <div>Lettera già chiamata!</div>
-            <div>Turno perso</div>
-        </div>`, 3000);
+        showPopup(`<div style="color:#f87171; font-weight:800; font-size:1.2em; margin-bottom:5px;">LETTERA GIÀ CHIAMATA!</div>
+                    <div>Il turno passa al prossimo giocatore</div>`, 3000, 'error');
         setTimeout(passTurn, 3000);
         return;
     }
@@ -1572,7 +1577,7 @@ function buyVowel() {
     if (gameState.usedLetters.has(normalized)) {
         showMessage(`La vocale "${letter}" è già stata chiamata!`, 'error');
         soundManager.playError();
-        showPopup(`<div class="popup-error">VOCALE GIÀ CHIAMATA!<br>Turno perso</div>`, 2000);
+        showPopup(`VOCALE GIÀ CHIAMATA!<br>Turno perso`, 2000, 'error');
         setTimeout(passTurn, 2500);
         return;
     }
@@ -1608,7 +1613,7 @@ function buyVowel() {
     } else {
         soundManager.playError();
         showMessage(`❌ "${letter}" non c'è nella frase. (-€${VOWEL_COST})`, 'error');
-        showPopup(`<div class="popup-error">VOCALE ASSENTE!<br>Turno perso</div>`, 2000);
+        showPopup(`VOCALE ASSENTE!<br>Turno perso`, 2000, 'error');
         setTimeout(passTurn, 2500);
     }
 }
@@ -1773,7 +1778,7 @@ function trySolve() {
         } else {
             soundManager.playError();
             showMessage('❌ Soluzione errata!', 'error');
-            showPopup(`<div class="popup-error">SOLUZIONE SBAGLIATA!<br>Turno perso</div>`, 2000);
+            showPopup(`SOLUZIONE SBAGLIATA!<br>Turno perso`, 2500, 'error');
             setTimeout(passTurn, 2500);
         }
     }
@@ -2000,10 +2005,10 @@ async function startNextManche() {
         <div class="popup-turn-player">
             ${gameState.currentManche === 5 ?
             '<span class="pulse-action" style="color:#fbbf24">GIRATE PER IL VALORE DEL ROUND</span>' :
-            `INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span>`
+            `INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span>`
         }
         </div>
-    </div>`, 4000);
+    </div>`, 4000, 'transparent-wrapper');
 }
 
 function showFinalResults() {
@@ -2568,8 +2573,8 @@ async function startGameLocal() {
         <div class="popup-manche-number">MANCHE ${gameState.currentManche}</div>
         <div class="popup-category-label">Categoria:</div>
         <div class="popup-manche-hint-large">${gameState.hint}</div>
-        <div class="popup-turn-player">INIZIA<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
-    </div>`, 4000);
+        <div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
+    </div>`, 4000, 'transparent-wrapper');
 
     // Sync initial state if in mobile mode
     if (isMobileMode) {
@@ -2717,6 +2722,12 @@ function initSmartphoneLobby() {
 
             if (elements.bigMobileLink) {
                 elements.bigMobileLink.innerHTML = `<a href="${mobileLink}" target="_blank" style="color: #00d4ff; text-decoration: none;">${mobileLink}</a>`;
+                
+                // Inject QR Code
+                if (elements.lobbyQrContainer) {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(mobileLink)}`;
+                    elements.lobbyQrContainer.innerHTML = `<img src="${qrUrl}" alt="Scan to join" />`;
+                }
             }
 
             // Host joins
@@ -3005,7 +3016,7 @@ function callFinalConsonant() {
         // Incorrect Guess -> Invalid turn -> Pass
         soundManager.playError();
         showMessage(`❌ "${letter}" non c'è. Turno perso.`, 'error');
-        showPopup(`<div class="popup-error">LETTERA ASSENTE!<br>Turno perso</div>`, 2000);
+        showPopup(`LETTERA ASSENTE!<br>Turno perso`, 2000, 'error');
         setTimeout(passTurn, 2500);
     }
 }
@@ -3049,7 +3060,7 @@ function callFinalVowel() {
         // Incorrect Guess -> Pass
         soundManager.playError();
         showMessage(`❌ "${letter}" non c'è. Turno perso.`, 'error');
-        showPopup(`<div class="popup-error">VOCALE ASSENTE!<br>Turno perso</div>`, 2000);
+        showPopup(`VOCALE ASSENTE!<br>Turno perso`, 2000, 'error');
         setTimeout(passTurn, 2500);
     }
 }
