@@ -1342,6 +1342,9 @@ function handleMysterySegment() {
                 <!-- Card 1: Risk (500) -->
                 <div class="mystery-card left" onclick="resolveMysteryChoice(500)">
                     <div class="card-content">
+                        <div class="divider" style="margin: 30px 0; justify-content: center;">
+                            <span style="font-size: 1rem; letter-spacing: 2px;">GIOCATORI CONNESSI</span>
+                        </div>
                         <span class="card-icon">💶</span>
                         <span class="card-text">PRENDI<br>€500</span>
                     </div>
@@ -2787,10 +2790,10 @@ function renderBigLobbyPlayers(players) {
 
     players.forEach(player => {
         const card = document.createElement('div');
-        card.className = 'big-player-card new'; // Always new animation for re-renders for now
+        card.className = 'lobby-player-card';
         card.innerHTML = `
-            <div class="big-player-avatar">👤</div>
-            <div class="big-player-name">${player.name}</div>
+            <div class="player-avatar-circle">👤</div>
+            <div class="player-card-name">${player.name}</div>
         `;
         elements.bigPlayersGrid.appendChild(card);
     });
