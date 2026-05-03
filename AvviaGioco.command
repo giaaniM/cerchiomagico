@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 echo "🧹 Pulizia processi precedenti..."
 lsof -ti:3000 | xargs kill -9 2>/dev/null
 
-echo "🚀 Avvio della Ruota della Fortuna..."
+echo "🚀 Avvio di Cerchio Magico..."
 
 # Caricamento NVM (Node Version Manager)
 export NVM_DIR="$HOME/.nvm"

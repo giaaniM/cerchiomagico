@@ -48,7 +48,7 @@ Il server sarà disponibile su `http://localhost:3000`
 ### Avviare il server:
 Apri un terminale e vai nella cartella del progetto:
 ```bash
-cd /Users/valeriopadovano/applicazioni/wheel-of-fortune
+cd cerchiomagico
 source ~/.nvm/nvm.sh
 npm start
 ```

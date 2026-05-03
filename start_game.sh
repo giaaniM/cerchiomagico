@@ -3,7 +3,7 @@
 # Script per far partire il server e aprire il gioco nel browser
 # Carica NVM se presente per evitare errori "node: command not found"
 
-echo "🚀 Avvio della Ruota della Fortuna..."
+echo "🚀 Avvio di Cerchio Magico..."
 
 # Caricamento NVM (Node Version Manager)
 export NVM_DIR="$HOME/.nvm"
