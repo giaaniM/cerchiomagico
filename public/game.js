@@ -2701,9 +2701,13 @@ function initSmartphoneLobby() {
             currentLobbyId = data.lobbyId;
             if (elements.bigLobbyIdDisplay) elements.bigLobbyIdDisplay.textContent = currentLobbyId;
 
-            // Use detected IP from server if available, otherwise fallback to localhost
-            const host = data.localIp ? `${data.localIp}:${data.port || 3000}` : window.location.host;
-            const altHost = data.hostname ? `${data.hostname}:${data.port || 3000}` : null;
+            // Use window.location.host as primary (works on Render/Public URLs)
+            // Use server IP only as fallback for local network play
+            const currentHost = window.location.host;
+            const isLocal = currentHost.includes('localhost') || currentHost.includes('127.0.0.1');
+            
+            const host = (isLocal && data.localIp) ? `${data.localIp}:${data.port || 3000}` : currentHost;
+            const altHost = (isLocal && data.hostname) ? `${data.hostname}:${data.port || 3000}` : null;
             const protocol = window.location.protocol;
             
             const mobileLink = `${protocol}//${host}/mobile.html`;
