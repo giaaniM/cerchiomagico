@@ -8,20 +8,20 @@
 }
 
 :root {
-    /* New Identity Palette - Midnight Magic (Indigo + Neon Cyan + Magenta) */
-    --bg-dark: #030014; /* Deep Space */
-    --bg-panel: rgba(15, 0, 40, 0.7); /* Deep Violet Glass */
-    --accent-primary: #00f2ff; /* Electric Cyan */
-    --accent-secondary: #ff00d4; /* Neon Magenta */
-    --accent-tertiary: #9d4edd; /* Radiant Violet */
-    --accent-gold: #ffaa00; /* Amber Gold (warm) */
+    /* Refined Identity Palette - Modern Midnight (Slate + Soft Blue + Indigo) */
+    --bg-dark: #0f172a; /* Slate 900 */
+    --bg-panel: rgba(15, 23, 42, 0.8); /* Slate 900 Glass */
+    --accent-primary: #38bdf8; /* Soft Sky Blue */
+    --accent-secondary: #818cf8; /* Soft Indigo */
+    --accent-tertiary: #a78bfa; /* Soft Violet */
+    --accent-gold: #fbbf24; /* Amber Gold */
     
-    --text-primary: #e0e0ff;
+    --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
     
-    --tile-bg: rgba(20, 0, 60, 0.4);
-    --tile-border: rgba(0, 242, 255, 0.3);
-    --tile-glow: rgba(0, 242, 255, 0.2);
+    --tile-bg: #1e293b; /* Slate 800 for hidden tiles */
+    --tile-border: rgba(255, 255, 255, 0.1);
+    --tile-glow: rgba(56, 189, 248, 0.2);
     
     --font-main: 'Lexend', sans-serif;
     --font-display: 'Lexend', sans-serif;
@@ -58,9 +58,7 @@ body {
     font-family: var(--font-main);
     background-color: var(--bg-dark);
     background-image: 
-        radial-gradient(circle at 50% 20%, rgba(157, 78, 221, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(0, 242, 255, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 100% 0%, rgba(255, 0, 212, 0.05) 0%, transparent 40%);
+        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%);
     color: var(--text-primary);
     margin: 0;
     padding: 0;
@@ -468,15 +466,14 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 /* Black oval with purple borders */
 /* Oval removed as per request */
 .board-oval {
-    padding: 20px;
-    /* Just simple padding wrapper now */
+    padding: 0; /* Removed extra wrapper padding */
 }
 
 .board-frame {
-    /* Magic Board Style - Neon Outline */
+    /* Refined Magic Board Style */
     background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-    box-shadow: 0 0 40px rgba(0, 242, 255, 0.2), 0 20px 80px rgba(0, 0, 0, 0.8);
-    padding: 3px; /* Very thin neon border */
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.1);
+    padding: 6px; /* Elegant border thickness */
     position: relative;
     clip-path: polygon(7.14% 0%, 92.86% 0%,
             92.86% 25%, 100% 25%,
@@ -487,11 +484,10 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .game-board-inner {
-    background: linear-gradient(135deg, #0f0028 0%, #030014 50%, #0f0028 100%);
-    /* Very deep violet-black background for tiles */
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%);
     width: 100%;
     height: 100%;
-    padding: 12px;
+    padding: 8px; /* Tighter internal padding */
     position: relative;
     overflow: hidden;
     clip-path: polygon(7.14% 0%, 92.86% 0%,
@@ -593,20 +589,20 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 /* ===== Tiles (Italian Style) ===== */
 .tile {
-    /* Responsive sizing based on viewport height to ensure it fits big screens */
-    width: clamp(35px, 4.2vh, 55px); 
-    height: clamp(50px, 6.5vh, 85px); /* More rectangular vertically */
+    /* Larger vertical rectangles to fill the view */
+    width: 58px; 
+    height: 80px; 
     flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: clamp(1.2rem, 3.5vh, 2.5rem);
+    font-size: 2.5rem;
     font-weight: 800;
     font-family: var(--font-main);
-    border-radius: 4px;
+    border-radius: 6px;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 2px solid #000;
-    background: transparent;
+    border: 1px solid #000;
+    background: rgba(15, 23, 42, 0.5); 
     position: relative;
 }
 
@@ -617,26 +613,17 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 
-/* Empty/background tiles - TRANSPARENT (show purple background) */
-.tile.empty {
-    background: transparent;
-    border: 3px solid #000;
-}
-
-.tile.empty::before {
-    display: none;
-}
-
-/* Unrevealed letter tiles - WHITE */
+/* Unrevealed letter tiles - SOLID WHITE */
 .tile.letter {
-    background: #f5f5f4;
-    border: 3px solid #000;
+    background: #ffffff; 
+    border: 2px solid #000000;
     color: transparent;
 }
 
-/* Remove decorative pattern from letter tiles since they are now solid white */
-.tile.letter:not(.revealed)::before {
-    display: none;
+/* Empty/background tiles - VISIBLE */
+.tile.empty {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Revealed letter tiles - WHITE with BLACK TEXT */
@@ -843,17 +830,16 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 /* Modal Overlay */
 .modal-overlay {
-    position: absolute;
+    position: fixed; /* Fixed to cover whole viewport */
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    /* Dark semi-transparent background */
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9); /* Opaque black background */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 9999; /* Ensure it is on top of everything */
     transition: background-color 0.3s ease;
 }
 
@@ -1109,14 +1095,13 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
-    color: #000;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white; /* Changed to white for better contrast */
     font-weight: 800;
     border: none;
-    padding: 14px 28px;
+    padding: 18px 45px;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 242, 255, 0.3);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-transform: uppercase;
 }
@@ -1442,24 +1427,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     justify-content: center;
 }
 
-.tile {
-    width: var(--tile-size);
-    height: var(--tile-size);
-    background: var(--tile-bg);
-    border: 1px solid var(--tile-border);
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: calc(var(--tile-size) * 0.7);
-    font-weight: 800;
-    color: var(--accent-gold);
-    text-transform: uppercase;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    backdrop-filter: blur(8px);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
-}
+/* Removed duplicate .tile definition to fix shape/size issues */
 
 .tile.hidden {
     background: linear-gradient(135deg, #1e293b, #0f172a);
@@ -1709,27 +1677,34 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 /* Main Game Layout */
 .game-main-layout {
     display: flex;
-    justify-content: center; /* Center everything to avoid gaps on huge screens */
+    justify-content: center;
     align-items: center;
     width: 100%;
+    max-width: 1400px;
     margin: 0 auto;
-    gap: clamp(20px, 4vw, 80px); /* Responsive gap */
+    gap: clamp(20px, 4vw, 60px); 
     padding: 0 20px;
 }
 
-/* Ensure Sidebars don't shrink too much */
 .players-sidebar,
 .wheel-value-sidebar {
-    flex: 0 0 180px; /* Reduced basis for more board space */
-    max-width: 220px;
+    flex: 0 0 220px;
+    width: 220px;
+    position: relative;
+    z-index: 10;
 }
 
 .board-area {
     flex: 1;
+    max-width: 850px; /* Increased to occupy more space */
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 0;
+    justify-content: center;
+}
+
+.board-frame {
+    max-width: 100%; /* Scale down if needed */
 }
 
 .spin-container-centered {
@@ -2119,15 +2094,15 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .btn-spin {
     padding: 22px 50px;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: 800;
     background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
     color: white;
     border: none;
     border-radius: 60px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 8px 0 #7b2cbf, 0 12px 30px rgba(255, 0, 212, 0.3);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
     text-transform: uppercase;
     animation: spinPulse 2s infinite ease-in-out;
 }
@@ -2219,18 +2194,18 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .btn-action {
-    padding: 12px 20px;
+    padding: 12px 28px;
     font-weight: 800;
-    font-size: 0.95rem;
-    background: linear-gradient(180deg, var(--accent-blue) 0%, #0284c7 100%);
+    font-size: 1rem;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.15s ease;
-    box-shadow: 0 4px 0 #0369a1, 0 6px 12px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .btn-action:hover:not(:disabled) {
@@ -3054,7 +3029,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 /* ===== Jolly Choice Popup ===== */
-.popup-jolly-choice {
+.popup-megaturno-choice {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3062,14 +3037,14 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     width: 100%;
 }
 
-.jolly-choice-title {
+.megaturno-choice-title {
     font-size: 2.5rem;
     font-weight: 900;
     color: #ef4444;
     text-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
 }
 
-.jolly-choice-text {
+.megaturno-choice-text {
     font-size: 1.2rem;
     color: #fff;
     text-align: center;
@@ -3080,26 +3055,41 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 .wheel-value.raddoppia {
     background: linear-gradient(135deg, #FF6B35, #F7931E);
     color: #fff;
-    font-size: 2rem;
+    padding: 6px 20px;
+    border-radius: 50px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-block;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
     animation: pulseRaddoppia 1s infinite;
 }
 
-@keyframes pulseRaddoppia {
-
-    0%,
-    100% {
-        box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
-    }
-
-    50% {
-        box-shadow: 0 0 40px rgba(255, 107, 53, 1);
-    }
-}
-
-.wheel-value.jolly {
+.wheel-value.megaturno {
     background: linear-gradient(135deg, #9333EA, #7C3AED);
     color: #fff;
-    font-size: 2.5rem;
+    padding: 6px 20px;
+    border-radius: 50px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-block;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+}
+
+.wheel-value.perditutto {
+    background: #000;
+    color: #fff;
+    padding: 6px 20px;
+    border-radius: 50px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-block;
+    border: 2px solid #ef4444;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
 /* ===== New Popup Styles ===== */
@@ -3203,14 +3193,14 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 
-.popup-jolly {
+.popup-megaturno {
     font-size: 2.5rem;
     font-weight: 900;
     color: #9333EA;
     text-shadow: 0 0 30px rgba(147, 51, 234, 0.8);
 }
 
-.popup-jolly-used {
+.popup-megaturno-used {
     font-size: 2.5rem;
     font-weight: 900;
     color: var(--accent-green);

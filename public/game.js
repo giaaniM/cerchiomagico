@@ -198,7 +198,7 @@ const API_URL = window.location.origin;
 const gameState = {
     phrase: '',
     originalPhrase: '', // Original phrase for file removal
-    pendingPenalty: null, // Track CROLLO or SALTA for jolly choice
+    pendingPenalty: null, // Track PERDITUTTO or SALTA for jolly choice
     pointerAngle: 0, // Pointer oscillation angle for animation
     hint: '',
     normalizedPhrase: '',
@@ -209,7 +209,7 @@ const gameState = {
     currentManche: null,
     partialScores: {},
     totalScores: {},
-    hasJolly: {}, // Track which players have Jolly shield
+    hasMegaTurno: {}, // Track which players have Jolly shield
     pendingWheelValue: null,
     nextValueMultiplier: 1, // For Raddoppia (x2)
     wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
@@ -653,7 +653,7 @@ function renderPlayersList() {
         li.className = item.originalIndex === gameState.currentPlayerIndex ? 'active' : '';
 
         // Add Jolly shield if player has it (with pulsing animation)
-        const jollyIcon = gameState.hasJolly[item.player.name] ? '<span class="shield-icon">🛡️</span>' : '';
+        const jollyIcon = gameState.hasMegaTurno[item.player.name] ? '<span class="shield-icon">🛡️</span>' : '';
 
         li.innerHTML = `
             <span class="player-name">${item.player.name} ${jollyIcon}</span>
@@ -736,7 +736,7 @@ const WHEEL_SEGMENTS = [
     { value: 500, color: '#5a189a', label: '500€' }, // Violet
     { value: 900, color: '#00f2ff', label: '900€' }, // Cyan
     { value: 700, color: '#5a189a', label: '700€' }, // Violet
-    { value: 'CROLLO', color: '#10002b', label: 'CROLLO' }, // Deepest Violet
+    { value: 'PERDITUTTO', color: '#000000', label: 'PERDITUTTO' }, // BLACK BANKRUPT
     { value: 600, color: '#5a189a', label: '600€' }, // Violet
     { value: 500, color: '#ff00d4', label: '500€' }, // Magenta
 
@@ -747,14 +747,14 @@ const WHEEL_SEGMENTS = [
     { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
 
     // Group 3
-    { value: 'TURBO', color: '#ffaa00', label: 'TURBO', glowing: true }, // Amber Gold
+    { value: 'RADDOPPIA', color: '#ffaa00', label: 'RADDOPPIA' }, // Amber Gold
     { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
     { value: 800, color: '#5a189a', label: '800€' }, // Violet
     { value: 300, color: '#3c096c', label: '300€' }, // Mid Violet
-    { value: 'TURBO_START', color: '#ffaa00', label: 'TURBO', glowing: true }, // Amber Gold
+    { value: 'RADDOPPIA_START', color: '#ffaa00', label: 'RADDOPPIA' }, // Amber Gold
 
     // Group 4
-    { value: 'JOLLY', color: '#ff00d4', label: 'JOLLY' }, // Magenta
+    { value: 'MEGATURNO', color: '#ff00d4', label: 'MEGATURNO' }, // Magenta
     { value: 300, color: '#5a189a', label: '300€' }, // Violet
     { value: 500, color: '#00f2ff', label: '500€' }, // Cyan
     { value: 200, color: '#3c096c', label: '200€' }, // Mid Violet
@@ -823,7 +823,7 @@ function renderWheelToCache() {
             fillStyle = expGrad;
             ctx.shadowColor = '#d946ef'; // Fuchsia glow
             ctx.shadowBlur = 15 * scale;
-        } else if (segment.color === 'GOLD' || (segment.glowing && segment.color !== 'EXPRESS')) {
+        } else if (segment.color === 'GOLD' || segment.glowing) {
             // INVERTED GOLD GRADIENT (Radial, Bright Center -> Dark Rim)
             const goldGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
             goldGrad.addColorStop(0, '#fef3c7'); // Bright Gold center
@@ -839,7 +839,7 @@ function renderWheelToCache() {
             // Standard Segments - Deep Vignette
             const baseColor = segment.color;
             const vignetteGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-            if (baseColor === '#FFFFFF') {
+            if (baseColor === '#FFFFFF' || baseColor === '#f8fafc') {
                 // For White segments (SALTA, ?500, CRISTALLO), keep center bright
                 vignetteGrad.addColorStop(0, '#FFFFFF'); // Bright center
                 vignetteGrad.addColorStop(0.6, '#f8fafc'); // Mostly white
@@ -856,7 +856,7 @@ function renderWheelToCache() {
         ctx.fill();
 
         // ADD GLITTER (BRILLANTINATO) FOR SPECIAL SEGMENTS
-        if (segment.color === 'EXPRESS' || segment.color === 'RAINBOW') {
+        if (segment.color === 'EXPRESS' || segment.color === 'RAINBOW' || segment.label === 'MEGATURNO' || segment.label === 'EXPRESS') {
             ctx.save();
             const sparkleCount = segment.color === 'RAINBOW' ? 200 : 150;
             for (let j = 0; j < sparkleCount * scale; j++) {
@@ -865,7 +865,7 @@ function renderWheelToCache() {
                 const gx = centerX + r * Math.cos(a);
                 const gy = centerY + r * Math.sin(a);
 
-                if (segment.color === 'EXPRESS') {
+                if (segment.color === 'EXPRESS' || segment.label === 'MEGATURNO' || segment.label === 'EXPRESS') {
                     // Random white/silver/violet sparkles
                     ctx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#e9d5ff';
                 } else {
@@ -910,9 +910,9 @@ function renderWheelToCache() {
             ctx.shadowBlur = 0;
             ctx.strokeStyle = 'transparent'; // No stroke either
         }
-        else if (label === 'CROLLO') ctx.fillStyle = '#FFFFFF';
-        else if (label === 'JOLLY') ctx.fillStyle = '#FFFFFF';
-        else if (label === 'TURBO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'PERDITUTTO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'MEGATURNO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'RADDOPPIA') ctx.fillStyle = '#FFFFFF';
         else if (label === 'EXPRESS') {
             ctx.fillStyle = '#FFFFFF'; // White text
             ctx.shadowColor = '#000';
@@ -930,10 +930,10 @@ function renderWheelToCache() {
 
         // Text Styling (Refined)
         let fontSize = 21 * scale;
-        if (label === 'CROLLO') fontSize = 11 * scale;
+        if (label === 'PERDITUTTO') fontSize = 10.5 * scale;
         else if (label === 'SALTA') fontSize = 16 * scale;
-        else if (label === 'TURBO') fontSize = 12 * scale;
-        else if (label === 'JOLLY') fontSize = 16 * scale;
+        else if (label === 'RADDOPPIA') fontSize = 9 * scale;
+        else if (label === 'MEGATURNO') fontSize = 10 * scale;
         else if (label === 'EXPRESS') fontSize = 14 * scale;
 
         ctx.font = `bold ${fontSize}px Lexend, sans-serif`;
@@ -944,16 +944,16 @@ function renderWheelToCache() {
         let baseRadius = 0.86;
 
         // Adjust for smaller fonts so the *top* edge aligns at the rim
-        if (label === 'JOLLY') baseRadius = 0.87; // 16px
-        if (label === 'SALTA') baseRadius = 0.87; // 16px
-        if (label === 'TURBO') baseRadius = 0.88; // 12px
-        if (label === 'EXPRESS') baseRadius = 0.88; // 14px
-        if (label === 'CROLLO') baseRadius = 0.89; // 11px (Lower font = higher radius)
+        if (label === 'MEGATURNO') baseRadius = 0.88; 
+        if (label === 'SALTA') baseRadius = 0.87; 
+        if (label === 'RADDOPPIA') baseRadius = 0.89; 
+        if (label === 'EXPRESS') baseRadius = 0.88; 
+        if (label === 'PERDITUTTO') baseRadius = 0.89;
 
         let currentRadius = radius * baseRadius;
 
-        // "Letterspacing minimo" -> 0.95
-        const charSpacing = 0.85; // Reduced from 0.95 for even tighter fit
+        // Extremely tight spacing for long words
+        const charSpacing = (label === 'PERDITUTTO' || label === 'RADDOPPIA') ? 0.78 : 0.85;
 
         // Draw Characters
         chars.forEach(char => {
@@ -975,16 +975,7 @@ function renderWheelToCache() {
             currentRadius -= fontSize * currentSpacing;
         });
 
-        // "JOLLY: Prima testo poi simbolo, piccolo"
-        if (label === 'JOLLY') {
-            ctx.save();
-            // Position after text (currentRadius is now lower/inner)
-            ctx.translate(currentRadius - (5 * scale), 0);
-            ctx.rotate(Math.PI / 2);
-            ctx.font = `${14 * scale}px Lexend, sans-serif`;
-            ctx.fillText('💎', 0, 0);
-            ctx.restore();
-        }
+/* Removed diamond icon from MEGATURNO per user request */
         ctx.restore();
     });
     // Pegs removed per user request
@@ -1143,7 +1134,7 @@ function onWheelStop(result) {
                 if (isMobileMode) syncGameState();
             }, 3000);
         } else {
-            // Failure: Special segment hit (SALTA, CROLLO, etc.)
+            // Failure: Special segment hit (SALTA, PERDITUTTO, etc.)
             soundManager.playError();
             gameState.wheelPhase = 'final_spin'; // Allow re-spin
             elements.currentWheelValue.textContent = 'GIRA ANCORA';
@@ -1178,7 +1169,7 @@ function onWheelStop(result) {
                     <div class="express-benefit-item"><div class="express-benefit-icon">+</div> <b>Consonante:</b> +€500 per ogni occorrenza</div>
                     <div class="express-benefit-item"><div class="express-benefit-icon">-</div> <b>Vocale:</b> Costa €500 del tuo bottino</div>
                 </div>
-                <span class="warning">Sbagliare significa CROLLO IMMEDIATO!</span>
+                <span class="warning">Sbagliare significa PERDITUTTO IMMEDIATO!</span>
             </div>
         </div>`, 5000);
         return;
@@ -1187,9 +1178,9 @@ function onWheelStop(result) {
     const player = getCurrentPlayer();
 
     if (result.value === 'SALTA') {
-        if (gameState.hasJolly[player.name]) {
+        if (gameState.hasMegaTurno[player.name]) {
             // Use Cristallo to avoid SALTA
-            handlePenaltyWithJolly(player, 'SALTA');
+            handlePenaltyWithMegaTurno(player, 'SALTA');
         } else {
             soundManager.playError();
             elements.currentWheelValue.textContent = 'SALTA';
@@ -1197,38 +1188,38 @@ function onWheelStop(result) {
             showPopup(`<div class="popup-salta">SALTA!<br>Turno perso</div>`, 2000);
             setTimeout(passTurn, 2500);
         }
-    } else if (result.value === 'TURBO') {
-        // TURBO - Set special pending value and wait for consonant
-        elements.currentWheelValue.textContent = 'TURBO';
-        elements.currentWheelValue.className = 'wheel-value turbo';
-        gameState.pendingWheelValue = 'TURBO';
+    } else if (result.value === 'RADDOPPIA') {
+        // RADDOPPIA - Set special pending value and wait for consonant
+        elements.currentWheelValue.textContent = 'RADDOPPIA';
+        elements.currentWheelValue.className = 'wheel-value raddoppia';
+        gameState.pendingWheelValue = 'RADDOPPIA';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         if (isMobileMode) syncGameState();
-        showMessage('TURBO! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
-    } else if (result.value === 'JOLLY') {
-        // JOLLY - Set special pending value and wait for consonant
-        elements.currentWheelValue.textContent = '💎';
-        elements.currentWheelValue.className = 'wheel-value jolly';
-        gameState.pendingWheelValue = 'JOLLY';
+        showMessage('RADDOPPIA! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
+    } else if (result.value === 'MEGATURNO') {
+        // MEGATURNO - Set special pending value and wait for consonant
+        elements.currentWheelValue.textContent = 'MEGATURNO';
+        elements.currentWheelValue.className = 'wheel-value megaturno';
+        gameState.pendingWheelValue = 'MEGATURNO';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         if (isMobileMode) syncGameState();
-        showMessage('JOLLY! Chiama una consonante per ottenere la protezione!', 'info');
-    } else if (result.value === 'CROLLO') {
+        showMessage('MEGATURNO! Chiama una consonante per ottenere la protezione!', 'info');
+    } else if (result.value === 'PERDITUTTO') {
         // Check if player has Cristallo shield
-        if (gameState.hasJolly[player.name]) {
+        if (gameState.hasMegaTurno[player.name]) {
             // Offer choice: use Cristallo or accept Crollo
-            handlePenaltyWithJolly(player, 'CROLLO');
+            handlePenaltyWithMegaTurno(player, 'PERDITUTTO');
         } else {
             // Normal Crollo - lose ALL scores (partial + total)
             soundManager.playGameOver();
-            elements.currentWheelValue.textContent = 'CROLLO';
-            elements.currentWheelValue.className = 'wheel-value crollo';
+            elements.currentWheelValue.textContent = 'PERDITUTTO';
+            elements.currentWheelValue.className = 'wheel-value perditutto';
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0; // Lose global score too
             renderPlayersList();
-            showPopup(`<div class="popup-crollo">💥 CROLLO!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0</div>`, 4000);
+            showPopup(`<div class="popup-perditutto">💥 PERDITUTTO!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0</div>`, 4000);
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         }
@@ -1242,7 +1233,8 @@ function onWheelStop(result) {
         const finalValue = baseValue * gameState.nextValueMultiplier;
 
         gameState.pendingWheelValue = finalValue;
-        elements.currentWheelValue.textContent = `€${finalValue}`;
+        const displayValue = isNaN(finalValue) ? '?' : `€${finalValue}`;
+        elements.currentWheelValue.textContent = displayValue;
         elements.currentWheelValue.className = 'wheel-value';
 
         // Reset multiplier after use
@@ -1259,28 +1251,28 @@ function onWheelStop(result) {
     }
 }
 
-function handlePenaltyWithJolly(player, penaltyType) {
-    gameState.pendingPenalty = penaltyType; // Track if it was CROLLO or SALTA
-    const title = penaltyType === 'CROLLO' ? '💥 CROLLO!' : '⏭️ SALTA';
-    const penaltyText = penaltyType === 'CROLLO'
+function handlePenaltyWithMegaTurno(player, penaltyType) {
+    gameState.pendingPenalty = penaltyType; // Track if it was PERDITUTTO or SALTA
+    const title = penaltyType === 'PERDITUTTO' ? '💥 PERDITUTTO!' : '⏭️ SALTA';
+    const penaltyText = penaltyType === 'PERDITUTTO'
         ? 'Hai un Cristallo Magico 🛡️<br>Vuoi usarlo per salvarti dal Crollo?'
         : 'Hai un Cristallo Magico 🛡️<br>Vuoi usarlo per non saltare il turno?';
 
     const html = `
-        <div class="popup-jolly-choice">
+        <div class="popup-megaturno-choice">
             <div class="jolly-choice-title">${title}</div>
             <p class="jolly-choice-text">${penaltyText}</p>
             <div class="mystery-cards-container">
                 <!-- Use Jolly -->
-                <div class="mystery-card left" onclick="resolveJollyChoice(true)">
+                <div class="mystery-card left" onclick="resolveMegaTurnoChoice(true)">
                     <div class="card-content">
                         <span class="card-icon">🛡️</span>
-                        <span class="card-text">USA<br>JOLLY</span>
+                        <span class="card-text">USA<br>MEGATURNO</span>
                     </div>
                 </div>
 
                 <!-- Accept Penalty -->
-                <div class="mystery-card right" onclick="resolveJollyChoice(false)">
+                <div class="mystery-card right" onclick="resolveMegaTurnoChoice(false)">
                     <div class="card-content">
                         <span class="card-icon">${penaltyType === 'BANCAROTTA' ? '💥' : '⏭️'}</span>
                         <span class="card-text">ACCETTA<br>${penaltyType}</span>
@@ -1292,7 +1284,7 @@ function handlePenaltyWithJolly(player, penaltyType) {
     showPopup(html, 0); // Permanent until choice
 }
 
-window.resolveJollyChoice = function (useJolly) {
+window.resolveMegaTurnoChoice = function (useJolly) {
     const player = getCurrentPlayer();
     const penaltyType = gameState.pendingPenalty;
     elements.modalOverlay.style.display = 'none';
@@ -1301,9 +1293,9 @@ window.resolveJollyChoice = function (useJolly) {
     if (useJolly) {
         // Use Jolly - keep money/turn, lose shield, KEEP TURN
         soundManager.playReveal();
-        gameState.hasJolly[player.name] = false;
+        gameState.hasMegaTurno[player.name] = false;
         renderPlayersList();
-        showPopup(`<div class="popup-jolly-used">🛡️ SCUDO USATO!<br>${player.name} è salvo!</div>`, 2500);
+        showPopup(`<div class="popup-megaturno-used">🛡️ SCUDO USATO!<br>${player.name} è salvo!</div>`, 2500);
         // Player keeps turn - reset to idle
         setTimeout(() => {
             gameState.wheelPhase = 'idle';
@@ -1317,13 +1309,13 @@ window.resolveJollyChoice = function (useJolly) {
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0;
             renderPlayersList();
-            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Totali gara: €0<br><br>(Jolly conservato)</div>`, 4000);
+            showPopup(`<div class="popup-bancarotta">💥 PERDITUTTO!<br><br>Hai perso TUTTO il bottino!<br>Totali gara: €0<br><br>(Scudo conservato)</div>`, 4000);
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         } else {
             // It was PASSA
             soundManager.playError();
-            showPopup(`<div class="popup-passa">⏭️ CHIUDI IL TURNO<br>${player.name} passa la mano.<br><br>(Jolly conservato)</div>`, 2500);
+            showPopup(`<div class="popup-passa">⏭️ CHIUDI IL TURNO<br>${player.name} passa la mano.<br><br>(Scudo conservato)</div>`, 2500);
             setTimeout(passTurn, 3000);
         }
     }
@@ -1503,8 +1495,8 @@ function callConsonant() {
                 renderPlayersList();
                 soundManager.playCash();
             } else if (specialAction === 'SCUDO') {
-                gameState.hasJolly[player.name] = true;
-                showPopup(`<div class="popup-jolly">🛡️ SCUDO!<br>${player.name} ha ottenuto uno scudo!</div>`, 2500);
+                gameState.hasMegaTurno[player.name] = true;
+                showPopup(`<div class="popup-megaturno">🛡️ SCUDO!<br>${player.name} ha ottenuto uno scudo!</div>`, 2500);
                 renderPlayersList();
             }
 
@@ -1896,7 +1888,7 @@ async function startNextManche() {
     // Reset partial scores
     gameState.players.forEach(p => gameState.partialScores[p.name] = 0);
 
-    // Shields (hasJolly) are now preserved across rounds as requested.
+    // Shields (hasMegaTurno) are now preserved across rounds as requested.
 
     // Increase the "1000" segment value each manche (1000, 2000, 3000, 4000, 5000)
     const base1000Value = 1000;
@@ -2480,7 +2472,7 @@ async function startGameLocal() {
     }
 
     // Reset shields
-    gameState.hasJolly = {};
+    gameState.hasMegaTurno = {};
 
     // Increase the "1000" segment value each manche
     const base1000Value = 1000;
