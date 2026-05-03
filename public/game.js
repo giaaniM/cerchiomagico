@@ -2715,17 +2715,23 @@ function initSmartphoneLobby() {
 
             // Use detected IP from server if available, otherwise fallback to localhost
             const host = data.localIp ? `${data.localIp}:${data.port || 3000}` : window.location.host;
-            // Use http specifically as mobile safari might block mixed content if we were https (we aren't generally but good to be explicit)
-            // But actually better to match protocol
+            const altHost = data.hostname ? `${data.hostname}:${data.port || 3000}` : null;
             const protocol = window.location.protocol;
+            
             const mobileLink = `${protocol}//${host}/mobile.html`;
+            const altMobileLink = altHost ? `${protocol}//${altHost}/mobile.html` : null;
 
             if (elements.bigMobileLink) {
-                elements.bigMobileLink.innerHTML = `<a href="${mobileLink}" target="_blank" style="color: #00d4ff; text-decoration: none;">${mobileLink}</a>`;
+                let html = `<a href="${mobileLink}" target="_blank" style="color: #00d4ff; text-decoration: none;">${mobileLink}</a>`;
+                if (altMobileLink) {
+                    html += `<div style="font-size: 0.6em; opacity: 0.6; margin-top: 5px;">Alt: ${altMobileLink}</div>`;
+                }
+                elements.bigMobileLink.innerHTML = html;
                 
-                // Inject QR Code
+                // Inject QR Code (Use hostname if available as it's often more stable on Macs/iPhones)
                 if (elements.lobbyQrContainer) {
-                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(mobileLink)}`;
+                    const qrData = altMobileLink || mobileLink;
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
                     elements.lobbyQrContainer.innerHTML = `<img src="${qrUrl}" alt="Scan to join" />`;
                 }
             }

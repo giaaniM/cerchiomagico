@@ -61,6 +61,15 @@ function getLocalIp() {
     return 'localhost';
 }
 
+function getLocalHostname() {
+    try {
+        const hostname = os.hostname();
+        return hostname.endsWith('.local') ? hostname : `${hostname}.local`;
+    } catch (e) {
+        return null;
+    }
+}
+
 // Store lobbies and games
 // Store lobbies and games
 const lobbies = new Map();
@@ -85,7 +94,12 @@ app.post('/api/lobby/create', (req, res) => {
         status: 'waiting' // waiting, playing, finished
     });
     console.log(`Lobby CREATED: ${lobbyId}. Total lobbies: ${lobbies.size}`);
-    res.json({ lobbyId, localIp: getLocalIp(), port: 3000 });
+    res.json({ 
+        lobbyId, 
+        localIp: getLocalIp(), 
+        hostname: getLocalHostname(),
+        port: PORT 
+    });
 });
 
 // Get lobby info
@@ -423,6 +437,10 @@ server.listen(PORT, HOST, () => {
     console.log(`==========================================\n`);
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Server accessible from network on http://${localIP}:${PORT}`);
+    const hostName = getLocalHostname();
+    if (hostName) {
+        console.log(`Server also accessible via: http://${hostName}:${PORT}`);
+    }
     console.log(`Mobile page: http://${localIP}:${PORT}/mobile.html`);
 });
 
