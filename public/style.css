@@ -758,9 +758,12 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     animation: flipIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Express Mode - Revealed Tiles remain standard or can be styled if requested */
-/* User requested: "durante l express le celle del tabellone invece di vuola puoi farle oro" */
-/* This likely refers to unrevealed ones, but let's check context. Usually revealed are white. */
+/* Express Mode: unrevealed tiles become transparent so gold board background shows through */
+.express-active .tile.letter:not(.revealed) {
+    background: transparent;
+    border-color: rgba(251, 191, 36, 0.6);
+    box-shadow: inset 0 0 8px rgba(251, 191, 36, 0.3);
+}
 
 .tile.letter.revealed::before {
     display: none;
@@ -1172,6 +1175,10 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     transform: translate(-50%, -50%);
     width: 90%;
     max-width: 650px;
+    /* prevent horizontal scrollbar from wide children */
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 90vh;
 }
 
 .popup-message.transparent-wrapper {
@@ -1892,24 +1899,26 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     margin-bottom: 0px;
 }
 
-/* Players Sidebar */
+/* Players Sidebar — LEFT — MANCHE ATTUALE (cyan accent) */
 .players-sidebar {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(0, 18, 40, 0.75);
     backdrop-filter: blur(15px);
     border-radius: 20px;
     padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(0, 242, 255, 0.07);
 }
 
-.players-sidebar h3 {
+.players-sidebar h3,
+.sidebar-title {
     text-align: center;
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    color: var(--accent-gold);
+    font-size: 0.7rem;
+    letter-spacing: 2.5px;
+    color: var(--accent-primary);
     margin-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(0, 242, 255, 0.2);
     padding-bottom: 10px;
+    text-transform: uppercase;
 }
 
 .players-list {
@@ -1992,31 +2001,44 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     gap: 10px;
 }
 
-/* Wheel Value Sidebar */
+/* Wheel Value Sidebar — RIGHT — TOTALI GARA (gold accent) */
 .wheel-value-sidebar {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.wheel-value-display {
-    background: rgba(15, 23, 42, 0.6);
+    align-items: stretch;
+    justify-content: flex-start;
+    background: rgba(30, 18, 0, 0.75);
     backdrop-filter: blur(15px);
     border-radius: 20px;
-    padding: 25px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    min-width: 150px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    padding: 20px;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(251, 191, 36, 0.07);
 }
 
-.value-label {
+/* Total Winnings Sidebar Box */
+.total-winnings-card {
+    font-size: clamp(0.9rem, 1.5vw, 1.3rem);
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    text-align: center;
+    border: none;
+    min-width: 0;
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.total-winnings-card .value-label {
+    font-size: 0.7rem;
+    letter-spacing: 2.5px;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+    padding-bottom: 10px;
+    margin-bottom: 5px;
     display: block;
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
 }
 
 .wheel-value {
@@ -2128,20 +2150,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     font-size: 1.2rem;
 }
 
-/* Total Winnings Sidebar Box */
-.total-winnings-card {
-    font-size: clamp(0.9rem, 1.5vw, 1.3rem);
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    min-width: 180px;
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+
+
 
 .total-winnings-list {
     list-style: none;
@@ -3178,6 +3188,22 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     gap: 40px;
     justify-content: center;
     align-items: center;
+    margin: 30px 0;
+}
+
+.mystery-title {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+}
+
+.mystery-note {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 20px;
 }
 
 .mystery-card {
@@ -3290,16 +3316,23 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .wheel-value.megaturno {
-    background: linear-gradient(135deg, #9333EA, #7C3AED);
-    color: #fff;
+    background: linear-gradient(135deg, #ff00d4, #7C3AED);
+    color: #fbbf24;
     padding: 6px 20px;
     border-radius: 50px;
     font-size: 1.8rem;
     font-weight: 800;
     text-transform: uppercase;
     display: inline-block;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(255, 0, 212, 0.3);
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+    animation: pulseMegaturno 1s ease-in-out infinite alternate;
+}
+
+@keyframes pulseMegaturno {
+    from { box-shadow: 0 0 15px rgba(251, 191, 36, 0.4), 0 0 30px rgba(255, 0, 212, 0.2); }
+    to   { box-shadow: 0 0 30px rgba(251, 191, 36, 0.8), 0 0 60px rgba(255, 0, 212, 0.5); }
 }
 
 .wheel-value.perditutto {
@@ -3552,6 +3585,10 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 2px 10px rgba(255,255,255,0.05);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Fix for Windows: ensure content-box alignment */
+    flex-shrink: 0;
+    overflow: hidden;
+    line-height: 1;
 }
 
 .mode-emoji {
@@ -3810,69 +3847,76 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     margin-bottom: 15px;
 }
 
-/* Partial Ranking Popup */
 .popup-ranking-partial {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
     width: 100%;
-    padding: 10px;
+    padding: 5px 0;
 }
 
 .ranking-header {
-    font-size: 2rem;
+    font-size: 1.4rem;
     color: var(--accent-gold);
     text-transform: uppercase;
     letter-spacing: 3px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border-bottom: 2px solid rgba(255, 215, 0, 0.3);
-    padding-bottom: 15px;
+    padding-bottom: 10px;
+    text-align: center;
 }
 
 .ranking-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    max-height: 400px;
-    overflow-y: auto;
+    gap: 8px;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .ranking-item {
     display: flex;
     align-items: center;
     background: rgba(255, 255, 255, 0.05);
-    padding: 15px 25px;
-    border-radius: 15px;
+    padding: 10px 16px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
     animation: slideInRight 0.4s ease-out backwards;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .ranking-item.top-rank {
     background: linear-gradient(90deg, rgba(234, 179, 8, 0.2), rgba(0, 0, 0, 0.2));
     border-color: rgba(234, 179, 8, 0.5);
-    transform: scale(1.02);
 }
 
 .rank-pos {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 900;
-    width: 45px;
+    width: 30px;
+    flex-shrink: 0;
     color: var(--text-secondary);
 }
 
 .rank-name {
     flex-grow: 1;
     text-align: left;
-    font-size: 1.4rem;
+    font-size: 1rem;
     font-weight: 700;
     text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .rank-val {
-    font-size: 1.6rem;
+    font-size: 1.1rem;
     font-weight: 900;
     color: var(--accent-gold);
+    flex-shrink: 0;
 }
 
 @keyframes slideInRight {

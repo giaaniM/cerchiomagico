@@ -135,9 +135,16 @@ const soundManager = {
         setTimeout(() => this.playTone(1318.51, 'sine', 0.6, 0.1), 600); // E6
     },
 
+    _tickAudio: null,
     playWheelTick() {
-        // Play rotation.mp3 as requested
-        this._playAudio('assets/sounds/rotation.mp3');
+        if (this.isMuted) return;
+        if (!this._tickAudio) {
+            this._tickAudio = new Audio('assets/sounds/rotation.mp3');
+        }
+        // Use cloneNode to allow overlapping without reloading/delay
+        const tick = this._tickAudio.cloneNode();
+        tick.volume = 0.7;
+        tick.play().catch(e => console.warn('Tick audio error:', e));
     },
 
     // Aliases for missing methods
@@ -198,7 +205,7 @@ const API_URL = window.location.origin;
 const gameState = {
     phrase: '',
     originalPhrase: '', // Original phrase for file removal
-    pendingPenalty: null, // Track PERDITUTTO or SALTA for jolly choice
+    pendingPenalty: null, // Track BANCAROTTA or PASSA for jolly choice
     pointerAngle: 0, // Pointer oscillation angle for animation
     hint: '',
     normalizedPhrase: '',
@@ -209,7 +216,7 @@ const gameState = {
     currentManche: null,
     partialScores: {},
     totalScores: {},
-    hasMegaTurno: {}, // Track which players have Jolly shield
+    hasShield: {}, // Track which players have Shield protection
     pendingWheelValue: null,
     nextValueMultiplier: 1, // For Raddoppia (x2)
     wheelPhase: 'idle', // 'idle', 'spinning', 'call_consonant', 'choose_action'
@@ -653,7 +660,7 @@ function renderPlayersList() {
         li.className = item.originalIndex === gameState.currentPlayerIndex ? 'active' : '';
 
         // Add Jolly shield if player has it (with pulsing animation)
-        const jollyIcon = gameState.hasMegaTurno[item.player.name] ? '<span class="shield-icon">🛡️</span>' : '';
+        const shieldIcon = gameState.hasShield[item.player.name] ? '<span class="shield-icon">🛡️</span>' : '';
 
         // Avatar URL using DiceBear (Fun Emoji style)
         const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(item.player.name)}&radius=20`;
@@ -663,7 +670,7 @@ function renderPlayersList() {
                 <img src="${avatarUrl}" class="player-avatar" alt="Avatar">
             </div>
             <div class="player-info-wrap">
-                <span class="player-name">${item.player.name} ${jollyIcon}</span>
+                <span class="player-name">${item.player.name} ${shieldIcon}</span>
                 <span class="player-score">€${item.score}</span>
             </div>
         `;
@@ -710,10 +717,8 @@ function passTurn() {
 
     // Logic for Final Round (Manche 5)
     if (gameState.currentManche === 5) {
-        gameState.wheelPhase = 'final_play'; // Always input mode, never spin
-        checkFinalRoundBanner();
+        gameState.wheelPhase = 'final_play';
     } else {
-        // Normal Rounds
         gameState.wheelPhase = 'idle';
     }
 
@@ -744,34 +749,28 @@ function passTurn() {
 
 // ===== Wheel Segments =====
 const WHEEL_SEGMENTS = [
-    // Group 1
-    { value: 500, color: '#5a189a', label: '500€' }, // Violet
-    { value: 900, color: '#00f2ff', label: '900€' }, // Cyan
-    { value: 700, color: '#5a189a', label: '700€' }, // Violet
-    { value: 'PERDITUTTO', color: '#000000', label: 'PERDITUTTO' }, // BLACK BANKRUPT
-    { value: 600, color: '#5a189a', label: '600€' }, // Violet
-    { value: 500, color: '#ff00d4', label: '500€' }, // Magenta
-
-    // Group 2
-    { value: 300, color: '#3c096c', label: '300€' }, // Mid Violet
-    { value: 450, color: '#5a189a', label: '450€' }, // Violet
-    { value: 700, color: '#00f2ff', label: '700€' }, // Cyan
-    { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
-
-    // Group 3
-    { value: 'RADDOPPIA', color: '#ffaa00', label: 'RADDOPPIA' }, // Amber Gold
-    { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
-    { value: 800, color: '#5a189a', label: '800€' }, // Violet
-    { value: 300, color: '#3c096c', label: '300€' }, // Mid Violet
-    { value: 'RADDOPPIA_START', color: '#ffaa00', label: 'RADDOPPIA' }, // Amber Gold
-
-    // Group 4
-    { value: 'MEGATURNO', color: '#ff00d4', label: 'MEGATURNO' }, // Magenta
-    { value: 300, color: '#5a189a', label: '300€' }, // Violet
-    { value: 500, color: '#00f2ff', label: '500€' }, // Cyan
-    { value: 200, color: '#3c096c', label: '200€' }, // Mid Violet
-    { value: 'SALTA', color: '#f8fafc', label: 'SALTA' }, // White
-    { value: 200, color: '#5a189a', label: '200€' } // Violet
+    { value: 'PASSA', color: '#f8fafc', label: 'PASSA' }, // TOP
+    { value: 'SCUDO', color: '#ffaa00', label: 'SCUDO', glowing: true }, // Gold
+    { value: 'PASSA', color: '#f8fafc', label: 'PASSA' },
+    { value: 800, color: '#5a189a', label: '800€' },
+    { value: 300, color: '#3c096c', label: '300€' },
+    { value: 'SCUDO_START', color: '#ffaa00', label: 'SCUDO', glowing: true }, // Gold
+    { value: 'MEGATURNO', color: '#ff00d4', label: 'MEGATURNO', glowing: true }, // Magenta
+    { value: 300, color: '#5a189a', label: '300€' },
+    { value: 'RADDOPPIA', color: '#00f2ff', label: 'RADDOPPIA' },
+    { value: 200, color: '#3c096c', label: '200€' },
+    { value: 'PASSA', color: '#f8fafc', label: 'PASSA' },
+    { value: 200, color: '#5a189a', label: '200€' },
+    { value: 500, color: '#5a189a', label: '500€' },
+    { value: '?500', color: '#00f2ff', label: '?500' },
+    { value: 700, color: '#5a189a', label: '700€' },
+    { value: 'BANCAROTTA', color: '#10002b', label: 'BANCAROTTA' },
+    { value: 600, color: '#5a189a', label: '600€' },
+    { value: 1000, color: '#ffaa00', label: '1000€', isTopValue: true, glowing: true },
+    { value: 300, color: '#3c096c', label: '300€' },
+    { value: 450, color: '#5a189a', label: '450€' },
+    { value: 700, color: '#00f2ff', label: '700€' },
+    { value: 500, color: '#5a189a', label: '500€' }
 ];
 
 // ===== Wheel Drawing =====
@@ -852,7 +851,7 @@ function renderWheelToCache() {
             const baseColor = segment.color;
             const vignetteGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
             if (baseColor === '#FFFFFF' || baseColor === '#f8fafc') {
-                // For White segments (SALTA, ?500, CRISTALLO), keep center bright
+                // For White segments (PASSA, ?500, CRISTALLO), keep center bright
                 vignetteGrad.addColorStop(0, '#FFFFFF'); // Bright center
                 vignetteGrad.addColorStop(0.6, '#f8fafc'); // Mostly white
                 vignetteGrad.addColorStop(1, '#cbd5e1'); // Light gray rim
@@ -916,56 +915,67 @@ function renderWheelToCache() {
 
         // Text Color Logic
         const label = segment.label;
-        if (label === 'SALTA') {
+        if (label === 'PASSA') {
             ctx.fillStyle = '#000000';
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.strokeStyle = 'transparent'; // No stroke either
         }
-        else if (label === 'PERDITUTTO') ctx.fillStyle = '#FFFFFF';
-        else if (label === 'MEGATURNO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'BANCAROTTA') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'MEGATURNO') {
+            ctx.fillStyle = '#fbbf24'; // Vivid yellow as requested
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 3 * scale;
+        }
+        else if (label === 'SCUDO') {
+            ctx.fillStyle = '#0f172a'; // Dark text on gold background
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+        }
+        else if (label === '?500') {
+            ctx.fillStyle = '#0f172a'; // Dark on cyan background
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+        }
         else if (label === 'RADDOPPIA') ctx.fillStyle = '#FFFFFF';
-        else if (label === 'EXPRESS') {
-            ctx.fillStyle = '#FFFFFF'; // White text
+        else {
+            ctx.fillStyle = '#FFFF00'; // All other numeric values YELLOW
             ctx.shadowColor = '#000';
-            ctx.shadowBlur = 4 * scale;
-        } else {
-            ctx.fillStyle = '#FFFF00'; // YELLOW text
-            ctx.shadowColor = '#000';
-            ctx.shadowBlur = 4 * scale;
+            ctx.shadowBlur = 3 * scale;
         }
 
         ctx.textAlign = 'center';
-        if (label !== 'SALTA') ctx.lineWidth = 3 * scale;
+        if (label !== 'PASSA') ctx.lineWidth = 3 * scale;
 
         const chars = label.replace(/\s/g, '').split('');
 
         // Text Styling (Refined)
         let fontSize = 21 * scale;
-        if (label === 'PERDITUTTO') fontSize = 10.5 * scale;
-        else if (label === 'SALTA') fontSize = 16 * scale;
+        if (label === 'BANCAROTTA') fontSize = 10.5 * scale;
+        else if (label === 'PASSA') fontSize = 16 * scale;
         else if (label === 'RADDOPPIA') fontSize = 9 * scale;
         else if (label === 'MEGATURNO') fontSize = 10 * scale;
+        else if (label === 'SCUDO') fontSize = 13 * scale;
+        else if (label === '?500') fontSize = 14 * scale;
         else if (label === 'EXPRESS') fontSize = 14 * scale;
 
         ctx.font = `bold ${fontSize}px Lexend, sans-serif`;
 
         // Text Radius Logic
-        // "I testi devono partire in cima come i numeri" 
-        // Numbers (21px): 0.86
         let baseRadius = 0.86;
 
-        // Adjust for smaller fonts so the *top* edge aligns at the rim
-        if (label === 'MEGATURNO') baseRadius = 0.88; 
-        if (label === 'SALTA') baseRadius = 0.87; 
-        if (label === 'RADDOPPIA') baseRadius = 0.89; 
-        if (label === 'EXPRESS') baseRadius = 0.88; 
-        if (label === 'PERDITUTTO') baseRadius = 0.89;
+        if (label === 'MEGATURNO') baseRadius = 0.88;
+        if (label === 'PASSA') baseRadius = 0.87;
+        if (label === 'RADDOPPIA') baseRadius = 0.89;
+        if (label === 'EXPRESS') baseRadius = 0.88;
+        if (label === 'BANCAROTTA') baseRadius = 0.89;
+        if (label === 'SCUDO') baseRadius = 0.87;
+        if (label === '?500') baseRadius = 0.88;
 
         let currentRadius = radius * baseRadius;
 
         // Extremely tight spacing for long words
-        const charSpacing = (label === 'PERDITUTTO' || label === 'RADDOPPIA') ? 0.78 : 0.85;
+        const charSpacing = (label === 'BANCAROTTA' || label === 'RADDOPPIA') ? 0.78 : 0.85;
 
         // Draw Characters
         chars.forEach(char => {
@@ -987,7 +997,30 @@ function renderWheelToCache() {
             currentRadius -= fontSize * currentSpacing;
         });
 
-/* Removed diamond icon from MEGATURNO per user request */
+        // DRAW ICONS (🛡️, 🚀, 🎲) AFTER TEXT
+        if (label === 'SCUDO') {
+            ctx.save();
+            ctx.translate(currentRadius - (6 * scale), 0);
+            ctx.rotate(Math.PI / 2);
+            ctx.font = `${16 * scale}px Lexend, sans-serif`;
+            ctx.fillText('🛡️', 0, 0);
+            ctx.restore();
+        } else if (label === 'MEGATURNO') {
+            ctx.save();
+            ctx.translate(currentRadius - (6 * scale), 0);
+            ctx.rotate(Math.PI / 2);
+            ctx.font = `${14 * scale}px Lexend, sans-serif`;
+            ctx.fillText('🚀', 0, 0);
+            ctx.restore();
+        } else if (label === '?500') {
+            ctx.save();
+            ctx.translate(currentRadius - (6 * scale), 0);
+            ctx.rotate(Math.PI / 2);
+            ctx.font = `${14 * scale}px Lexend, sans-serif`;
+            ctx.fillText('🎲', 0, 0);
+            ctx.restore();
+        }
+
         ctx.restore();
     });
     // Pegs removed per user request
@@ -1131,22 +1164,26 @@ function onWheelStop(result) {
             checkFinalRoundBanner();
 
             showPopup(`<div class="popup-info">
-                <div class="popup-title">VALORE FISSATO!</div>
+                <div class="popup-title">VALORE FINALE FISSATO!</div>
                 <div class="popup-text">
-                    Ogni consonante vale<br>
-                    <span style="color:#fbbf24; font-size:1.6em; font-weight:900">€${gameState.finalRoundValue}</span>
+                    <div style="font-size:0.9em; opacity:0.8;">Ruota: €${baseValue}</div>
+                    <div style="font-size:1.1em; color:#fbbf24; margin:5px 0;">+ €1000 BONUS!</div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top:10px; margin-top:10px;">
+                        Ogni lettera varrà:<br>
+                        <span style="color:#fbbf24; font-size:1.8em; font-weight:900">€${gameState.finalRoundValue}</span>
+                    </div>
                 </div>
                 <div class="popup-turn-player" style="margin-top:20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:15px;">
-                    INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span>
+                    INIZIA:<br><span class="popup-name">${getCurrentPlayer().name}</span>
                 </div>
-            </div>`, 5000);
+            </div>`, 6000);
 
             setTimeout(() => {
                 updateUI();
                 if (isMobileMode) syncGameState();
             }, 3000);
         } else {
-            // Failure: Special segment hit (SALTA, PERDITUTTO, etc.)
+            // Failure: Special segment hit (PASSA, BANCAROTTA, etc.)
             soundManager.playError();
             gameState.wheelPhase = 'final_spin'; // Allow re-spin
             elements.currentWheelValue.textContent = 'GIRA ANCORA';
@@ -1161,9 +1198,9 @@ function onWheelStop(result) {
         return; // Important: Consume the event
     }
 
-    if (result.value === 'EXPRESS') {
+    if (result.value === 'MEGATURNO' || result.value === 'EXPRESS') {
         soundManager.playExpress();
-        elements.currentWheelValue.textContent = 'EXPRESS';
+        elements.currentWheelValue.textContent = 'MEGATURNO';
         elements.currentWheelValue.className = 'wheel-value express-active';
         gameState.wheelPhase = 'express';
         gameState.expressAccumulated = 0; // Reset accumulated for this turn
@@ -1174,14 +1211,14 @@ function onWheelStop(result) {
         updateUI();
         if (isMobileMode) syncGameState();
         showPopup(`<div class="popup-express">
-            <div class="popup-express-title"><span class="rocket">🚀</span> EXPRESS MODE!</div>
+            <div class="popup-express-title"><span class="rocket">🚀</span> MEGATURNO! (EXPRESS)</div>
             <div class="popup-express-body">
-                Sfida la sorte e chiama le lettere una dopo l'altra!
+                Hai attivato il MEGATURNO! Prova a indovinare finché non sbagli!
                 <div class="express-benefit-list">
                     <div class="express-benefit-item"><div class="express-benefit-icon">+</div> <b>Consonante:</b> +€500 per ogni occorrenza</div>
-                    <div class="express-benefit-item"><div class="express-benefit-icon">-</div> <b>Vocale:</b> Costa €500 del tuo bottino</div>
+                    <div class="express-benefit-item"><div class="express-benefit-icon">-</div> <b>Vocale:</b> Costa €500</div>
                 </div>
-                <span class="warning">Sbagliare significa PERDITUTTO IMMEDIATO!</span>
+                <span class="warning">ATTENZIONE: Sbagliare significa BANCAROTTA!</span>
             </div>
         </div>`, 5000);
         return;
@@ -1189,15 +1226,15 @@ function onWheelStop(result) {
 
     const player = getCurrentPlayer();
 
-    if (result.value === 'SALTA') {
-        if (gameState.hasMegaTurno[player.name]) {
-            // Use Cristallo to avoid SALTA
-            handlePenaltyWithMegaTurno(player, 'SALTA');
+    if (result.value === 'PASSA') {
+        if (gameState.hasShield[player.name]) {
+            // Use Shield to avoid PASSA
+            handlePenaltyWithShield(player, 'PASSA');
         } else {
             soundManager.playError();
-            elements.currentWheelValue.textContent = 'SALTA';
-            elements.currentWheelValue.className = 'wheel-value salta';
-            showPopup(`<div class="popup-salta">SALTA!<br>Turno perso</div>`, 2000);
+            elements.currentWheelValue.textContent = 'PASSA';
+            elements.currentWheelValue.className = 'wheel-value passa';
+            showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
             setTimeout(passTurn, 2500);
         }
     } else if (result.value === 'RADDOPPIA') {
@@ -1209,29 +1246,29 @@ function onWheelStop(result) {
         updateUI();
         if (isMobileMode) syncGameState();
         showMessage('RADDOPPIA! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
-    } else if (result.value === 'MEGATURNO') {
-        // MEGATURNO - Set special pending value and wait for consonant
-        elements.currentWheelValue.textContent = 'MEGATURNO';
+    } else if (result.value === 'SCUDO' || result.value === 'SCUDO_START') {
+        // SCUDO - Set special pending value and wait for consonant
+        elements.currentWheelValue.textContent = 'SCUDO';
         elements.currentWheelValue.className = 'wheel-value megaturno';
-        gameState.pendingWheelValue = 'MEGATURNO';
+        gameState.pendingWheelValue = 'SCUDO';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         if (isMobileMode) syncGameState();
-        showMessage('MEGATURNO! Chiama una consonante per ottenere la protezione!', 'info');
-    } else if (result.value === 'PERDITUTTO') {
-        // Check if player has Cristallo shield
-        if (gameState.hasMegaTurno[player.name]) {
-            // Offer choice: use Cristallo or accept Crollo
-            handlePenaltyWithMegaTurno(player, 'PERDITUTTO');
+        showMessage('SCUDO! Chiama una consonante per ottenere la protezione!', 'info');
+    } else if (result.value === 'BANCAROTTA') {
+        // Check if player has shield protection
+        if (gameState.hasShield[player.name]) {
+            // Offer choice: use Shield or accept Bancarotta
+            handlePenaltyWithShield(player, 'BANCAROTTA');
         } else {
-            // Normal Crollo - lose ALL scores (partial + total)
+            // Normal Bancarotta - lose ALL scores (partial + total)
             soundManager.playGameOver();
-            elements.currentWheelValue.textContent = 'PERDITUTTO';
-            elements.currentWheelValue.className = 'wheel-value perditutto';
+            elements.currentWheelValue.textContent = 'BANCAROTTA';
+            elements.currentWheelValue.className = 'wheel-value bancarotta';
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0; // Lose global score too
             renderPlayersList();
-            showPopup(`<div class="popup-perditutto">💥 PERDITUTTO!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0</div>`, 4000);
+            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0</div>`, 4000);
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         }
@@ -1263,28 +1300,28 @@ function onWheelStop(result) {
     }
 }
 
-function handlePenaltyWithMegaTurno(player, penaltyType) {
-    gameState.pendingPenalty = penaltyType; // Track if it was PERDITUTTO or SALTA
-    const title = penaltyType === 'PERDITUTTO' ? '💥 PERDITUTTO!' : '⏭️ SALTA';
-    const penaltyText = penaltyType === 'PERDITUTTO'
-        ? 'Hai un Cristallo Magico 🛡️<br>Vuoi usarlo per salvarti dal Crollo?'
-        : 'Hai un Cristallo Magico 🛡️<br>Vuoi usarlo per non saltare il turno?';
+function handlePenaltyWithShield(player, penaltyType) {
+    gameState.pendingPenalty = penaltyType;
+    const title = penaltyType === 'BANCAROTTA' ? '💥 BANCAROTTA!' : '⏭️ PASSA';
+    const penaltyText = penaltyType === 'BANCAROTTA'
+        ? 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per salvarti dalla Bancarotta?'
+        : 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per non perdere il turno?';
 
     const html = `
         <div class="popup-megaturno-choice">
             <div class="jolly-choice-title">${title}</div>
             <p class="jolly-choice-text">${penaltyText}</p>
             <div class="mystery-cards-container">
-                <!-- Use Jolly -->
-                <div class="mystery-card left" onclick="resolveMegaTurnoChoice(true)">
+                <!-- Use Shield -->
+                <div class="mystery-card left" onclick="resolveShieldChoice(true)">
                     <div class="card-content">
                         <span class="card-icon">🛡️</span>
-                        <span class="card-text">USA<br>MEGATURNO</span>
+                        <span class="card-text">USA<br>SCUDO</span>
                     </div>
                 </div>
 
                 <!-- Accept Penalty -->
-                <div class="mystery-card right" onclick="resolveMegaTurnoChoice(false)">
+                <div class="mystery-card right" onclick="resolveShieldChoice(false)">
                     <div class="card-content">
                         <span class="card-icon">${penaltyType === 'BANCAROTTA' ? '💥' : '⏭️'}</span>
                         <span class="card-text">ACCETTA<br>${penaltyType}</span>
@@ -1293,22 +1330,22 @@ function handlePenaltyWithMegaTurno(player, penaltyType) {
             </div>
         </div>
     `;
-    showPopup(html, 0); // Permanent until choice
+    showPopup(html, 0);
 }
 
-window.resolveMegaTurnoChoice = function (useJolly) {
+window.resolveShieldChoice = function (useShield) {
     const player = getCurrentPlayer();
     const penaltyType = gameState.pendingPenalty;
     elements.modalOverlay.style.display = 'none';
     elements.popupMessage.style.display = 'none';
 
-    if (useJolly) {
-        // Use Jolly - keep money/turn, lose shield, KEEP TURN
+    if (useShield) {
+        // Use Shield - keep money/turn, lose shield
         soundManager.playReveal();
-        gameState.hasMegaTurno[player.name] = false;
+        gameState.hasShield[player.name] = false;
         renderPlayersList();
-        showPopup(`<div class="popup-megaturno-used">🛡️ SCUDO USATO!<br>${player.name} è salvo!</div>`, 2500);
-        // Player keeps turn - reset to idle
+        showPopup(`<div class="popup-megaturno-used">🛡️ SCUDO UTILIZZATO!<br>${player.name} è salvo!</div>`, 2500);
+        
         setTimeout(() => {
             gameState.wheelPhase = 'idle';
             updateUI();
@@ -1321,7 +1358,7 @@ window.resolveMegaTurnoChoice = function (useJolly) {
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0;
             renderPlayersList();
-            showPopup(`<div class="popup-bancarotta">💥 PERDITUTTO!<br><br>Hai perso TUTTO il bottino!<br>Totali gara: €0<br><br>(Scudo conservato)</div>`, 4000);
+            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Totali gara: €0<br><br>(Scudo conservato)</div>`, 4000);
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         } else {
@@ -1347,18 +1384,15 @@ function handleMysterySegment() {
     }
 
     // Always show the selection cards on the host screen (web) as well
-
     const html = `
         <div class="popup-mystery-minimal">
+            <div class="mystery-title">SCELTA MISTERIOSA</div>
             <div class="mystery-cards-container">
                 <!-- Card 1: Risk (500) -->
                 <div class="mystery-card left" onclick="resolveMysteryChoice(500)">
                     <div class="card-content">
-                        <div class="divider" style="margin: 30px 0; justify-content: center;">
-                            <span style="font-size: 1rem; letter-spacing: 2px;">GIOCATORI CONNESSI</span>
-                        </div>
                         <span class="card-icon">💶</span>
-                        <span class="card-text">PRENDI<br>€500</span>
+                        <span class="card-text">SICURO<br>€500</span>
                     </div>
                 </div>
 
@@ -1366,10 +1400,11 @@ function handleMysterySegment() {
                 <div class="mystery-card right" onclick="resolveMysteryChoice('RAFFLE')">
                     <div class="card-content">
                         <span class="card-icon">🎲</span>
-                        <span class="card-text">ESTRAI<br>A SORTE</span>
+                        <span class="card-text">RISCHIA<br>ESTRAI</span>
                     </div>
                 </div>
             </div>
+            <p class="mystery-note">Scegli tra i 500€ sicuri o tenta la sorte!</p>
         </div>
     `;
     showPopup(html, 0); // Permanent until clicked
@@ -1510,8 +1545,8 @@ function callConsonant() {
                 renderPlayersList();
                 soundManager.playCash();
             } else if (specialAction === 'SCUDO') {
-                gameState.hasMegaTurno[player.name] = true;
-                showPopup(`<div class="popup-megaturno">🛡️ SCUDO!<br>${player.name} ha ottenuto uno scudo!</div>`, 2500);
+                gameState.hasShield[player.name] = true;
+                showPopup(`<div class="popup-megaturno">🛡️ SCUDO OTTENUTO!<br>${player.name} ha ottenuto una protezione!</div>`, 2500);
                 renderPlayersList();
             }
 
@@ -1528,9 +1563,13 @@ function callConsonant() {
                     showPopup(`<div class="popup-info">CONSONANTI TERMINATE!</div>`, 2500);
                 }
 
-                gameState.wheelPhase = 'choose_action';
+                if (gameState.currentManche === 5) {
+                    gameState.wheelPhase = 'final_play';
+                } else {
+                    gameState.wheelPhase = 'choose_action';
+                }
                 gameState.pendingWheelValue = null;
-                elements.currentWheelValue.textContent = '-';
+                elements.currentWheelValue.textContent = (gameState.currentManche === 5) ? `€${gameState.finalRoundValue}` : '-';
                 updateUI();
                 if (isMobileMode) syncGameState();
             }
@@ -1603,19 +1642,18 @@ function buyVowel() {
             setTimeout(endManche, 1500);
         } else {
             // Final Round?
-            if (gameState.wheelPhase === 'final_play') {
-                gameState.wheelPhase = 'final_decision';
-                updateUI();
-                if (isMobileMode) syncGameState();
+            if (gameState.currentManche === 5) {
+                gameState.wheelPhase = 'final_play';
             } else {
                 gameState.wheelPhase = 'choose_action';
-                updateUI();
-                if (isMobileMode) syncGameState();
             }
+            updateUI();
+            if (isMobileMode) syncGameState();
         }
     } else {
         soundManager.playError();
-        showMessage(`❌ "${letter}" non c'è nella frase. (-€${VOWEL_COST})`, 'error');
+        const costText = (gameState.currentManche === 5) ? "" : ` (-€${VOWEL_COST})`;
+        showMessage(`❌ "${letter}" non c'è nella frase.${costText}`, 'error');
         showPopup(`VOCALE ASSENTE!<br>Turno perso`, 2000, 'error');
         setTimeout(passTurn, 2500);
     }
@@ -1903,7 +1941,7 @@ async function startNextManche() {
     // Reset partial scores
     gameState.players.forEach(p => gameState.partialScores[p.name] = 0);
 
-    // Shields (hasMegaTurno) are now preserved across rounds as requested.
+    // Shields (hasShield) are now preserved across rounds as requested.
 
     // Increase the "1000" segment value each manche (1000, 2000, 3000, 4000, 5000)
     const base1000Value = 1000;
@@ -2106,28 +2144,35 @@ function updateUI() {
             if (elements.passBtn) elements.passBtn.style.display = 'none';
             hideFinalRoundBanner();
             return; // EXIT EARLY
-        } else if (phase === 'final_play') {
+        } else if (phase === 'final_play' || phase === 'final_decision') {
             spinBtn.style.display = 'none';
             consonantContainer.style.display = 'none';
             elements.expressContainer.style.display = 'none';
             if (elements.finalRoundContainer) elements.finalRoundContainer.style.display = 'flex';
 
-            // Enable inputs
-            if (elements.finalConsonantInput) elements.finalConsonantInput.disabled = false;
-            if (elements.finalConsonantBtn) elements.finalConsonantBtn.disabled = false;
-            if (elements.finalVowelInput) elements.finalVowelInput.disabled = false;
-            if (elements.finalVowelBtn) elements.finalVowelBtn.disabled = false;
+            const isDecision = (phase === 'final_decision');
 
-            // Auto-focus consonant input
-            if (elements.finalConsonantInput) {
-                setTimeout(() => elements.finalConsonantInput.focus(), 50);
+            // Enable/Disable inputs
+            if (elements.finalConsonantInput) elements.finalConsonantInput.disabled = isDecision;
+            if (elements.finalConsonantBtn) elements.finalConsonantBtn.disabled = isDecision;
+            if (elements.finalVowelInput) elements.finalVowelInput.disabled = isDecision;
+            if (elements.finalVowelBtn) elements.finalVowelBtn.disabled = isDecision;
+
+            if (!isDecision) {
+                // Auto-focus consonant input
+                if (elements.finalConsonantInput) {
+                    setTimeout(() => elements.finalConsonantInput.focus(), 50);
+                }
+                hideMessage(); // Clear decision message
+            } else {
+                showMessage('RISOLVI O PASSA!', 'info');
             }
 
             // Always allow "Passa" and "Risolvi"
             if (elements.passBtn) {
                 elements.passBtn.style.display = 'inline-block';
                 elements.passBtn.disabled = false;
-                elements.passBtn.textContent = 'PASSA';
+                elements.passBtn.textContent = isDecision ? 'PASSA IL TURNO' : 'PASSA';
             }
             if (solveGroup) solveGroup.style.display = 'block';
 
@@ -2486,15 +2531,16 @@ async function startGameLocal() {
         gameState.currentManche++;
     }
 
-    // Reset shields
-    gameState.hasMegaTurno = {};
+    // Shields (hasShield) are preserved across manches
+    // gameState.hasShield = {}; // Don't reset
 
-    // Increase the "1000" segment value each manche
+    // Increase the TOP VALUE segment value each manche (1000, 2000, 3000, 4000, 5000)
     const base1000Value = 1000;
-    const currentWheel1000 = base1000Value * gameState.currentManche;
-    if (WHEEL_SEGMENTS[5]) {
-        WHEEL_SEGMENTS[5].value = currentWheel1000;
-        WHEEL_SEGMENTS[5].label = `${currentWheel1000}€`;
+    const currentWheelTopValue = base1000Value * gameState.currentManche;
+    const topSegment = WHEEL_SEGMENTS.find(s => s.isTopValue);
+    if (topSegment) {
+        topSegment.value = currentWheelTopValue;
+        topSegment.label = `${currentWheelTopValue}€`;
     }
     renderWheelToCache();
 
@@ -3008,24 +3054,31 @@ function callFinalConsonant() {
 
     const occurrences = countLetterOccurrences(letter);
     if (occurrences > 0) {
-        // Correct Guess
-        const earnings = occurrences * gameState.finalRoundValue;
-        gameState.partialScores[player.name] += earnings;
+        // Correct Guess - Incremental update for satisfy
+        const earnings = gameState.finalRoundValue; // Value per occurrence
 
-        revealLetter(letter, true, null);
+        revealLetter(letter, true, () => {
+            gameState.partialScores[player.name] += earnings;
+            renderPlayersList();
+            soundManager.playCash();
+            if (isMobileMode) syncGameState();
+        });
+
         soundManager.playCorrect();
-        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (+€${earnings})`, 'success');
+        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (+€${occurrences * earnings})`, 'success');
 
-        // Show solved letters 
+        // Delay until all instances are revealed
+        const totalDelay = occurrences * 1500;
         setTimeout(() => {
             if (checkWin()) {
                 endManche();
             } else {
-                // Stay in final_play to allow another choice!
+                // Transition to decision phase: MUST Solve or Pass
+                gameState.wheelPhase = 'final_decision';
                 updateUI();
                 if (isMobileMode) syncGameState();
             }
-        }, 1500);
+        }, totalDelay + 500);
     } else {
         // Incorrect Guess -> Invalid turn -> Pass
         soundManager.playError();
@@ -3056,20 +3109,22 @@ function callFinalVowel() {
 
     const occurrences = countLetterOccurrences(letter);
     if (occurrences > 0) {
-        // Correct Guess (Free)
+        // Correct Guess (Free, no winnings)
         revealLetter(letter, true, null);
         soundManager.playCorrect();
         showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e! (Gratis)`, 'success');
 
+        const totalDelay = occurrences * 1500;
         setTimeout(() => {
             if (checkWin()) {
                 endManche();
             } else {
-                // Stay in final_play
+                // Transition to decision phase: MUST Solve or Pass
+                gameState.wheelPhase = 'final_decision';
                 updateUI();
                 if (isMobileMode) syncGameState();
             }
-        }, 1500);
+        }, totalDelay + 500);
     } else {
         // Incorrect Guess -> Pass
         soundManager.playError();
