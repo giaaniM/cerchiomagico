@@ -2206,7 +2206,7 @@ function updateUI() {
 // ===== AI Fetch (DATABASE STATICO PRIMARIO) =====
 // ===== AI Fetch (Con Few-Shot Prompting e Fallback) =====
 async function fetchPuzzleFromAI() {
-    const API_KEY = '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';
+    const API_KEY = ''; // REMOVED FOR SECURITY. MOVE TO SERVER-SIDE OR USE ENV VAR.
     const url = 'https://api.groq.com/openai/v1/chat/completions';
 
     // 1. Preparazione Esempi (Few-Shot Prompting mirato alla lunghezza corretta)
