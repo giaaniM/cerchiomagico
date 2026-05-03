@@ -655,9 +655,17 @@ function renderPlayersList() {
         // Add Jolly shield if player has it (with pulsing animation)
         const jollyIcon = gameState.hasMegaTurno[item.player.name] ? '<span class="shield-icon">🛡️</span>' : '';
 
+        // Avatar URL using DiceBear (Fun Emoji style)
+        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(item.player.name)}&radius=20`;
+
         li.innerHTML = `
-            <span class="player-name">${item.player.name} ${jollyIcon}</span>
-            <span class="player-score">€${item.score}</span>
+            <div class="player-avatar-wrap">
+                <img src="${avatarUrl}" class="player-avatar" alt="Avatar">
+            </div>
+            <div class="player-info-wrap">
+                <span class="player-name">${item.player.name} ${jollyIcon}</span>
+                <span class="player-score">€${item.score}</span>
+            </div>
         `;
         elements.playersList.appendChild(li);
     });
@@ -680,7 +688,11 @@ function renderTotalWinnings() {
 
     playersWithTotals.forEach((item) => {
         const li = document.createElement('li');
+        // Small Avatar URL using DiceBear
+        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(item.name)}&radius=20`;
+
         li.innerHTML = `
+            <img src="${avatarUrl}" class="total-avatar" alt="Avatar">
             <span class="win-name">${item.name}</span>
             <span class="win-amount">€${item.total}</span>
         `;
@@ -2791,8 +2803,9 @@ function renderBigLobbyPlayers(players) {
     players.forEach(player => {
         const card = document.createElement('div');
         card.className = 'lobby-player-card';
+        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(player.name)}&radius=50`;
         card.innerHTML = `
-            <div class="player-avatar-circle">👤</div>
+            <div class="player-avatar-circle" style="background-image: url('${avatarUrl}'); background-size: cover; background-position: center; font-size: 0;"></div>
             <div class="player-card-name">${player.name}</div>
         `;
         elements.bigPlayersGrid.appendChild(card);

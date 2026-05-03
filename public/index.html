@@ -15,13 +15,18 @@
 
 <body>
     <div class="game-container">
-        <header class="game-header">
-            <h1>✨ Cerchio Magico</h1>
-            <div class="subtitle">Il gioco delle parole senza confini</div>
-        </header>
-
         <!-- Setup Screen (Refactored) -->
         <div id="setup-screen" class="screen active">
+            <header class="game-header">
+                <div class="logo-container">
+                    <div class="logo-icon">🎡</div>
+                    <div class="logo-text">
+                        <span class="logo-word-1">CERCHIO</span>
+                        <span class="logo-word-2">MAGICO</span>
+                    </div>
+                </div>
+                <div class="subtitle">Il gioco delle parole senza confini</div>
+            </header>
             <div class="setup-layout">
                 <!-- Host photo removed as requested -->
 
@@ -40,8 +45,8 @@
                         </div>
 
                         <!-- Mode 2: Smartphone Multiplayer -->
-                        <div class="mode-option-card" id="mode-smartphone-btn">
-                            <div class="mode-badge">✦ Consigliato</div>
+                        <div class="mode-option-card secondary" id="mode-smartphone-btn">
+                            <div class="mode-badge beta">BETA</div>
                             <div class="mode-icon-wrapper">
                                 <span class="mode-emoji">📱</span>
                             </div>
@@ -137,18 +142,26 @@
                 <div id="popup-message" class="popup-message" style="display: none;"></div>
             </div>
 
-            <!-- Manche Indicator -->
-            <div class="manche-indicator">
-                <span>MANCHE</span>
-                <span id="manche-number" class="manche-number">1</span>
-                <span>/ 5</span>
+            <!-- Game Top Bar (Compact Logo + Manche) -->
+            <div class="game-top-bar">
+                <div class="compact-logo">
+                    <span class="logo-icon-small">🎡</span>
+                    <span class="logo-text-small">
+                        <span class="cw1">CERCHIO</span> <span class="cw2">MAGICO</span>
+                    </span>
+                </div>
+                <div class="manche-indicator">
+                    <span>MANCHE</span>
+                    <span id="manche-number" class="manche-number">1</span>
+                    <span>/ 5</span>
+                </div>
             </div>
 
             <!-- Main Game Layout -->
             <div class="game-main-layout">
                 <!-- Left: Players Sidebar -->
                 <aside class="players-sidebar">
-                    <h3>GIOCATORI</h3>
+                    <h3 class="sidebar-title">MANCHE ATTUALE</h3>
                     <ul id="players-list" class="players-list">
                         <!-- Injected via JS -->
                     </ul>
@@ -520,6 +533,17 @@
         }
     })();
     </script>
+
+    <!-- ========== SITE FOOTER ========== -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">✨ CERCHIO MAGICO</div>
+            <div class="footer-copy">
+                &copy; 2026 Cerchio Magico Game. Tutti i diritti riservati.<br>
+                Sviluppato da Valerio Padovano
+            </div>
+        </div>
+    </footer>
 </body>
 
 </html>
