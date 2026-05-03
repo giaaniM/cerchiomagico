@@ -1,7 +1,7 @@
 {
   "name": "wheel-of-fortune",
   "version": "1.0.0",
-  "description": "Ruota della Fortuna - Multiplayer con supporto mobile",
+  "description": "Cerchio Magico - Multiplayer con supporto mobile",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

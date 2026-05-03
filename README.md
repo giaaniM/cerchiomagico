@@ -1,4 +1,4 @@
-# Ruota della Fortuna - Modalità Multiplayer Mobile
+# Cerchio Magico - Modalità Multiplayer Mobile
 
 ## Prerequisiti
 

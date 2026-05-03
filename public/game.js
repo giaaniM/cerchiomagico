@@ -2237,7 +2237,7 @@ async function fetchPuzzleFromAI() {
             console.log(`Groq AI Attempt ${attempt}/10 (Category: ${chosenCategory})...`);
 
             // PROMPT AGGIORNATO (User Request: Apostrofi SI, 30-40 caratteri totali)
-            const systemPrompt = `Sei il capo autore della "Ruota della Fortuna". Genera un database JSON di enigmi con uno stile evocativo, concreto e pop.
+            const systemPrompt = `Sei il capo autore di "Cerchio Magico". Genera un database JSON di enigmi con uno stile evocativo, concreto e pop.
 
 Regole Tassative:
 

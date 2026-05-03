@@ -432,7 +432,7 @@ server.listen(PORT, HOST, () => {
     localIP = getLocalIp();
 
     console.log(`\n==========================================`);
-    console.log(`🚀 Ruota della Fortuna SERVER ATTIVO`);
+    console.log(`🚀 Cerchio Magico SERVER ATTIVO`);
     console.log(`✅ Route /api/puzzle/remove REGISTRATA`);
     console.log(`==========================================\n`);
     console.log(`Server running on http://localhost:${PORT}`);
