@@ -23,8 +23,8 @@
     --tile-border: rgba(255, 255, 255, 0.1);
     --tile-glow: rgba(56, 189, 248, 0.2);
     
-    --font-main: 'Space Grotesk', sans-serif;
-    --font-display: 'Syne', sans-serif;
+    --font-main: 'Lexend', sans-serif;
+    --font-display: 'Lexend', sans-serif;
 
     /* Glow Effects */
     --glow-blue: 0 0 20px rgba(0, 212, 255, 0.5);
@@ -69,12 +69,13 @@ body {
     justify-content: flex-start;
     flex-direction: column;
     align-items: center;
-    padding: 10px;
+    padding: 5px;
 }
 
 h1, h2, h3, .big-lobby-id, .mode-card h2 {
     font-family: var(--font-display);
     text-transform: uppercase;
+    letter-spacing: 0; /* Reduced spacing */
 }
 
 /* ===== Game Container ===== */
@@ -95,23 +96,22 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .game-header h1 {
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-    margin-top: 5px;
-    margin-bottom: 5px;
+    font-size: clamp(1.2rem, 3.5vw, 2.2rem);
+    margin-top: 0;
+    margin-bottom: 2px;
     background: radial-gradient(circle, #ffe681 0%, #d4af37 60%, #8a6e18 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     font-weight: 800;
-    letter-spacing: 1px;
 }
 
 .subtitle {
     color: var(--text-secondary);
-    font-size: 1rem;
-    letter-spacing: 2px;
+    font-size: 0.8rem;
     text-transform: uppercase;
+    opacity: 0.7;
 }
 
 /* ===== Screens ===== */
@@ -586,21 +586,18 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 /* ===== Tiles (Italian Style) ===== */
 .tile {
-    width: 54px;
-    /* Reduced from 62px */
-    height: 70px;
-    /* Reduced from 80px */
+    width: 44px; /* Further reduced from 48px to avoid sidebar overlap */
+    height: 58px; /* Further reduced from 64px */
     flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 2.4rem;
-    /* Reduced from 2.8rem to fit */
+    font-size: 1.8rem; /* Scaled font to match smaller tile */
     font-weight: 800;
-    font-family: 'Arial', sans-serif;
+    font-family: var(--font-main);
     border-radius: 3px;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 3px solid #000;
+    border: 2px solid #000;
     background: transparent;
     position: relative;
 }
@@ -806,31 +803,29 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 /* Hint Display */
 .hint-display {
-    width: 60%;
-    min-width: 300px;
-    text-align: center;
-    padding: 8px 20px;
-    background: rgba(255, 255, 255, 0.08);
+    padding: 6px 20px;
+    background: rgba(15, 23, 42, 0.6);
     border-radius: 50px;
-    margin-bottom: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
 }
 
 .hint-label {
-    display: block;
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     color: var(--accent-gold);
     text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 5px;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 #hint-text {
-    font-size: 1.2rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 700;
     color: var(--text-primary);
+    text-transform: uppercase;
 }
 
 .used-letter.correct {
@@ -1694,13 +1689,10 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));
-    padding: 6px 18px;
-    border-radius: 25px;
     font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 2px;
-    margin-bottom: 5px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
 }
 
 .manche-number {
@@ -1714,21 +1706,18 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* Sidebar leggermente più basse (riportate a center da flex-start) */
     width: 100%;
-    max-width: 1600px;
+    max-width: 1500px;
     margin: 0 auto;
-    gap: 15px;
+    gap: 30px; /* Increased gap to prevent board overlap */
     padding: 0 10px;
-    /* Ensure some breathing room */
 }
 
 /* Ensure Sidebars don't shrink too much */
 .players-sidebar,
 .wheel-value-sidebar {
-    flex: 0 0 220px;
-    /* Fixed basis, don't grow, don't shrink below this unless media query hits */
-    max-width: 250px;
+    flex: 0 0 180px; /* Reduced basis for more board space */
+    max-width: 220px;
 }
 
 .board-area {
