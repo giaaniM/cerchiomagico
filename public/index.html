@@ -17,121 +17,97 @@
     <div class="game-container">
         <!-- Setup Screen (Refactored) -->
         <div id="setup-screen" class="screen active">
-            <header class="game-header">
-                <div class="logo-container">
-                    <div class="logo-icon">🎡</div>
-                    <div class="logo-text">
+            <div class="home-hero">
+                <div class="home-logo">
+                    <span class="home-logo-icon">🎡</span>
+                    <div class="home-logo-text">
                         <span class="logo-word-1">CERCHIO</span>
                         <span class="logo-word-2">MAGICO</span>
                     </div>
                 </div>
-                <div class="subtitle">Il gioco delle parole senza confini</div>
-            </header>
+                <p class="home-tagline">Il gioco delle parole senza confini</p>
+                <div class="home-rules-strip">
+                    <div class="home-rule-chip">
+                        <span class="hrc-icon">🎡</span>
+                        <span class="hrc-label">Gira la Ruota</span>
+                        <span class="hrc-sub">ottieni un valore</span>
+                    </div>
+                    <div class="home-rule-arrow">→</div>
+                    <div class="home-rule-chip">
+                        <span class="hrc-icon">🔤</span>
+                        <span class="hrc-label">Chiama Lettere</span>
+                        <span class="hrc-sub">guadagni per occorrenza</span>
+                    </div>
+                    <div class="home-rule-arrow">→</div>
+                    <div class="home-rule-chip">
+                        <span class="hrc-icon">✏️</span>
+                        <span class="hrc-label">Risolvi la Frase</span>
+                        <span class="hrc-sub">vinci il round</span>
+                    </div>
+                    <div class="home-rule-arrow">→</div>
+                    <div class="home-rule-chip hrc-win">
+                        <span class="hrc-icon">🏆</span>
+                        <span class="hrc-label">5 Manche</span>
+                        <span class="hrc-sub">chi ha più soldi vince</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="setup-layout">
-                <!-- Host photo removed as requested -->
-
-                <!-- Initial Mode Selection -->
-                <div id="mode-selection" class="setup-step" style="text-align: center;">
-                    <h2 class="mode-section-title">Scegli la modalità di gioco</h2>
-
-                    <div class="mode-selection-container">
-                        <!-- Mode 1: Local Multiplayer -->
-                        <div class="mode-option-card" id="mode-local-btn">
-                            <div class="mode-icon-wrapper">
-                                <span class="mode-emoji">🎮</span>
-                            </div>
-                            <div class="mode-title">Multigiocatore<br>Locale</div>
-                            <div class="mode-desc">Il Master gestisce il tabellone, gli altri giocatori partecipano.</div>
-                        </div>
-
-                        <!-- Mode 2: Smartphone Multiplayer -->
-                        <div class="mode-option-card secondary" id="mode-smartphone-btn">
-                            <div class="mode-badge beta">BETA</div>
-                            <div class="mode-icon-wrapper">
-                                <span class="mode-emoji">📱</span>
-                            </div>
-                            <div class="mode-title">Multigiocatore<br>Smartphone</div>
-                            <div class="mode-desc">Ogni giocatore usa il proprio telefono come controller.</div>
+                <div class="setup-card">
+                    <div class="setup-section">
+                        <label class="setup-label">Quanti giocatori?</label>
+                        <div class="player-count-pills">
+                            <button class="count-pill active" data-count="2">2</button>
+                            <button class="count-pill" data-count="3">3</button>
+                            <button class="count-pill" data-count="4">4</button>
+                            <button class="count-pill" data-count="5">5</button>
                         </div>
                     </div>
+
+                    <div id="local-names-container" class="names-grid"></div>
+
+                    <button id="start-local-game-btn" class="btn-primary setup-start-btn">
+                        🚀 Inizia Partita
+                    </button>
+                    <button id="how-to-play-btn" class="setup-howto-link">? Come si gioca</button>
                 </div>
 
-                <!-- Local Mode Step 1: Player Count -->
-                <div id="setup-local-players" class="setup-step" style="display: none; text-align: center;">
-                    <h2 style="font-size: 2rem; margin-bottom: 20px;">Configurazione Locale</h2>
-                    <div class="form-group">
-                        <label for="player-count-input" style="display: block; margin-bottom: 10px;">Quanti
-                            giocatori?</label>
-                        <input type="number" id="player-count-input" min="2" max="5" value="2"
-                            class="player-count-input">
-                    </div>
-
-                    <button id="next-local-names-btn" class="btn-primary" style="margin-top: 20px;">
-                        Avanti →
-                    </button>
-                    <button class="btn-secondary btn-back-mode" style="margin-top: 10px;">
-                        ← Indietro
-                    </button>
+                <div class="setup-experimental-banner" id="mode-smartphone-btn">
+                    <span class="exp-badge">⚗️ SPERIMENTALE</span>
+                    <span class="exp-text">Gioca con gli smartphone come controller</span>
+                    <span class="exp-cta">📱 Attiva →</span>
                 </div>
+            </div>
 
-                <!-- Local Mode Step 2: Player Names -->
-                <div id="setup-local-names" class="setup-step" style="display: none; text-align: center;">
-                    <h2 style="font-size: 2rem; margin-bottom: 20px;">Nomi dei Giocatori</h2>
-                    <div id="local-names-container" style="margin-bottom: 30px;">
-                        <!-- Generated by JS -->
-                    </div>
-
-                    <button id="start-local-game-btn" class="btn-primary">
-                        Inizia Partita 🚀
-                    </button>
-                    <button id="back-local-players-btn" class="btn-secondary" style="margin-top: 10px;">
-                        ← Indietro
-                    </button>
-                </div>
-
-                <!-- Smartphone Mode Lobby (Big View) -->
-                <div id="setup-smartphone-mode" class="setup-step" style="display: none; width: 100%;">
-                    <div class="big-lobby-container">
-                        <h2 style="color: var(--accent-gold); margin-bottom: 20px;">LOBBY APERTA</h2>
-
-                        <div class="lobby-info-row">
-                            <div class="lobby-info-item">
-                                <p class="lobby-label">CODICE LOBBY</p>
-                                <div class="big-lobby-id" id="big-lobby-id-display">------</div>
-                            </div>
-                            <div class="lobby-divider-v"></div>
-                            <div class="lobby-info-item" style="flex: 0 0 auto; padding: 0 40px;">
-                                <div id="lobby-qr-container" class="lobby-qr-container">
-                                    <!-- QR Image will be injected here -->
-                                </div>
-                            </div>
-                            <div class="lobby-divider-v"></div>
-                            <div class="lobby-info-item">
-                                <p class="lobby-label">LINK DI GIOCO</p>
-                                <div id="big-mobile-link" class="lobby-url-text"></div>
-                            </div>
+            <!-- Smartphone mode — hidden, preserved for future use -->
+            <div id="setup-smartphone-mode" class="setup-step" style="display: none; width: 100%;">
+                <div class="big-lobby-container">
+                    <h2 style="color: var(--accent-gold); margin-bottom: 20px;">LOBBY APERTA</h2>
+                    <div class="lobby-info-row">
+                        <div class="lobby-info-item">
+                            <p class="lobby-label">CODICE LOBBY</p>
+                            <div class="big-lobby-id" id="big-lobby-id-display">------</div>
                         </div>
-
-                        <div class="divider" style="margin: 20px 0;">
-                            <span>GIOCATORI CONNESSI</span>
+                        <div class="lobby-divider-v"></div>
+                        <div class="lobby-info-item" style="flex: 0 0 auto; padding: 0 40px;">
+                            <div id="lobby-qr-container" class="lobby-qr-container"></div>
                         </div>
-
-                        <div id="big-players-grid" class="big-players-grid">
-                            <p style="color: #64748b; font-style: italic; font-size: 0.9rem;">In attesa di giocatori...</p>
-                        </div>
-
-                        <div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center;">
-                            <button id="start-smartphone-game-btn" class="btn-primary pulse" style="max-width: 300px;"
-                                disabled>
-                                AVVIA PARTITA
-                            </button>
-                            <button class="btn-secondary btn-back-mode" style="width: auto;">
-                                Annulla
-                            </button>
+                        <div class="lobby-divider-v"></div>
+                        <div class="lobby-info-item">
+                            <p class="lobby-label">LINK DI GIOCO</p>
+                            <div id="big-mobile-link" class="lobby-url-text"></div>
                         </div>
                     </div>
+                    <div class="divider" style="margin: 20px 0;"><span>GIOCATORI CONNESSI</span></div>
+                    <div id="big-players-grid" class="big-players-grid">
+                        <p style="color: #64748b; font-style: italic; font-size: 0.9rem;">In attesa di giocatori...</p>
+                    </div>
+                    <div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center;">
+                        <button id="start-smartphone-game-btn" class="btn-primary pulse" style="max-width: 300px;" disabled>AVVIA PARTITA</button>
+                        <button class="btn-secondary back-mode-btn" style="width: auto;">Annulla</button>
+                    </div>
                 </div>
-
             </div>
         </div>
 
@@ -342,7 +318,7 @@
     <div id="tutorial-overlay" class="tutorial-overlay">
         <div class="tutorial-modal">
             <button id="tutorial-close-btn" class="tutorial-close-btn" aria-label="Chiudi">✕</button>
-            <div class="tutorial-step-counter"><span id="tut-current">1</span> / 6</div>
+            <div class="tutorial-step-counter"><span id="tut-current">1</span> / 5</div>
 
             <div class="tutorial-slides-wrap">
                 <!-- Slide 1 -->
@@ -362,62 +338,49 @@
                 <!-- Slide 2 -->
                 <div class="tutorial-slide" data-slide="1">
                     <div class="tut-icon">🖥️</div>
-                    <h2 class="tut-title">Giocare in Compagnia (Locale)</h2>
-                    <p class="tut-body">Un <strong style="color:#fbbf24">Master</strong> gestisce il tabellone dal PC e può partecipare anche come giocatore.<br>Proietta su uno schermo grande per un'esperienza da studio televisivo!</p>
+                    <h2 class="tut-title">Come si Gioca</h2>
+                    <p class="tut-body">Un <strong style="color:#fbbf24">Master</strong> gestisce il tabellone e i turni.<br>Proietta su TV per un'esperienza da studio televisivo!</p>
                     <div class="tut-tips">
-                        <div class="tut-tip"><span>🎬</span><div><strong>Il Master</strong><br><small>Conduce il gioco, fa girare la ruota e conferma le lettere degli altri giocatori</small></div></div>
-                        <div class="tut-tip"><span>📺</span><div><strong>HDMI → TV</strong><br><small>Collega il cavo e seleziona "Duplica schermo" per proiettare su TV</small></div></div>
-                        <div class="tut-tip"><span>🍎</span><div><strong>AirPlay (MacBook)</strong><br><small>Centro di Controllo → Duplica schermo → Apple TV/schermo esterno</small></div></div>
+                        <div class="tut-tip"><span>🎬</span><div><strong>Il Master conduce</strong><br><small>Fa girare la ruota e inserisce le lettere degli altri giocatori</small></div></div>
+                        <div class="tut-tip"><span>📺</span><div><strong>HDMI → TV</strong><br><small>Collega il cavo e seleziona "Duplica schermo" per proiettare</small></div></div>
+                        <div class="tut-tip"><span>🍎</span><div><strong>AirPlay (MacBook)</strong><br><small>Centro di Controllo → Duplica schermo → Apple TV</small></div></div>
                     </div>
                 </div>
 
                 <!-- Slide 3 -->
                 <div class="tutorial-slide" data-slide="2">
-                    <div class="tut-icon">📱</div>
-                    <h2 class="tut-title">Usa lo Smartphone come Controller!</h2>
-                    <p class="tut-body">La modalità più coinvolgente! Il PC mostra il tabellone su TV,<br>ogni giocatore controlla il gioco dal proprio telefono.</p>
-                    <div class="tut-steps">
-                        <div class="tut-step"><div class="tut-step-n">1</div><div>Scegli <strong>Multigiocatore Smartphone</strong> sul PC → viene creata una lobby</div></div>
-                        <div class="tut-step"><div class="tut-step-n">2</div><div>Ogni giocatore apre il link <strong>mobile</strong> dal telefono sulla stessa Wi-Fi</div></div>
-                        <div class="tut-step"><div class="tut-step-n">3</div><div>Inserisci il <strong>codice lobby</strong> mostrato sul PC e inizia!</div></div>
+                    <div class="tut-icon">🎯</div>
+                    <h2 class="tut-title">Le Regole Base</h2>
+                    <div class="tut-rules">
+                        <div class="tut-rule"><span>🎡</span><div><strong>Gira la Ruota</strong> → ottieni un valore in denaro per quel turno</div></div>
+                        <div class="tut-rule"><span>🔤</span><div><strong>Chiama una Consonante</strong> → guadagni il valore × numero di occorrenze</div></div>
+                        <div class="tut-rule"><span>🅰️</span><div><strong>Compra una Vocale</strong> → costa €1.000 dal tuo montepremi</div></div>
+                        <div class="tut-rule success"><span>✏️</span><div><strong>Risolvi la Frase</strong> → premi "Risolvi" e indovina per vincere il round</div></div>
+                        <div class="tut-rule danger"><span>☠️</span><div><strong>PERDITUTTO</strong> → perdi tutto il montepremi accumulato nel round</div></div>
+                        <div class="tut-rule"><span>⏭️</span><div><strong>PASSA</strong> → perdi il turno, passa al prossimo giocatore</div></div>
                     </div>
-                    <div class="tut-note">⚠️ PC e smartphone devono essere sulla <strong>stessa rete Wi-Fi</strong></div>
                 </div>
 
                 <!-- Slide 4 -->
                 <div class="tutorial-slide" data-slide="3">
-                    <div class="tut-icon">🎯</div>
-                    <h2 class="tut-title">Le Regole Base</h2>
-                    <div class="tut-rules">
-                        <div class="tut-rule"><span>🎡</span><div><strong>Gira la Ruota</strong> → ottieni un valore in denaro</div></div>
-                        <div class="tut-rule"><span>🔤</span><div><strong>Chiama una Consonante</strong> → guadagni valore × occorrenze</div></div>
-                        <div class="tut-rule"><span>🅰️</span><div><strong>Compra una Vocale</strong> → costa €1.000 dal montepremi</div></div>
-                        <div class="tut-rule danger"><span>☠️</span><div><strong>PERDITUTTO</strong> → perdi tutto il montepremi del round</div></div>
-                        <div class="tut-rule"><span>⏭️</span><div><strong>SALTA</strong> → perdi il turno corrente</div></div>
-                        <div class="tut-rule success"><span>💰</span><div><strong>SOLDI</strong> → guadagni € X per ogni lettera indovinata</div></div>
+                    <div class="tut-icon">⚡</div>
+                    <h2 class="tut-title">Spicchi Speciali della Ruota</h2>
+                    <div class="tut-specials">
+                        <div class="tut-special"><span class="tut-badge express">🚀 MEGATURNO</span><span>Modalità express! Consonanti +€500, vocali −€500. Giochi finché non sbagli — poi Perditutto!</span></div>
+                        <div class="tut-special"><span class="tut-badge shield">🛡️ SCUDO</span><span>Ti protegge una volta da PERDITUTTO o PASSA. Puoi scegliere se usarlo o conservarlo.</span></div>
+                        <div class="tut-special"><span class="tut-badge double">✖️ RADDOPPIA</span><span>Raddoppia il tuo punteggio attuale. Se sei a €0, guadagni €500 per ogni lettera.</span></div>
+                        <div class="tut-special"><span class="tut-badge mystery">🎰 ?500</span><span>Scegli: €500 sicuri oppure un valore estratto a sorte (da €200 a €1.000)!</span></div>
+                        <div class="tut-special"><span class="tut-badge final">💎 MANCHE 5</span><span>Round finale! Gira una volta per fissare il valore, poi chiama lettere e risolvi.</span></div>
                     </div>
                 </div>
 
                 <!-- Slide 5 -->
                 <div class="tutorial-slide" data-slide="4">
-                    <div class="tut-icon">⚡</div>
-                    <h2 class="tut-title">Poteri Speciali della Ruota</h2>
-                    <div class="tut-specials">
-                        <div class="tut-special"><span class="tut-badge shield">MEGATURNO</span><span>Ti protegge automaticamente da un PERDITUTTO</span></div>
-                        <div class="tut-special"><span class="tut-badge raddoppia">⚡ RADDOPPIA</span><span>Consonanti €500 fissi, vocali -€500. Giochi da solo finché non sbagli!</span></div>
-                        <div class="tut-special"><span class="tut-badge double">✖️ RADDOPPIA</span><span>Il valore della prossima consonante viene moltiplicato ×2</span></div>
-                        <div class="tut-special"><span class="tut-badge mystery">🎰 ?500</span><span>Scegli: €500 sicuri oppure estrazione a sorte tra tutti!</span></div>
-                        <div class="tut-special"><span class="tut-badge final">💎 MANCHE 5</span><span>Round finale! Valore fisso, nessuna ruota, turni fino alla soluzione.</span></div>
-                    </div>
-                </div>
-
-                <!-- Slide 6 -->
-                <div class="tutorial-slide" data-slide="5">
                     <div class="tut-icon" style="font-size:5rem">🚀</div>
-                    <h2 class="tut-title">Sei Pronto a Giocare?</h2>
-                    <p class="tut-body">Scegli la modalità e che il Cerchio Magico abbia inizio!<br>Buona fortuna a tutti i giocatori! 🍀</p>
-                    <button id="tutorial-start-btn" class="tut-start-btn">🎡 Inizia il Gioco!</button>
-                    <p class="tut-reopen-hint">Puoi riaprire questo tutorial premendo il tasto <strong>?</strong> in alto</p>
+                    <h2 class="tut-title">Pronti a Giocare?</h2>
+                    <p class="tut-body">Inserite i vostri nomi, premete <strong style="color:#fbbf24">Inizia Partita</strong> e che il Cerchio Magico abbia inizio!<br><br>Buona fortuna a tutti! 🍀</p>
+                    <button id="tutorial-start-btn" class="tut-start-btn">🎡 Torna alla Partita</button>
+                    <p class="tut-reopen-hint">Puoi riaprire questo tutorial premendo il tasto <strong>?</strong> in alto a destra</p>
                 </div>
             </div>
 
@@ -428,7 +391,6 @@
                 <span class="tut-dot" data-dot="2"></span>
                 <span class="tut-dot" data-dot="3"></span>
                 <span class="tut-dot" data-dot="4"></span>
-                <span class="tut-dot" data-dot="5"></span>
             </div>
 
             <!-- Nav -->
@@ -448,7 +410,7 @@
     (function() {
         const STORAGE_KEY = 'cerchio_magico_tutorial_seen';
         let currentSlide = 0;
-        const TOTAL = 6;
+        const TOTAL = 5;
 
         function openTutorial() {
             currentSlide = 0;
@@ -488,6 +450,7 @@
         document.getElementById('tutorial-close-btn').addEventListener('click', closeTutorial);
         document.getElementById('tutorial-start-btn').addEventListener('click', closeTutorial);
         document.getElementById('tutorial-help-btn').addEventListener('click', openTutorial);
+        document.getElementById('how-to-play-btn').addEventListener('click', openTutorial);
 
         // Audio Toggle Logic
         document.getElementById('audio-toggle-btn').addEventListener('click', () => {

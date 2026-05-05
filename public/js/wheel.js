@@ -348,9 +348,10 @@ export function spinWheel() {
     if (overlay) overlay.classList.add('active');
 
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+    const isFinalSpin = gameState.currentManche === 5 && !gameState.finalSpinComplete;
 
     let randomSegmentIndex;
-    if (gameState.wheelPhase === 'final_spin') {
+    if (isFinalSpin) {
         const numericIndices = WHEEL_SEGMENTS
             .map((s, i) => ({ s, i }))
             .filter(({ s }) => typeof s.value === 'number' && s.value > 0)

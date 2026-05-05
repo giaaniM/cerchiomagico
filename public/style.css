@@ -5008,3 +5008,264 @@ body.manche-finale .board-frame {
     font-weight: 900;
     color: #fff;
 }
+
+/* ===== New Home Setup Card ===== */
+.setup-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 28px;
+    padding: 28px 36px;
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    backdrop-filter: blur(20px);
+}
+
+.setup-flow-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.setup-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.setup-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.player-count-pills {
+    display: flex;
+    gap: 10px;
+}
+
+.count-pill {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: var(--text-secondary);
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.count-pill:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+.count-pill.active {
+    border-color: var(--accent-gold);
+    background: rgba(251,191,36,0.15);
+    color: var(--accent-gold);
+    box-shadow: 0 0 16px rgba(251,191,36,0.3);
+}
+
+.names-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+}
+
+.name-input-wrap input {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: var(--font-family);
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+.name-input-wrap input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    background: rgba(251,191,36,0.07);
+}
+.name-input-wrap input::placeholder { color: rgba(255,255,255,0.25); }
+
+.setup-start-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 16px;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+}
+
+.setup-howto-link {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-family: var(--font-family);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: color 0.2s ease;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.setup-howto-link:hover { color: var(--accent-gold); }
+
+/* ===== Home Hero ===== */
+.home-hero {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 28px;
+    gap: 16px;
+}
+
+.home-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.home-logo-icon {
+    font-size: 3.8rem;
+    filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.6));
+    animation: spin-slow 25s linear infinite;
+    display: block;
+}
+
+.home-logo-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 0.88;
+}
+
+.home-tagline {
+    color: var(--accent-gold);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 3px;
+    opacity: 0.85;
+    margin: 0;
+}
+
+.home-rules-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.home-rule-arrow {
+    color: rgba(255,255,255,0.3);
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+.home-rule-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 14px;
+    padding: 10px 16px;
+    min-width: 110px;
+    transition: border-color 0.2s ease;
+}
+
+.home-rule-chip:hover { border-color: rgba(255,255,255,0.2); }
+
+.home-rule-chip.hrc-win {
+    border-color: rgba(251,191,36,0.25);
+    background: rgba(251,191,36,0.06);
+}
+
+.hrc-icon { font-size: 1.4rem; line-height: 1; }
+
+.hrc-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.hrc-sub {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.setup-experimental-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(251,191,36,0.05);
+    border: 1px dashed rgba(251,191,36,0.3);
+    border-radius: 14px;
+    padding: 12px 20px;
+    width: 100%;
+    max-width: 520px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-wrap: wrap;
+}
+.setup-experimental-banner:hover {
+    background: rgba(251,191,36,0.1);
+    border-color: rgba(251,191,36,0.55);
+}
+
+.exp-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fbbf24;
+    background: rgba(251,191,36,0.15);
+    border: 1px solid rgba(251,191,36,0.35);
+    border-radius: 6px;
+    padding: 3px 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.exp-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.exp-cta {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #fbbf24;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .home-hero { padding: 24px 16px 16px; }
+    .home-rules-strip { gap: 6px; }
+    .home-rule-chip { min-width: 90px; padding: 8px 10px; }
+    .home-rule-arrow { display: none; }
+    .setup-card { padding: 22px 20px; }
+    .exp-text { display: none; }
+}
