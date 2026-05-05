@@ -117,10 +117,7 @@ const soundManager = {
     },
 
     playWin() {
-        // 1. Play external MP3 (Voice/Jingle)
-        this._playAudio('assets/sounds/fraseindovinata.mp3');
-
-        // 2. Play Synthetic Victory Fanfare (Together)
+        // Play Synthetic Victory Fanfare
         // Arpeggio C Major: C5 - E5 - G5 - C6
         this.playTone(523.25, 'triangle', 0.1, 0.2); // C5
         setTimeout(() => this.playTone(659.25, 'triangle', 0.1, 0.2), 150); // E5
@@ -205,7 +202,7 @@ const API_URL = window.location.origin;
 const gameState = {
     phrase: '',
     originalPhrase: '', // Original phrase for file removal
-    pendingPenalty: null, // Track BANCAROTTA or PASSA for jolly choice
+    pendingPenalty: null, // Track PERDITUTTO or PASSA for jolly choice
     pointerAngle: 0, // Pointer oscillation angle for animation
     hint: '',
     normalizedPhrase: '',
@@ -388,6 +385,14 @@ function showMessage(text, type = 'info') {
     }, 3000);
 }
 
+function popup(icon, title, body = '') {
+    return `<div class="popup-body">
+        ${icon ? `<div class="popup-icon">${icon}</div>` : ''}
+        <div class="popup-title">${title}</div>
+        ${body ? `<div class="popup-text">${body}</div>` : ''}
+    </div>`;
+}
+
 function showPopup(html, duration = 2000, className = '') {
     elements.modalOverlay.style.display = 'flex';
     elements.popupMessage.style.display = 'block';
@@ -548,6 +553,22 @@ function revealLetter(letter, animate = true, onRevealIndividual = null) {
         }
     });
     gameState.revealedLetters.add(normalizedLetter);
+
+    // Lock all interactive controls during tile reveal animation, restore via updateUI when done
+    if (animate && count > 0) {
+        const lockEls = [
+            elements.spinBtn,
+            elements.consonantInput, elements.consonantBtn,
+            elements.vowelInput, elements.vowelBtn,
+            elements.expressConsonantInput, elements.expressConsonantBtn,
+            elements.expressVowelInput, elements.expressVowelBtn,
+            elements.finalConsonantInput, elements.finalConsonantBtn,
+            elements.finalVowelInput, elements.finalVowelBtn,
+        ];
+        lockEls.forEach(el => { if (el) el.disabled = true; });
+        setTimeout(() => updateUI(), (count - 1) * 1500 + 1200);
+    }
+
     return count;
 }
 
@@ -733,7 +754,7 @@ function passTurn() {
 
     const nextPlayer = getCurrentPlayer();
     // Show turn popup (without hint - hint only at manche start)
-    showPopup(`<div class="popup-turn">TURNO DI<br><span class="popup-name">${nextPlayer.name}</span></div>`, 2500);
+    showPopup(popup('🎯', `TURNO DI ${nextPlayer.name}`), 2500);
 }
 
 // ===== Wheel Segments (Patterned: Purple -> DeepBlue -> DarkBlue -> Blue -> LiteBlue -> Special) =====
@@ -743,42 +764,42 @@ function passTurn() {
 // Dark Blue: #1e3a8a (Blue 900)
 // Blue: #2563eb (Blue 600)
 // Light Blue: #60a5fa (Blue 400)
-// Specials: 1000, PASSA, BANCAROTTA, RADDOPPIA
+// Specials: 1000, PASSA, PERDITUTTO, RADDOPPIA
 // Note: SCUDO replaces the "Purple" slot in the last group to fit.
 
 // ===== Wheel Segments =====
 const WHEEL_SEGMENTS = [
     // Group 1
-    { value: 300, color: '#7e22ce', label: '300€' }, // Purple
-    { value: 200, color: '#172554', label: '200€' }, // Deep Blue
-    { value: 700, color: '#1e3a8a', label: '700€' }, // Dark Blue
-    { value: 500, color: '#2563eb', label: '500€' }, // Blue
+    { value: 300, color: '#b45309', label: '300€' }, // Amber
+    { value: 200, color: '#065f46', label: '200€' }, // Deep Emerald
+    { value: 700, color: '#0f766e', label: '700€' }, // Teal
+    { value: 500, color: '#0891b2', label: '500€' }, // Cyan
     { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
     { value: 1000, color: 'RAINBOW', label: '1000€', glowing: true }, // 1000 Rainbow
 
     // Group 2
-    { value: 'BANCAROTTA', color: '#111827', label: 'BANCAROTTA' },
-    { value: 350, color: '#7e22ce', label: '350€' }, // Purple
-    { value: 300, color: '#172554', label: '300€' }, // Deep Blue
-    { value: 450, color: '#1e3a8a', label: '450€' }, // Dark Blue
-    { value: 700, color: '#2563eb', label: '700€' }, // Blue
+    { value: 'PERDITUTTO', color: '#111827', label: 'PERDITUTTO' },
+    { value: 350, color: '#9a3412', label: '350€' }, // Burnt Orange
+    { value: 300, color: '#065f46', label: '300€' }, // Deep Emerald
+    { value: 450, color: '#0f766e', label: '450€' }, // Teal
+    { value: 700, color: '#0891b2', label: '700€' }, // Cyan
     { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
 
     // Group 3
     { value: 'RADDOPPIA', color: 'GOLD', label: 'RADDOPPIA', glowing: true },
     { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
-    { value: 800, color: '#1e3a8a', label: '800€' }, // Dark Blue
-    { value: 300, color: '#2563eb', label: '300€' }, // Blue
-    { value: 'MEGATURNO', color: 'EXPRESS', label: 'MEGATURNO', glowing: true }, // stesso gradiente EXPRESS
-    { value: '?500', color: '#14532D', label: '?500' }, // Dark Green
+    { value: 800, color: '#0f766e', label: '800€' }, // Teal
+    { value: 300, color: '#0891b2', label: '300€' }, // Cyan
+    { value: 'MEGATURNO', color: 'EXPRESS', label: 'MEGATURNO', glowing: true },
+    { value: '?500', color: '#166534', label: '?500' }, // Forest Green
 
     // Group 4
-    { value: 'SCUDO', color: '#9333EA', label: 'SCUDO' }, // Purple
-    { value: 300, color: '#172554', label: '300€' }, // Deep Blue
-    { value: 500, color: '#2563eb', label: '500€' }, // Blue
-    { value: 200, color: '#60a5fa', label: '200€' }, // Light Blue
+    { value: 'SCUDO', color: '#0369a1', label: 'SCUDO' }, // Ocean Blue
+    { value: 300, color: '#065f46', label: '300€' }, // Deep Emerald
+    { value: 500, color: '#0891b2', label: '500€' }, // Cyan
+    { value: 200, color: '#34d399', label: '200€' }, // Mint
     { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
-    { value: 200, color: '#7e22ce', label: '200€' } // Purple
+    { value: 200, color: '#b45309', label: '200€' } // Amber
 ];
 
 // ===== Wheel Drawing =====
@@ -938,7 +959,7 @@ function renderWheelToCache() {
             ctx.shadowBlur = 0;
             ctx.strokeStyle = 'transparent'; // No stroke either
         }
-        else if (label === 'BANCAROTTA') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'PERDITUTTO') ctx.fillStyle = '#FFFFFF';
         else if (label === 'MEGATURNO') {
             ctx.fillStyle = '#fbbf24'; // Vivid yellow as requested
             ctx.shadowColor = '#000';
@@ -968,7 +989,7 @@ function renderWheelToCache() {
 
         // Text Styling (Refined)
         let fontSize = 21 * scale;
-        if (label === 'BANCAROTTA') fontSize = 10.5 * scale;
+        if (label === 'PERDITUTTO') fontSize = 10.5 * scale;
         else if (label === 'PASSA') fontSize = 16 * scale;
         else if (label === 'RADDOPPIA') fontSize = 9 * scale;
         else if (label === 'MEGATURNO') fontSize = 10 * scale;
@@ -985,14 +1006,14 @@ function renderWheelToCache() {
         if (label === 'PASSA') baseRadius = 0.87;
         if (label === 'RADDOPPIA') baseRadius = 0.89;
         if (label === 'EXPRESS') baseRadius = 0.88;
-        if (label === 'BANCAROTTA') baseRadius = 0.89;
+        if (label === 'PERDITUTTO') baseRadius = 0.89;
         if (label === 'SCUDO') baseRadius = 0.87;
         if (label === '?500') baseRadius = 0.86;
 
         let currentRadius = radius * baseRadius;
 
         // Extremely tight spacing for long words
-        const charSpacing = (label === 'BANCAROTTA' || label === 'RADDOPPIA') ? 0.78 : 0.85;
+        const charSpacing = (label === 'PERDITUTTO' || label === 'RADDOPPIA') ? 0.78 : 0.85;
 
         // Draw Characters
         chars.forEach(char => {
@@ -1089,8 +1110,9 @@ function spinWheel() {
     const pointerEl = document.querySelector('.wheel-pointer');
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
-    // Unified probability for all segments as requested
-    const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+    // TEST MODE: force MEGATURNO — remove this line when done
+    const randomSegmentIndex = WHEEL_SEGMENTS.findIndex(s => s.value === 'MEGATURNO');
+    // const randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
     const resultFragment = WHEEL_SEGMENTS[randomSegmentIndex];
 
     // Stop near the EDGE of the segment (in bilico)
@@ -1173,37 +1195,21 @@ function onWheelStop(result) {
 
             checkFinalRoundBanner();
 
-            showPopup(`<div class="popup-info">
-                <div class="popup-title">VALORE FINALE FISSATO!</div>
-                <div class="popup-text">
-                    <div style="font-size:0.9em; opacity:0.8;">Ruota: €${baseValue}</div>
-                    <div style="font-size:1.1em; color:#fbbf24; margin:5px 0;">+ €1000 BONUS!</div>
-                    <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top:10px; margin-top:10px;">
-                        Ogni lettera varrà:<br>
-                        <span style="color:#fbbf24; font-size:1.8em; font-weight:900">€${gameState.finalRoundValue}</span>
-                    </div>
-                </div>
-                <div class="popup-turn-player" style="margin-top:20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:15px;">
-                    INIZIA:<br><span class="popup-name">${getCurrentPlayer().name}</span>
-                </div>
-            </div>`, 6000);
+            showPopup(popup('⭐', 'VALORE FISSATO!', `€${baseValue} + €1000 bonus<br>Ogni lettera vale <strong style="color:#fbbf24">€${gameState.finalRoundValue}</strong><br><br>Gioca: ${getCurrentPlayer().name}`), 6000, 'warning');
 
             setTimeout(() => {
                 updateUI();
                 if (isMobileMode) syncGameState();
             }, 3000);
         } else {
-            // Failure: Special segment hit (PASSA, BANCAROTTA, etc.)
+            // Failure: Special segment hit (PASSA, PERDITUTTO, etc.)
             soundManager.playError();
             gameState.wheelPhase = 'final_spin'; // Allow re-spin
             elements.currentWheelValue.textContent = 'GIRA ANCORA';
             updateUI();
 
             const label = result.label || result.value;
-            showPopup(`<div style="font-size:0.8em; opacity:0.8">RISULTATO: ${label}</div>
-                        <div style="margin-top:10px; font-weight:800; color:#f87171;">VALORE NON VALIDO!</div>
-                        <div style="font-size:0.7em; margin-top:5px">Bisogna colpire un valore numerico.</div>
-                        <div class="pulse-action" style="margin-top:15px; color:#fbbf24; font-weight:800">GIRA DI NUOVO</div>`, 3500, 'error');
+            showPopup(popup('⚠️', 'VALORE NON VALIDO', `Uscito: ${label} — Gira di nuovo`), 3500, 'danger');
         }
         return; // Important: Consume the event
     }
@@ -1220,17 +1226,7 @@ function onWheelStop(result) {
 
         updateUI();
         if (isMobileMode) syncGameState();
-        showPopup(`<div class="popup-express">
-            <div class="popup-express-title"><span class="rocket">🚀</span> MEGATURNO! (EXPRESS)</div>
-            <div class="popup-express-body">
-                Hai attivato il MEGATURNO! Prova a indovinare finché non sbagli!
-                <div class="express-benefit-list">
-                    <div class="express-benefit-item"><div class="express-benefit-icon">+</div> <b>Consonante:</b> +€500 per ogni occorrenza</div>
-                    <div class="express-benefit-item"><div class="express-benefit-icon">-</div> <b>Vocale:</b> Costa €500</div>
-                </div>
-                <span class="warning">ATTENZIONE: Sbagliare significa BANCAROTTA!</span>
-            </div>
-        </div>`, 5000);
+        showPopup(popup('🚀', 'MEGATURNO!', 'Consonante: +€500 per occorrenza<br>Vocale: −€500<br><br>⚠️ Sbagliare = Perditutto!'), 5000, 'special');
         return;
     }
 
@@ -1244,7 +1240,7 @@ function onWheelStop(result) {
             soundManager.playError();
             elements.currentWheelValue.textContent = 'PASSA';
             elements.currentWheelValue.className = 'wheel-value passa';
-            showPopup(`<div class="popup-passa">PASSA!<br>Turno perso</div>`, 2000);
+            showPopup(popup('⏭️', 'PASSA!', 'Turno perso'), 2000, 'warning');
             setTimeout(passTurn, 2500);
         }
     } else if (result.value === 'RADDOPPIA') {
@@ -1265,20 +1261,20 @@ function onWheelStop(result) {
         updateUI();
         if (isMobileMode) syncGameState();
         showMessage('SCUDO! Chiama una consonante per ottenere la protezione!', 'info');
-    } else if (result.value === 'BANCAROTTA') {
+    } else if (result.value === 'PERDITUTTO') {
         // Check if player has shield protection
         if (gameState.hasShield[player.name]) {
-            // Offer choice: use Shield or accept Bancarotta
-            handlePenaltyWithShield(player, 'BANCAROTTA');
+            // Offer choice: use Shield or accept Perditutto
+            handlePenaltyWithShield(player, 'PERDITUTTO');
         } else {
-            // Normal Bancarotta - lose ALL scores (partial + total)
+            // Normal Perditutto - lose ALL scores (partial + total)
             soundManager.playGameOver();
-            elements.currentWheelValue.textContent = 'BANCAROTTA';
-            elements.currentWheelValue.className = 'wheel-value bancarotta';
+            elements.currentWheelValue.textContent = 'PERDITUTTO';
+            elements.currentWheelValue.className = 'wheel-value perditutto';
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0; // Lose global score too
             renderPlayersList();
-            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Montepremi attuale: €0<br>Totali gara: €0</div>`, 4000);
+            showPopup(popup('💥', 'PERDITUTTO!', 'Hai perso tutto il bottino'), 4000, 'danger');
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         }
@@ -1312,9 +1308,9 @@ function onWheelStop(result) {
 
 function handlePenaltyWithShield(player, penaltyType) {
     gameState.pendingPenalty = penaltyType;
-    const title = penaltyType === 'BANCAROTTA' ? '💥 BANCAROTTA!' : '⏭️ PASSA';
-    const penaltyText = penaltyType === 'BANCAROTTA'
-        ? 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per salvarti dalla Bancarotta?'
+    const title = penaltyType === 'PERDITUTTO' ? '💥 PERDITUTTO!' : '⏭️ PASSA';
+    const penaltyText = penaltyType === 'PERDITUTTO'
+        ? 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per salvarti dalla Perditutto?'
         : 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per non perdere il turno?';
 
     const html = `
@@ -1333,7 +1329,7 @@ function handlePenaltyWithShield(player, penaltyType) {
                 <!-- Accept Penalty -->
                 <div class="mystery-card right" onclick="resolveShieldChoice(false)">
                     <div class="card-content">
-                        <span class="card-icon">${penaltyType === 'BANCAROTTA' ? '💥' : '⏭️'}</span>
+                        <span class="card-icon">${penaltyType === 'PERDITUTTO' ? '💥' : '⏭️'}</span>
                         <span class="card-text">ACCETTA<br>${penaltyType}</span>
                     </div>
                 </div>
@@ -1354,7 +1350,7 @@ window.resolveShieldChoice = function (useShield) {
         soundManager.playReveal();
         gameState.hasShield[player.name] = false;
         renderPlayersList();
-        showPopup(`<div class="popup-megaturno-used">🛡️ SCUDO UTILIZZATO!<br>${player.name} è salvo!</div>`, 2500);
+        showPopup(popup('🛡️', 'SCUDO UTILIZZATO!', `${player.name} è salvo!`), 2500, 'subtle-success');
         
         setTimeout(() => {
             gameState.wheelPhase = 'idle';
@@ -1363,18 +1359,18 @@ window.resolveShieldChoice = function (useShield) {
         }, 2500);
     } else {
         // Accept Penalty
-        if (penaltyType === 'BANCAROTTA') {
+        if (penaltyType === 'PERDITUTTO') {
             soundManager.playGameOver();
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0;
             renderPlayersList();
-            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA!<br><br>Hai perso TUTTO il bottino!<br>Totali gara: €0<br><br>(Scudo conservato)</div>`, 4000);
+            showPopup(popup('💥', 'PERDITUTTO!', 'Hai perso tutto il bottino<br><small>(Scudo conservato)</small>'), 4000, 'danger');
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         } else {
             // It was PASSA
             soundManager.playError();
-            showPopup(`<div class="popup-passa">⏭️ CHIUDI IL TURNO<br>${player.name} passa la mano.<br><br>(Scudo conservato)</div>`, 2500);
+            showPopup(popup('⏭️', 'PASSA', `${player.name} passa la mano<br><small>(Scudo conservato)</small>`), 2500, 'warning');
             setTimeout(passTurn, 3000);
         }
     }
@@ -1442,11 +1438,11 @@ window.resolveMysteryChoice = function (choice) {
         finalValue = rafflePool[selectedIdx];
 
         console.log('Raffle result:', finalValue, 'from', rafflePool.length, 'eligible segments');
-        showPopup(`<div class="popup-mystery-result">ESTRATTO:<br><span class="popup-value">€${finalValue}</span></div>`, 2000);
+        showPopup(popup('🎲', 'ESTRATTO!', `€${finalValue}`), 2000, 'warning');
     } else {
         soundManager.playReveal();
         finalValue = Number(choice);
-        showPopup(`<div class="popup-mystery-result">HAI SCELTO:<br><span class="popup-value">€${finalValue}</span></div>`, 2000);
+        showPopup(popup('💶', 'HAI SCELTO', `€${finalValue}`), 2000, 'warning');
     }
 
     // Notify mobile players to close their modals if we are in mobile mode
@@ -1483,15 +1479,14 @@ function callConsonant() {
     if (isVowel(letter)) {
         soundManager.playError();
         showMessage('Devi chiamare una CONSONANTE, non una vocale!', 'error');
-        showPopup(`HAI CHIAMATO UNA VOCALE!<br><span style="font-size:0.8em; opacity:0.8;">Le vocali si comprano a €1000</span>`, 2500, 'error');
+        showPopup(popup('🚫', 'HAI INSERITO UNA VOCALE!', 'Le vocali si comprano a €1000'), 2500, 'danger');
         return;
     }
 
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
         soundManager.playError();
-        showPopup(`<div style="color:#f87171; font-weight:800; font-size:1.2em; margin-bottom:5px;">LETTERA GIÀ CHIAMATA!</div>
-                    <div>Il turno passa al prossimo giocatore</div>`, 3000, 'error');
+        showPopup(popup('🚫', 'LETTERA GIÀ CHIAMATA!', 'Il turno passa al prossimo giocatore'), 3000, 'danger');
         setTimeout(passTurn, 3000);
         return;
     }
@@ -1543,19 +1538,12 @@ function callConsonant() {
             if (specialAction === 'RADDOPPIA' || specialAction === 'RADDOPPIA_ZERO') {
                 gameState.partialScores[player.name] = raddoppiaData.final;
                 const { isZero, current, final } = raddoppiaData;
-                showPopup(`<div class="popup-raddoppia">
-                    <div class="popup-raddoppia-title">🔥 RADDOPPIA!</div>
-                    <div class="popup-raddoppia-text">
-                        ${isZero ? `Eri a zero! Hai vinto 500€ per ogni lettera (${occurrences})` : 'Il tuo montepremi è stato'}
-                    </div>
-                    <div class="popup-raddoppia-highlight">${isZero ? 'BONUS!' : 'RADDOPPIATO!'}</div>
-                    <div class="popup-raddoppia-amount">Da €${current} a €${final}</div>
-                </div>`, 3500);
+                showPopup(popup('🔥', 'RADDOPPIA!', isZero ? `Bonus: €${final}` : `Da €${current} → €${final}`), 3500, 'warning');
                 renderPlayersList();
                 soundManager.playCash();
             } else if (specialAction === 'SCUDO') {
                 gameState.hasShield[player.name] = true;
-                showPopup(`<div class="popup-megaturno">🛡️ SCUDO OTTENUTO!<br>${player.name} ha ottenuto una protezione!</div>`, 2500);
+                showPopup(popup('🛡️', 'SCUDO OTTENUTO!', `${player.name} è protetto`), 2500, 'subtle-success');
                 renderPlayersList();
             }
 
@@ -1569,7 +1557,7 @@ function callConsonant() {
                 gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
 
                 if (!wasFinished && gameState.allConsonantsRevealed) {
-                    showPopup(`<div class="popup-info">CONSONANTI TERMINATE!</div>`, 2500);
+                    showPopup(popup('✅', 'CONSONANTI TERMINATE!', 'Ora puoi solo acquistare vocali o risolvere'), 2500);
                 }
 
                 if (gameState.currentManche === 5) {
@@ -1591,11 +1579,7 @@ function callConsonant() {
         elements.currentWheelValue.textContent = '-';
         const nextPlayer = gameState.players[(gameState.currentPlayerIndex + 1) % gameState.players.length];
         // Show error popup with larger letter
-        showPopup(`<div class="popup-error-large">
-            <div>LETTERA ASSENTE</div>
-            <span class="popup-letter-wrong">${letter}</span>
-            <div>non c'è nella frase</div>
-        </div>`, 3000);
+        showPopup(popup('❌', `"${letter}" NON PRESENTE`, 'Turno perso'), 3000, 'danger');
         setTimeout(passTurn, 3000);
     }
 }
@@ -1628,7 +1612,7 @@ function buyVowel() {
     if (gameState.usedLetters.has(normalized)) {
         showMessage(`La vocale "${letter}" è già stata chiamata!`, 'error');
         soundManager.playError();
-        showPopup(`VOCALE GIÀ CHIAMATA!<br>Turno perso`, 2000, 'error');
+        showPopup(popup('🚫', 'VOCALE GIÀ CHIAMATA!', 'Turno perso'), 2000, 'danger');
         setTimeout(passTurn, 2500);
         return;
     }
@@ -1663,7 +1647,7 @@ function buyVowel() {
         soundManager.playError();
         const costText = (gameState.currentManche === 5) ? "" : ` (-€${VOWEL_COST})`;
         showMessage(`❌ "${letter}" non c'è nella frase.${costText}`, 'error');
-        showPopup(`VOCALE ASSENTE!<br>Turno perso`, 2000, 'error');
+        showPopup(popup('❌', `"${letter}" NON PRESENTE`, 'Turno perso'), 2000, 'danger');
         setTimeout(passTurn, 2500);
     }
 }
@@ -1691,12 +1675,11 @@ function callExpressConsonant() {
         revealLetter(letter, true, null); // No incremental updates during reveal
 
         setTimeout(() => {
-            // User request: Incremental gain and cash sound at the end
-            gameState.expressAccumulated += (occurrences * 500);
+            const gain = occurrences * 500;
+            gameState.expressAccumulated += gain;
             soundManager.playCash();
-
-            // Message removed as per user request (banner is enough)
             checkExpressBanner();
+            flashExpressBanner(`+€${gain}`);
             renderPlayersList();
 
             if (checkWin()) {
@@ -1753,8 +1736,8 @@ function buyExpressVowel() {
     if (occurrences > 0) {
         revealLetter(letter, true, null);
         setTimeout(() => {
-            showMessage(`EXPRESS VOCALE: -€${cost}.`, 'info');
             checkExpressBanner();
+            flashExpressBanner(`-€${cost}`);
             if (checkWin()) {
                 endManche();
             } else {
@@ -1781,7 +1764,7 @@ function triggerExpressBankruptcy(reason) {
     // Remove Gold board style
     if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-    showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA EXPRESS!<br><br>${reason}<br>Hai perso TUTTO!</div>`, 4000);
+    showPopup(popup('💥', 'PERDITUTTO!', reason), 4000, 'danger');
     setTimeout(passTurn, 4500);
 }
 
@@ -1823,12 +1806,12 @@ function trySolve() {
             // Remove Gold board style
             if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-            showPopup(`<div class="popup-bancarotta">💥 BANCAROTTA EXPRESS!<br><br>Soluzione errata!<br>Hai perso TUTTO!</div>`, 4000);
+            showPopup(popup('💥', 'PERDITUTTO!', 'Soluzione errata — perdi tutto'), 4000, 'danger');
             setTimeout(passTurn, 4500);
         } else {
             soundManager.playError();
             showMessage('❌ Soluzione errata!', 'error');
-            showPopup(`SOLUZIONE SBAGLIATA!<br>Turno perso`, 2500, 'error');
+            showPopup(popup('❌', 'SOLUZIONE SBAGLIATA!', 'Turno perso'), 2500, 'danger');
             setTimeout(passTurn, 2500);
         }
     }
@@ -1871,11 +1854,7 @@ function endManche() {
     soundManager.playWinner(); // MANCHE WINNER SOUND
     soundManager.playCrowdCheer(); // CROWD REACTION
 
-    showPopup(`<div class="popup-win">
-        <div class="popup-title">MANCHE ${gameState.currentManche} VINTA!</div>
-        <div class="popup-winner">${winner.name}</div>
-        <div class="popup-earnings">+€${winnings}</div>
-    </div>`, 3000);
+    showPopup(popup('🏆', `MANCHE ${gameState.currentManche} VINTA!`, `${winner.name}<br><strong style="color:#4ade80;font-size:1.3em">+€${winnings.toLocaleString('it-IT')}</strong>`), 3000, 'subtle-success');
 
     // Clear board as requested: "cancella la frase che è stata indovinata"
     if (elements.gameBoard) elements.gameBoard.innerHTML = '';
@@ -1907,26 +1886,33 @@ function showPartialRanking() {
         (Number(gameState.totalScores[b.name]) || 0) - (Number(gameState.totalScores[a.name]) || 0)
     );
 
-    let html = `
-        <div class="popup-ranking-partial">
-            <div class="ranking-header">CLASSIFICA PARZIALE</div>
-            <div class="ranking-list">
-    `;
+    const manchesLeft = TOTAL_MANCHES - gameState.currentManche;
+    const medals = ['🥇', '🥈', '🥉'];
+
+    let html = `<div class="popup-ranking-partial">
+        <div class="ranking-manche-badge">MANCHE ${gameState.currentManche} / ${TOTAL_MANCHES}</div>
+        <div class="ranking-header">CLASSIFICA</div>
+        <div class="ranking-list">`;
 
     sortedPlayers.forEach((p, i) => {
         const score = gameState.totalScores[p.name] || 0;
-        const trophy = i === 0 ? '🏆' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+        const medal = medals[i] || `${i + 1}.`;
+        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(p.name)}&radius=20`;
         html += `
             <div class="ranking-item ${i === 0 ? 'top-rank' : ''}">
-                <span class="rank-pos">${i + 1}</span>
-                <span class="rank-name">${trophy} ${p.name}</span>
-                <span class="rank-val">€${score}</span>
-            </div>
-        `;
+                <span class="rank-medal">${medal}</span>
+                <img src="${avatarUrl}" class="rank-avatar" alt="">
+                <span class="rank-name">${p.name}</span>
+                <span class="rank-val">€${score.toLocaleString('it-IT')}</span>
+            </div>`;
     });
 
-    html += `</div></div>`;
-    showPopup(html, 0); // Display until timeout in endManche
+    html += `</div>`;
+    if (manchesLeft > 0) {
+        html += `<div class="ranking-footer">Ancora ${manchesLeft} manche${manchesLeft > 1 ? 's' : ''}</div>`;
+    }
+    html += `</div>`;
+    showPopup(html, 0);
 }
 
 async function startNextManche() {
@@ -2075,52 +2061,41 @@ function showFinalResults() {
     const sortedPlayers = gameState.players
         .sort((a, b) => gameState.totalScores[b.name] - gameState.totalScores[a.name]);
 
+    const fmt = (n) => `€${Number(n).toLocaleString('it-IT')}`;
+    const podiumData = [
+        { order: 1, cls: 'second', icon: '🥈' },
+        { order: 0, cls: 'first',  icon: '🥇' },
+        { order: 2, cls: 'third',  icon: '🥉' },
+    ];
+
     let resultsHtml = '<div class="results-podium">';
-
-    // Primo posto
-    if (sortedPlayers[0]) {
+    podiumData.forEach(({ order, cls, icon }) => {
+        const p = sortedPlayers[order];
+        if (!p) return;
+        const score = gameState.totalScores[p.name] || 0;
+        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(p.name)}&radius=50`;
         resultsHtml += `
-        <div class="podium-place first">
-            <div class="place-rank">1</div>
-            <div class="place-name">${sortedPlayers[0].name}</div>
-            <div class="place-score">€${gameState.totalScores[sortedPlayers[0].name]}</div>
+        <div class="podium-place ${cls}">
+            <div class="place-icon">${icon}</div>
+            <img src="${avatarUrl}" class="podium-avatar" alt="">
+            <div class="place-name">${p.name}</div>
+            <div class="place-score">${fmt(score)}</div>
+            <div class="podium-bar"></div>
         </div>`;
-    }
-
-    // Secondo posto
-    if (sortedPlayers[1]) {
-        resultsHtml += `
-        <div class="podium-place second">
-            <div class="place-rank">2</div>
-            <div class="place-name">${sortedPlayers[1].name}</div>
-            <div class="place-score">€${gameState.totalScores[sortedPlayers[1].name]}</div>
-        </div>`;
-    }
-
-    // Terzo posto
-    if (sortedPlayers[2]) {
-        resultsHtml += `
-        <div class="podium-place third">
-            <div class="place-rank">3</div>
-            <div class="place-name">${sortedPlayers[2].name}</div>
-            <div class="place-score">€${gameState.totalScores[sortedPlayers[2].name]}</div>
-        </div>`;
-    }
-
+    });
     resultsHtml += '</div>';
 
-    // Lista per gli altri giocatori (se più di 3)
     if (sortedPlayers.length > 3) {
         resultsHtml += '<div class="results-list-remaining">';
         sortedPlayers.slice(3).forEach((p, i) => {
-            resultsHtml += `<div class="result-row-small">${i + 4}. ${p.name}: €${gameState.totalScores[p.name]}</div>`;
+            resultsHtml += `<div class="result-row-small">${i + 4}. ${p.name} — ${fmt(gameState.totalScores[p.name])}</div>`;
         });
         resultsHtml += '</div>';
     }
 
-    elements.winTitle.textContent = `🏆 ${winner.name} VINCE! 🏆`;
+    elements.winTitle.innerHTML = `<span class="win-title-name">${winner.name}</span><br><span class="win-title-sub">ha vinto!</span>`;
     elements.winPhrase.innerHTML = resultsHtml;
-    elements.winMessage.textContent = `Montepremi finale: €${maxScore}`;
+    elements.winMessage.textContent = `Montepremi: ${fmt(maxScore)}`;
     elements.nextLevelBtn.textContent = 'NUOVA PARTITA';
     elements.nextLevelBtn.onclick = newGame;
 
@@ -2510,12 +2485,18 @@ function handlePlayerAction(action) {
             if (gameState.wheelPhase === 'call_consonant') {
                 elements.consonantInput.value = action.letter;
                 callConsonant();
+            } else if (gameState.wheelPhase === 'express') {
+                elements.expressConsonantInput.value = action.letter;
+                callExpressConsonant();
             }
             break;
         case 'buy-vowel':
             if (gameState.wheelPhase === 'choose_action' || gameState.wheelPhase === 'idle') {
                 elements.vowelInput.value = action.letter;
                 buyVowel();
+            } else if (gameState.wheelPhase === 'express') {
+                elements.expressVowelInput.value = action.letter;
+                buyExpressVowel();
             }
             break;
         case 'solve':
@@ -3028,13 +3009,23 @@ function checkExpressBanner() {
     banner.innerHTML = `
         <div class="express-banner-icon">🚀</div>
         <div class="express-banner-content">
-            <span class="express-banner-title">EXPRESS</span>
+            <span class="express-banner-title">MEGATURNO</span>
             <div class="express-banner-divider"></div>
             <span class="express-banner-player">${player.name}</span>
             <div class="express-banner-amount">€${totalExpress}</div>
         </div>
     `;
     banner.style.display = 'flex';
+}
+
+function flashExpressBanner(text) {
+    const banner = document.getElementById('express-banner');
+    if (!banner) return;
+    const el = document.createElement('div');
+    el.className = 'express-banner-flash ' + (text.startsWith('+') ? 'flash-gain' : 'flash-loss');
+    el.textContent = text;
+    banner.appendChild(el);
+    setTimeout(() => el.remove(), 900);
 }
 
 function hideExpressBanner() {
@@ -3093,7 +3084,7 @@ function callFinalConsonant() {
         // Incorrect Guess -> Invalid turn -> Pass
         soundManager.playError();
         showMessage(`❌ "${letter}" non c'è. Turno perso.`, 'error');
-        showPopup(`LETTERA ASSENTE!<br>Turno perso`, 2000, 'error');
+        showPopup(popup('❌', `"${letter}" NON PRESENTE`, 'Turno perso'), 2000, 'danger');
         setTimeout(passTurn, 2500);
     }
 }
@@ -3139,7 +3130,7 @@ function callFinalVowel() {
         // Incorrect Guess -> Pass
         soundManager.playError();
         showMessage(`❌ "${letter}" non c'è. Turno perso.`, 'error');
-        showPopup(`VOCALE ASSENTE!<br>Turno perso`, 2000, 'error');
+        showPopup(popup('❌', `"${letter}" NON PRESENTE`, 'Turno perso'), 2000, 'danger');
         setTimeout(passTurn, 2500);
     }
 }
@@ -3157,3 +3148,11 @@ function hideFinalRoundBanner() {
     const banner = document.getElementById('final-round-banner');
     if (banner) banner.style.display = 'none';
 }
+
+// Prevent accidental navigation (back gesture, tab close) during an active game
+window.addEventListener('beforeunload', (e) => {
+    if (gameState.currentManche) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});

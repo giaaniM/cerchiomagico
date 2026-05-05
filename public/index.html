@@ -225,6 +225,11 @@
                         <!-- State 4: FINAL ROUND Mode (Dedicated UI) -->
                         <div id="final-round-input-container" class="final-round-input-container"
                             style="display: none;">
+                            <div class="final-round-value-header">
+                                <span class="final-round-value-icon">💎</span>
+                                <span class="final-round-value-label">PER CONSONANTE</span>
+                                <span id="final-banner-value" class="final-round-value-amount">€0</span>
+                            </div>
                             <div class="final-round-input-capsule">
                                 <div class="final-input-group">
                                     <span class="final-input-label">CONSONANTE</span>
@@ -289,20 +294,10 @@
 
             <!-- New Game Button -->
             <div class="game-footer">
-                <button id="new-game-btn" class="btn-secondary">Nuovo Gioco</button>
+                <button id="new-game-btn" class="btn-secondary">Nuova Partita</button>
             </div>
         </div>
 
-        <!-- Final Round Banner Overlay -->
-        <div id="final-round-banner" class="final-round-banner" style="display: none;">
-            <div class="final-banner-content">
-                <span class="final-banner-icon">💎</span>
-                <div class="final-banner-text">
-                    <div class="final-banner-title">VALORE ROUND</div>
-                    <div id="final-banner-value" class="final-banner-value">€0</div>
-                </div>
-            </div>
-        </div>
 
         <!-- Win Screen -->
         <div id="win-screen" class="screen">
@@ -447,7 +442,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="puzzles.js"></script>
-    <script src="game.js?v=2.2"></script>
+    <script type="module" src="js/main.js"></script>
     <script>
     // ===== TUTORIAL SYSTEM =====
     (function() {
