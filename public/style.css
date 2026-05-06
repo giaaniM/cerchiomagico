@@ -5174,7 +5174,7 @@ body.manche-finale .board-frame {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px 28px;
+    padding: 12px 20px 24px;
     gap: 16px;
 }
 
@@ -5256,6 +5256,159 @@ body.manche-finale .board-frame {
 
 .hrc-sub {
     font-size: 0.65rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* ===== HOME VISUAL STRIP ===== */
+.home-visual-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+    width: 100%;
+}
+
+.hvs-arrow {
+    color: rgba(255,255,255,0.25);
+    font-size: 1.2rem;
+    font-weight: 300;
+    flex-shrink: 0;
+}
+
+.hvs-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px;
+    padding: 14px 16px 12px;
+    min-width: 120px;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.hvs-step:hover {
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+
+.hvs-step-win {
+    border-color: rgba(251,191,36,0.25);
+    background: rgba(251,191,36,0.06);
+}
+
+.hvs-visual {
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mini Wheel */
+.hvs-wheel {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: conic-gradient(
+        #8b5cf6 0deg 60deg,
+        #f59e0b 60deg 120deg,
+        #10b981 120deg 180deg,
+        #ef4444 180deg 240deg,
+        #3b82f6 240deg 300deg,
+        #ec4899 300deg 360deg
+    );
+    animation: spin-slow 8s linear infinite;
+    border: 3px solid rgba(255,255,255,0.25);
+    box-shadow: 0 0 16px rgba(251,191,36,0.35);
+    position: relative;
+    flex-shrink: 0;
+}
+
+.hvs-wheel-inner {
+    position: absolute;
+    inset: 22%;
+    border-radius: 50%;
+    background: var(--bg-dark);
+    border: 2px solid rgba(255,255,255,0.15);
+}
+
+.hvs-wheel-pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 12px solid var(--accent-gold);
+    filter: drop-shadow(0 0 4px rgba(251,191,36,0.8));
+}
+
+/* Mini Board Tiles */
+.hvs-board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+}
+
+.hvs-tile {
+    width: 22px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 900;
+    font-family: var(--font-display);
+    letter-spacing: 0;
+}
+
+.hvs-tile.hidden {
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.hvs-tile.revealed {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border: 1px solid rgba(0,242,255,0.4);
+    color: var(--accent-primary);
+    box-shadow: 0 0 6px rgba(0,242,255,0.2);
+}
+
+/* Prize display */
+.hvs-prize {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.hvs-trophy { font-size: 2rem; line-height: 1; }
+
+.hvs-prize-amt {
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 10px rgba(251,191,36,0.5);
+}
+
+.hvs-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.hvs-sub {
+    font-size: 0.63rem;
     color: var(--text-secondary);
     white-space: nowrap;
 }

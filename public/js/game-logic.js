@@ -552,6 +552,7 @@ export function startGameLocal() {
     gameState.currentPlayerIndex = (gameState.currentManche - 1) % gameState.players.length;
 
     showScreen('game-screen');
+    document.getElementById('home-btn').style.display = 'flex';
 
     let valid = false;
     let attempts = 0;
@@ -719,6 +720,7 @@ export function newGame() {
 function _doNewGame() {
     document.getElementById('modal-overlay').style.display = 'none';
     document.getElementById('popup-message').style.display = 'none';
+    document.getElementById('home-btn').style.display = 'none';
     showScreen('setup-screen');
     elements.modeSelection.style.display = 'block';
 

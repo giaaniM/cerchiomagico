@@ -6,8 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self' 'unsafe-inline' 'unsafe-eval' ws: wss: http: https: data: blob:; connect-src 'self' ws: wss: http: https:;">
-    <title>Cerchio Magico</title>
-    <link rel="stylesheet" href="style.css?v=3.2">
+    <title>Cerchio Magico — Il Gioco delle Parole Online Gratis</title>
+    <meta name="description" content="Cerchio Magico: il classico gioco televisivo delle lettere, gratis e online. Gira il cerchio, chiama le lettere, risolvi la frase e vinci il montepremi. Gioca con gli amici!">
+    <meta name="keywords" content="gioco delle parole online, indovina la frase, gioco lettere italiano, quiz televisivo parole, gioco frasi gratis, gioco televisivo lettere, indovina le lettere, gioco turni frasi">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Cerchio Magico — Il Gioco delle Parole Online">
+    <meta property="og:description" content="Il classico gioco televisivo delle lettere, gratis e online. Gira il cerchio, chiama le lettere, risolvi la frase!">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Cerchio Magico">
+    <meta name="twitter:description" content="Il classico gioco televisivo delle lettere. Gratis, online, con gli amici.">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Cerchio Magico",
+      "description": "Gioco online ispirato ai classici quiz televisivi delle parole. Gira il cerchio per ottenere un valore, chiama le lettere della frase nascosta e risolvi per vincere il montepremi.",
+      "genre": ["Word Game", "Quiz", "Party Game"],
+      "numberOfPlayers": {"@type": "QuantitativeValue", "minValue": 2, "maxValue": 5},
+      "inLanguage": "it",
+      "isAccessibleForFree": true,
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser"
+    }
+    </script>
+    <link rel="stylesheet" href="style.css?v=3.3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,29 +49,57 @@
                     </div>
                 </div>
                 <p class="home-tagline">Il gioco delle parole senza confini</p>
-                <div class="home-rules-strip">
-                    <div class="home-rule-chip">
-                        <span class="hrc-icon">🎡</span>
-                        <span class="hrc-label">Gira la Ruota</span>
-                        <span class="hrc-sub">ottieni un valore</span>
+                <div class="home-visual-strip">
+                    <div class="hvs-step">
+                        <div class="hvs-visual">
+                            <div class="hvs-wheel">
+                                <div class="hvs-wheel-inner"></div>
+                                <div class="hvs-wheel-pointer"></div>
+                            </div>
+                        </div>
+                        <span class="hvs-label">Gira il Cerchio</span>
+                        <span class="hvs-sub">ottieni un valore</span>
                     </div>
-                    <div class="home-rule-arrow">→</div>
-                    <div class="home-rule-chip">
-                        <span class="hrc-icon">🔤</span>
-                        <span class="hrc-label">Chiama Lettere</span>
-                        <span class="hrc-sub">guadagni per occorrenza</span>
+                    <div class="hvs-arrow">→</div>
+                    <div class="hvs-step">
+                        <div class="hvs-visual">
+                            <div class="hvs-board">
+                                <div class="hvs-tile hidden"></div>
+                                <div class="hvs-tile revealed">R</div>
+                                <div class="hvs-tile hidden"></div>
+                                <div class="hvs-tile hidden"></div>
+                                <div class="hvs-tile revealed">A</div>
+                                <div class="hvs-tile hidden"></div>
+                            </div>
+                        </div>
+                        <span class="hvs-label">Chiama Lettere</span>
+                        <span class="hvs-sub">guadagni per occorrenza</span>
                     </div>
-                    <div class="home-rule-arrow">→</div>
-                    <div class="home-rule-chip">
-                        <span class="hrc-icon">✏️</span>
-                        <span class="hrc-label">Risolvi la Frase</span>
-                        <span class="hrc-sub">vinci il round</span>
+                    <div class="hvs-arrow">→</div>
+                    <div class="hvs-step">
+                        <div class="hvs-visual">
+                            <div class="hvs-board">
+                                <div class="hvs-tile revealed">F</div>
+                                <div class="hvs-tile revealed">R</div>
+                                <div class="hvs-tile revealed">A</div>
+                                <div class="hvs-tile revealed">S</div>
+                                <div class="hvs-tile revealed">E</div>
+                                <div class="hvs-tile revealed">!</div>
+                            </div>
+                        </div>
+                        <span class="hvs-label">Risolvi la Frase</span>
+                        <span class="hvs-sub">vinci il round</span>
                     </div>
-                    <div class="home-rule-arrow">→</div>
-                    <div class="home-rule-chip hrc-win">
-                        <span class="hrc-icon">🏆</span>
-                        <span class="hrc-label">5 Manche</span>
-                        <span class="hrc-sub">chi ha più soldi vince</span>
+                    <div class="hvs-arrow">→</div>
+                    <div class="hvs-step hvs-step-win">
+                        <div class="hvs-visual">
+                            <div class="hvs-prize">
+                                <span class="hvs-trophy">🏆</span>
+                                <span class="hvs-prize-amt">€10.000</span>
+                            </div>
+                        </div>
+                        <span class="hvs-label">5 Manche</span>
+                        <span class="hvs-sub">chi ha più soldi vince</span>
                     </div>
                 </div>
             </div>
@@ -308,6 +359,7 @@
 
     <!-- Quick Actions (Fixed, top-right) -->
     <div class="quick-actions-container">
+        <button id="home-btn" class="quick-action-btn home-btn" title="Torna alla Home" style="display:none;">🏠</button>
         <button id="audio-toggle-btn" class="quick-action-btn" title="Attiva/Disattiva Audio">
             <svg id="audio-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
             <svg id="audio-icon-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>

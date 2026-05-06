@@ -69,6 +69,7 @@ elements.vowelBtn?.addEventListener('click', buyVowel);
 elements.solveBtn?.addEventListener('click', trySolve);
 elements.passBtn?.addEventListener('click', passTurn);
 elements.newGameBtn?.addEventListener('click', newGame);
+document.getElementById('home-btn')?.addEventListener('click', newGame);
 document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
     showPopup(`<div class="popup-body">
         <div class="popup-icon">↻</div>
