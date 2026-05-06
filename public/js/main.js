@@ -12,7 +12,7 @@
 import { soundManager } from './sound.js';
 import { elements } from './elements.js';
 import { gameState, socketState } from './state.js';
-import { showScreen } from './utils.js';
+import { showScreen, showPopup } from './utils.js';
 
 // ===== Module imports =====
 import { updateUI } from './ui.js';
@@ -78,7 +78,7 @@ document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
             <button onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'" class="btn-secondary" style="padding:8px 20px">Annulla</button>
             <button onclick="window._confirmSkipPhrase()" class="btn-solve" style="padding:8px 20px">Cambia</button>
         </div>
-    </div>`);
+    </div>`, 0);
     window._confirmSkipPhrase = () => {
         document.getElementById('modal-overlay').style.display = 'none';
         document.getElementById('popup-message').style.display = 'none';
