@@ -393,9 +393,10 @@ export function startNextManche() {
     }
     delete gameState.lastMancheWinnerIndex;
 
-    showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
+    // AI PHRASE GENERATION — disabilitato, riattiva decommentando il blocco sotto
+    // showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
 
-    // Select from PUZZLE_DATABASE
+    // Select phrase from local PUZZLE_DATABASE
     let valid = false;
     let attempts = 0;
 
@@ -405,6 +406,28 @@ export function startNextManche() {
         const list = JSON.parse(saved);
         gameState.excludedPhrases = new Set(list.map(p => normalizePhrase(p)));
     }
+
+    // AI phrase selection — disabilitato
+    // const aiPool = (gameState.aiPhrases || []).slice();
+    // for (let i = aiPool.length - 1; i > 0; i--) {
+    //     const j = Math.floor(Math.random() * (i + 1));
+    //     [aiPool[i], aiPool[j]] = [aiPool[j], aiPool[i]];
+    // }
+    // for (const puzzle of aiPool) {
+    //     if (valid) break;
+    //     const normalized = normalizePhrase(puzzle.phrase);
+    //     const isNotUsed = !gameState.usedPhrases.has(normalized);
+    //     const isNotExcluded = !gameState.excludedPhrases.has(normalized);
+    //     const words = puzzle.phrase.split(' ');
+    //     const fits = !!splitPhraseIntoRows(words, [12, 14, 14, 12]);
+    //     if (fits && isNotUsed && isNotExcluded) {
+    //         gameState.originalPhrase = puzzle.phrase;
+    //         gameState.phrase = sanitizePhrase(puzzle.phrase);
+    //         gameState.hint = puzzle.hint;
+    //         gameState.usedPhrases.add(normalized);
+    //         valid = true;
+    //     }
+    // }
 
     while (!valid && attempts < 200) {
         attempts++;
@@ -434,6 +457,7 @@ export function startNextManche() {
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
     gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
+    console.log(`🎡 Manche ${gameState.currentManche} — [${gameState.hint}] ${gameState.originalPhrase}`);
 
     elements.popupMessage.style.display = 'none';
     elements.modalOverlay.style.display = 'none';
@@ -461,7 +485,7 @@ export function startNextManche() {
     </div>`, 4000, 'transparent-wrapper');
 }
 
-export function startGameDirectly(players) {
+export async function startGameDirectly(players) {
     console.log('startGameDirectly called with:', players);
     if (!players || players.length === 0) {
         console.error('Cannot start game directly with 0 players');
@@ -472,6 +496,7 @@ export function startGameDirectly(players) {
     gameState.currentPlayerIndex = 0;
     gameState.totalScores = {};
     gameState.partialScores = {};
+    gameState.aiPhrases = [];
 
     gameState.players.forEach(p => {
         gameState.totalScores[p.name] = 0;
@@ -481,8 +506,27 @@ export function startGameDirectly(players) {
     if (elements.setupScreen) elements.setupScreen.classList.remove('active');
     if (elements.gameScreen) elements.gameScreen.classList.add('active');
 
+    // AI PHRASE GENERATION — disabilitato, riattiva decommentando le righe sotto
+    // showPopup('<div class="popup-loading">✨ Preparando la partita...</div>', 0);
+    // await fetchAIPhrases();
+    // elements.popupMessage.style.display = 'none';
+    // elements.modalOverlay.style.display = 'none';
+
     startNewManche();
     renderPlayersList();
+}
+
+async function fetchAIPhrases() {
+    try {
+        const res = await fetch('/api/generate-phrases');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        gameState.aiPhrases = data.phrases || [];
+        console.log(`AI: ${gameState.aiPhrases.length} frasi generate`);
+    } catch (e) {
+        console.warn('AI phrase fetch fallita, uso database locale:', e.message);
+        gameState.aiPhrases = [];
+    }
 }
 
 export function startNewManche() {
@@ -516,6 +560,13 @@ export function startGameLocal() {
         gameState.usedPhrases = new Set();
     }
 
+    // Carica frasi già vinte da localStorage (esclusione permanente per browser)
+    const savedWon = localStorage.getItem('won_phrases');
+    if (savedWon) {
+        const list = JSON.parse(savedWon);
+        gameState.excludedPhrases = new Set(list.map(p => normalizePhrase(p)));
+    }
+
     if (gameState.usedPhrases.size >= PUZZLE_DATABASE.length) {
         console.log('All phrases used! Resetting pool.');
         gameState.usedPhrases.clear();
@@ -545,6 +596,7 @@ export function startGameLocal() {
     }
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+    console.log(`🎡 Manche ${gameState.currentManche} — [${gameState.hint}] ${gameState.originalPhrase}`);
     gameState.revealedLetters = new Set();
     gameState.usedLetters = new Set();
     gameState.wheelPhase = 'idle';
@@ -585,6 +637,65 @@ export function startGameLocal() {
     if (socketState.isMobileMode) {
         syncGameState();
     }
+}
+
+export function skipPhrase() {
+    // Segna la frase attuale come usata in questa sessione (non la esclude per sempre)
+    if (gameState.phrase) {
+        gameState.usedPhrases.add(normalizePhrase(gameState.phrase));
+    }
+
+    // Reset stato manche (non tocca totalScores)
+    gameState.revealedLetters = new Set();
+    gameState.usedLetters = new Set();
+    gameState.pendingWheelValue = null;
+    gameState.nextValueMultiplier = 1;
+    gameState.wheelPhase = 'idle';
+    gameState.allConsonantsRevealed = false;
+    gameState.expressAccumulated = 0;
+    gameState.hasShield = gameState.hasShield || {};
+
+    // Reset punteggi parziali manche corrente
+    gameState.players.forEach(p => { gameState.partialScores[p.name] = 0; });
+
+    // Seleziona nuova frase
+    let valid = false;
+    let attempts = 0;
+    while (!valid && attempts < 200) {
+        attempts++;
+        const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
+        const normalized = normalizePhrase(randomPuzzle.phrase);
+        const isNotUsed = !gameState.usedPhrases.has(normalized);
+        const isNotExcluded = !gameState.excludedPhrases.has(normalized);
+        const fits = !!splitPhraseIntoRows(randomPuzzle.phrase.split(' '), [12, 14, 14, 12]);
+        if (fits && isNotUsed && isNotExcluded) {
+            gameState.originalPhrase = randomPuzzle.phrase;
+            gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
+            gameState.hint = randomPuzzle.hint;
+            gameState.usedPhrases.add(normalized);
+            valid = true;
+        }
+    }
+
+    if (!valid) {
+        gameState.usedPhrases.clear();
+        skipPhrase();
+        return;
+    }
+
+    gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+    gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
+    console.log(`↻ Skip → Manche ${gameState.currentManche} — [${gameState.hint}] ${gameState.originalPhrase}`);
+
+    elements.popupMessage.style.display = 'none';
+    elements.modalOverlay.style.display = 'none';
+    elements.currentWheelValue.textContent = '-';
+    elements.currentWheelValue.className = 'wheel-value';
+    elements.hintText.textContent = gameState.hint;
+    createBoard();
+    drawWheel(0);
+    renderPlayersList();
+    updateUI();
 }
 
 export function newGame() {

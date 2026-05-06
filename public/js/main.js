@@ -19,7 +19,7 @@ import { updateUI } from './ui.js';
 import { passTurn, setUpdateUI as playersSetUpdateUI, setSyncGameState as playersSetSyncGameState } from './players.js';
 import { setUpdateUI as boardSetUpdateUI } from './board.js';
 import { spinWheel, drawWheel, renderWheelToCache } from './wheel.js';
-import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche } from './game-logic.js';
+import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche, skipPhrase } from './game-logic.js';
 import { callExpressConsonant, buyExpressVowel, setEndManche as expressSetEndManche } from './express.js';
 import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndManche, setSyncGameState as finalRoundSetSyncGameState } from './finalRound.js';
 import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
@@ -69,6 +69,22 @@ elements.vowelBtn?.addEventListener('click', buyVowel);
 elements.solveBtn?.addEventListener('click', trySolve);
 elements.passBtn?.addEventListener('click', passTurn);
 elements.newGameBtn?.addEventListener('click', newGame);
+document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
+    showPopup(`<div class="popup-body">
+        <div class="popup-icon">↻</div>
+        <div class="popup-title">CAMBIA FRASE?</div>
+        <div class="popup-text">I punteggi di questa manche verranno azzerati.<br>Il totale gara rimane invariato.</div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:16px">
+            <button onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'" class="btn-secondary" style="padding:8px 20px">Annulla</button>
+            <button onclick="window._confirmSkipPhrase()" class="btn-solve" style="padding:8px 20px">Cambia</button>
+        </div>
+    </div>`);
+    window._confirmSkipPhrase = () => {
+        document.getElementById('modal-overlay').style.display = 'none';
+        document.getElementById('popup-message').style.display = 'none';
+        skipPhrase();
+    };
+});
 
 // Consonant input
 elements.consonantInput?.addEventListener('keypress', (e) => {

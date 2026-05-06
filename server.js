@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -423,6 +424,130 @@ io.on('connection', (socket) => {
             }
         }
     });
+});
+
+// ===== AI PHRASE GENERATION =====
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+
+const GENERATION_PROMPT = `Sei un autore di puzzle per la trasmissione italiana "Ruota della Fortuna".
+Genera esattamente 12 puzzle originali.
+
+MECCANICA DEL PUZZLE:
+L'hint è il TEMA o SOGGETTO. La frase lo DESCRIVE, COMPLETA o RACCONTA qualcosa su di esso.
+Il concorrente legge prima l'hint — poi deve indovinare la frase lettera per lettera.
+
+ESEMPI DI STILE (solo per capire il tono — NON ricopiare queste frasi, genera frasi originali):
+  ERCOLE                 → COMPÌ DODICI FATICHE PER VOLERE DI ERA
+  PIRATI DEI CARAIBI     → JACK SPARROW NAVIGA I MARI IN CERCA DI TESORI
+  STORIA DEL CALCIO      → PELÈ SEGNÒ IL MILLESIMO GOL IN CARRIERA A SANTOS
+  BUROCRAZIA ITALIANA    → PER FARE UN CERTIFICATO SERVONO TRE UFFICI DIVERSI
+  FISICA QUANTISTICA     → UN ELETTRONE PUÒ TROVARSI IN DUE POSTI INSIEME
+
+COSA IMPARARE DAGLI ESEMPI:
+- Ogni frase ha struttura sintattica DIVERSA — NON usare mai lo stesso schema due volte
+- La frase può iniziare con: verbo coniugato (VINSERO, ERA, COMPÌ), sostantivo (KABUL), pronome (CHI)
+- La frase NON inizia quasi mai con articolo (IL/LA/I/LE) — evita questo inizio
+- La frase usa vocabolario ricco e specifico
+- hint e frase insieme formano un pensiero completo — la frase "appartiene" all'hint
+- L'hint NON ripete parole chiave della frase
+- VIETATO usare schemi fissi tipo "NELLA X È UN..." per tutte le frasi
+
+VARIETÀ TEMATICA: usa almeno 8 temi diversi tra: mitologia, storia, scienza, sport, TV italiana, cinema,
+  geografia, cucina, personaggi famosi, cultura pop, natura, curiosità
+
+REGOLE TECNICHE (ogni violazione invalida la frase):
+  1. Solo LETTERE MAIUSCOLE e SPAZI — zero punteggiatura, zero numeri, zero anni
+  2. Apostrofi → spazio  (L'INGANNO → L INGANNO, DELL'ORO → DELL ORO)
+  2b. Il verbo "essere" va scritto SEMPRE con accento: È (non E). La congiunzione "e" (and) rimane E.
+  3. Lunghezza frase: MASSIMO 45 caratteri inclusi gli spazi, minimo 27
+  4. Minimo 4 parole
+  5. Fatti e riferimenti REALI e VERIFICABILI — ortografia italiana corretta
+  6. VIETATO usare frasi banali del tipo "X È LA MONTAGNA PIÙ ALTA", "X È LA CAPITALE DI Y", "X È IL PAESE PIÙ GRANDE" — devono raccontare qualcosa di specifico e interessante, non un fatto enciclopedico ovvio
+  7. Preferisci fatti curiosi, azioni specifiche, eventi precisi — non definizioni generiche
+
+Rispondi SOLO con questo JSON, zero testo aggiuntivo:
+{"frasi": [
+  {"frase": "COMPÌ DODICI FATICHE PER VOLERE DI ERA", "hint": "ERCOLE", "difficolta": "medio"},
+  ...
+]}`;
+
+function validatePhrase(p, debug = false) {
+    if (!p.frase || !p.hint) { if (debug) console.log(`  ✗ [mancante] ${p.frase}`); return false; }
+    const f = p.frase.trim().toUpperCase();
+    if (!/^[A-ZÀÈÉÌÒÙÌ\s]+$/.test(f)) {
+        const bad = [...f].filter(c => !/[A-ZÀÈÉÌÒÙÌ\s]/.test(c));
+        if (debug) console.log(`  ✗ [caratteri: ${[...new Set(bad)].join('')}] ${f}`);
+        return false;
+    }
+    if (f.length < 27 || f.length > 52) { if (debug) console.log(`  ✗ [${f.length}ch] ${f}`); return false; }
+    if (f.split(' ').filter(w => w.length > 0).length < 4) { if (debug) console.log(`  ✗ [<4 parole] ${f}`); return false; }
+    return true;
+}
+
+app.get('/api/generate-phrases', async (req, res) => {
+    if (!GROQ_API_KEY) {
+        console.warn('GROQ_API_KEY non configurata — uso database locale');
+        return res.json({ phrases: [] });
+    }
+
+    try {
+        const response = await fetch(GROQ_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'User-Agent': 'cerchiomagico/1.0'
+            },
+            body: JSON.stringify({
+                model: GROQ_MODEL,
+                messages: [{ role: 'user', content: GENERATION_PROMPT }],
+                temperature: 0.7,
+                max_tokens: 4096,
+                response_format: { type: 'json_object' }
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            console.error('Groq error:', err);
+            return res.json({ phrases: [] });
+        }
+
+        const data = await response.json();
+        const raw = data.choices?.[0]?.message?.content || '';
+
+        let items = [];
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) items = parsed;
+            else {
+                const arr = Object.values(parsed).find(v => Array.isArray(v));
+                items = arr || [];
+            }
+        } catch {
+            const match = raw.match(/\[[\s\S]*\]/);
+            if (match) items = JSON.parse(match[0]);
+        }
+
+        const normalized = items.map(p => ({
+            ...p,
+            frase: (p.frase || '').trim().toUpperCase().replace(/[''`']/g, ' ').replace(/\s+/g, ' ').trim(),
+            hint:  (p.hint  || '').trim().toUpperCase().replace(/[''`']/g, ' ').replace(/\s+/g, ' ').trim(),
+        }));
+        const valid = normalized
+            .filter(p => validatePhrase(p, true))
+            .map(p => ({ phrase: p.frase, hint: p.hint, difficolta: p.difficolta || 'medio' }));
+
+        console.log(`\nGroq: ${items.length} generate, ${valid.length} valide`);
+        valid.forEach((p,i) => console.log(`  ${i+1}. [${p.hint}] ${p.phrase}`));
+        res.json({ phrases: valid });
+
+    } catch (err) {
+        console.error('generate-phrases error:', err);
+        res.json({ phrases: [] });
+    }
 });
 
 const PORT = process.env.PORT || 3000;
