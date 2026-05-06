@@ -32,7 +32,14 @@ export function updateUI() {
             elements.expressContainer.style.display = 'none';
             if (elements.finalRoundContainer) elements.finalRoundContainer.style.display = 'none';
             if (elements.passBtn) elements.passBtn.style.display = 'none';
-            if (solveSectionCard) solveSectionCard.style.display = 'none';
+            if (solveSectionCard) {
+                solveSectionCard.style.display = 'block';
+                solveSectionCard.classList.remove('final-decision-active');
+            }
+            if (solveGroup) solveGroup.style.display = 'block';
+            if (elements.solutionInput) elements.solutionInput.disabled = true;
+            const solveBtnSpin = document.getElementById('solve-btn');
+            if (solveBtnSpin) solveBtnSpin.disabled = true;
             hideFinalRoundBanner();
             return;
         } else if (phase === 'final_play') {
@@ -41,7 +48,14 @@ export function updateUI() {
             consonantContainer.style.display = 'none';
             elements.expressContainer.style.display = 'none';
             if (elements.finalRoundContainer) elements.finalRoundContainer.style.display = 'flex';
-            if (solveSectionCard) solveSectionCard.style.display = 'none';
+            if (solveSectionCard) {
+                solveSectionCard.style.display = 'block';
+                solveSectionCard.classList.remove('final-decision-active');
+            }
+            if (solveGroup) solveGroup.style.display = 'block';
+            if (elements.solutionInput) elements.solutionInput.disabled = true;
+            const solveBtnPlay = document.getElementById('solve-btn');
+            if (solveBtnPlay) solveBtnPlay.disabled = true;
             if (elements.passBtn) elements.passBtn.style.display = 'none';
             if (elements.finalConsonantInput) {
                 elements.finalConsonantInput.disabled = false;
@@ -65,6 +79,9 @@ export function updateUI() {
                 solveSectionCard.classList.add('final-decision-active');
             }
             if (solveGroup) solveGroup.style.display = 'block';
+            if (elements.solutionInput) elements.solutionInput.disabled = false;
+            const solveBtnDecision = document.getElementById('solve-btn');
+            if (solveBtnDecision) solveBtnDecision.disabled = false;
             if (elements.passBtn) {
                 elements.passBtn.style.display = 'inline-block';
                 elements.passBtn.disabled = false;

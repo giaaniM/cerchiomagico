@@ -2048,12 +2048,15 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .player-shield-badge {
     position: absolute;
-    bottom: -4px;
-    right: -6px;
-    font-size: 0.75rem;
+    bottom: -6px;
+    right: -8px;
+    font-size: 1.1rem;
     line-height: 1;
-    filter: drop-shadow(0 0 3px rgba(0,0,0,0.8));
+    filter: drop-shadow(0 0 4px rgba(0,0,0,0.9));
     animation: shieldPulse 1.5s ease-in-out infinite;
+    background: rgba(10, 20, 40, 0.75);
+    border-radius: 50%;
+    padding: 2px;
 }
 
 .player-info-wrap {
@@ -2233,7 +2236,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     height: 64px;
     border-radius: 50%;
     border: 3px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.05);
+    background: white;
+    padding: 3px;
 }
 
 .podium-place.first .podium-avatar {
@@ -2241,6 +2245,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     height: 76px;
     border-color: rgba(251,191,36,0.6);
     box-shadow: 0 0 16px rgba(251,191,36,0.4);
+    background: white;
+    padding: 3px;
 }
 
 @keyframes podiumBounce {
@@ -2268,6 +2274,15 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     color: var(--accent-gold);
     font-size: 1.1rem;
     margin-bottom: 8px;
+}
+
+.win-message {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 20px rgba(251,191,36,0.5);
+    margin: 16px 0 24px;
+    letter-spacing: 1px;
 }
 
 .results-list-remaining {
@@ -2310,31 +2325,39 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .total-winnings-list li {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    gap: 8px;
+    padding: 7px 10px;
     background: rgba(255, 255, 255, 0.03);
     border-radius: 8px;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    overflow: hidden;
 }
 
 .total-avatar {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
+    background: white;
     object-fit: cover;
+    flex-shrink: 0;
 }
 
 .total-winnings-list .win-name {
     font-weight: 600;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .total-winnings-list .win-amount {
     font-weight: 800;
     color: var(--accent-gold);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* Game Actions Row - New side-by-side structure */
@@ -4048,7 +4071,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     height: 36px;
     border-radius: 10px;
     flex-shrink: 0;
-    background: rgba(255,255,255,0.05);
+    background: white;
+    padding: 2px;
 }
 
 .rank-pos {

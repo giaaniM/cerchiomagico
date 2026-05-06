@@ -27,7 +27,10 @@ export function callFinalConsonant() {
     }
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        showMessage(`Lettera "${letter}" già chiamata!`, 'error');
+        soundManager.playError();
+        showMessage(`❌ "${letter}" già chiamata! Turno perso.`, 'error');
+        showPopup(popup('❌', `"${letter}" GIÀ CHIAMATA`, 'Turno perso'), 2000, 'danger');
+        setTimeout(passTurn, 2500);
         return;
     }
 
@@ -82,7 +85,10 @@ export function callFinalVowel() {
     }
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        showMessage(`Vocale "${letter}" già chiamata!`, 'error');
+        soundManager.playError();
+        showMessage(`❌ "${letter}" già chiamata! Turno perso.`, 'error');
+        showPopup(popup('❌', `"${letter}" GIÀ CHIAMATA`, 'Turno perso'), 2000, 'danger');
+        setTimeout(passTurn, 2500);
         return;
     }
 
