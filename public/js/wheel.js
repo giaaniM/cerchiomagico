@@ -290,7 +290,7 @@ export function renderWheelToCache() {
             ctx.translate(currentRadius - (6 * scale), 0);
             ctx.rotate(Math.PI / 2);
             ctx.font = `${14 * scale}px Lexend, sans-serif`;
-            ctx.fillText('🚀', 0, 0);
+            ctx.fillText('⚡', 0, 0);
             ctx.restore();
         }
 
@@ -469,7 +469,7 @@ export function onWheelStop(result) {
 
         updateUI();
         checkExpressBanner();
-        showPopup(popup('🚀', 'MEGATURNO!', 'Consonante: +€500 per occorrenza<br>Vocale: −€500<br><br>⚠️ Sbagliare = Perditutto!'), 5000, 'special');
+        showPopup(popup('⚡', 'MEGATURNO!', 'Consonante: +€500 per occorrenza<br>Vocale: −€500<br><br>⚠️ Sbagliare = Perditutto!'), 5000, 'special');
         return;
     }
 

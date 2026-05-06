@@ -14,7 +14,10 @@
       "Bash(curl -s http://localhost:3000/js/game-logic.js)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(sed -i '' \"s/ctx.fillText\\('🚀'/ctx.fillText\\('⚡'/g\" /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/js/wheel.js /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/game.js)",
+      "Bash(sed -i '' \"s/popup\\('🚀'/popup\\('⚡'/g\" /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/js/wheel.js /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/game.js)",
+      "Bash(sed -i '' \"s/'express-banner-icon'>🚀/'express-banner-icon'>⚡/g\" /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/game.js)"
     ]
   }
 }

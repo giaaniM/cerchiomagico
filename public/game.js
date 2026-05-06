@@ -1048,7 +1048,7 @@ function renderWheelToCache() {
             ctx.translate(currentRadius - (6 * scale), 0);
             ctx.rotate(Math.PI / 2);
             ctx.font = `${14 * scale}px Lexend, sans-serif`;
-            ctx.fillText('🚀', 0, 0);
+            ctx.fillText('⚡', 0, 0);
             ctx.restore();
         }
 
@@ -1226,7 +1226,7 @@ function onWheelStop(result) {
 
         updateUI();
         if (isMobileMode) syncGameState();
-        showPopup(popup('🚀', 'MEGATURNO!', 'Consonante: +€500 per occorrenza<br>Vocale: −€500<br><br>⚠️ Sbagliare = Perditutto!'), 5000, 'special');
+        showPopup(popup('⚡', 'MEGATURNO!', 'Consonante: +€500 per occorrenza<br>Vocale: −€500<br><br>⚠️ Sbagliare = Perditutto!'), 5000, 'special');
         return;
     }
 
@@ -2796,7 +2796,7 @@ function initSmartphoneLobby() {
         if (elements.startSmartphoneGameBtn) {
             elements.startSmartphoneGameBtn.disabled = data.players.length < 2;
             if (data.players.length >= 2) {
-                elements.startSmartphoneGameBtn.innerHTML = `AVVIA PARTITA (${data.players.length}) 🚀`;
+                elements.startSmartphoneGameBtn.innerHTML = `AVVIA PARTITA (${data.players.length})`;
             } else {
                 elements.startSmartphoneGameBtn.innerHTML = `IN ATTESA DI GIOCATORI... (${data.players.length}/2)`;
             }
@@ -3007,7 +3007,7 @@ function checkExpressBanner() {
     const totalExpress = gameState.expressAccumulated;
 
     banner.innerHTML = `
-        <div class="express-banner-icon">🚀</div>
+        <div class="express-banner-icon">⚡</div>
         <div class="express-banner-content">
             <span class="express-banner-title">MEGATURNO</span>
             <div class="express-banner-divider"></div>

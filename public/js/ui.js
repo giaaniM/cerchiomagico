@@ -280,7 +280,7 @@ export function checkExpressBanner() {
     const totalExpress = gameState.expressAccumulated;
 
     banner.innerHTML = `
-        <div class="express-banner-icon">🚀</div>
+        <div class="express-banner-icon">⚡</div>
         <div class="express-banner-content">
             <span class="express-banner-title">MEGATURNO</span>
             <div class="express-banner-divider"></div>

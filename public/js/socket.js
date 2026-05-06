@@ -144,7 +144,7 @@ export function initSmartphoneLobby() {
         if (elements.startSmartphoneGameBtn) {
             elements.startSmartphoneGameBtn.disabled = data.players.length < 2;
             if (data.players.length >= 2) {
-                elements.startSmartphoneGameBtn.innerHTML = `AVVIA PARTITA (${data.players.length}) 🚀`;
+                elements.startSmartphoneGameBtn.innerHTML = `AVVIA PARTITA (${data.players.length})`;
             } else {
                 elements.startSmartphoneGameBtn.innerHTML = `IN ATTESA DI GIOCATORI... (${data.players.length}/2)`;
             }
