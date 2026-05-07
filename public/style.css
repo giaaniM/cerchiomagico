@@ -1,3 +1,10 @@
+/* ===== Self-hosted Lexend font ===== */
+@font-face { font-family: 'Lexend'; font-weight: 400; font-display: swap; src: url('fonts/lexend-400.ttf') format('truetype'); }
+@font-face { font-family: 'Lexend'; font-weight: 500; font-display: swap; src: url('fonts/lexend-500.ttf') format('truetype'); }
+@font-face { font-family: 'Lexend'; font-weight: 600; font-display: swap; src: url('fonts/lexend-600.ttf') format('truetype'); }
+@font-face { font-family: 'Lexend'; font-weight: 700; font-display: swap; src: url('fonts/lexend-700.ttf') format('truetype'); }
+@font-face { font-family: 'Lexend'; font-weight: 800; font-display: swap; src: url('fonts/lexend-800.ttf') format('truetype'); }
+
 /* ===== CSS Reset & Variables ===== */
 *,
 *::before,
@@ -2301,7 +2308,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     border-top: 1px solid rgba(255,255,255,0.07);
 }
 
-.wheel-value.perditutto {
+.wheel-value.crollo {
     color: var(--accent-red);
     font-size: 1rem;
 }
@@ -3507,7 +3514,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     to   { box-shadow: 0 0 30px rgba(251, 191, 36, 0.8), 0 0 60px rgba(255, 0, 212, 0.5); }
 }
 
-.wheel-value.perditutto {
+.wheel-value.crollo {
     background: #000;
     color: #fff;
     padding: 6px 20px;
@@ -4884,6 +4891,38 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 .tut-nav-btn.primary:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); transform: translateY(-1px); }
 /* ===== Site Footer ===== */
+.seo-section {
+    width: 100%;
+    background: rgba(2, 6, 23, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 40px 20px;
+}
+.seo-content {
+    max-width: 800px;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    line-height: 1.7;
+}
+.seo-content h2 {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 1rem;
+    margin: 0 0 8px;
+    font-weight: 600;
+}
+.seo-content h3 {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.85rem;
+    margin: 16px 0 4px;
+    font-weight: 600;
+}
+.seo-content p {
+    margin: 0 0 8px;
+}
+.seo-content strong {
+    color: rgba(255, 255, 255, 0.65);
+}
+
 .site-footer {
     width: 100%;
     background: linear-gradient(0deg, rgba(2, 6, 23, 0.8) 0%, transparent 100%);
@@ -4939,6 +4978,51 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     color: rgba(255, 255, 255, 0.2);
     line-height: 1.6;
     margin-top: 5px;
+}
+
+.footer-link {
+    color: rgba(255, 255, 255, 0.25);
+    text-decoration: none;
+}
+.footer-link:hover {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.kofi-home-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 8px 20px;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 20px;
+    color: rgba(251, 191, 36, 0.7);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+.kofi-home-btn:hover {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.7);
+    color: rgba(251, 191, 36, 1);
+}
+
+.kofi-endgame {
+    display: block;
+    margin-top: 16px;
+    color: rgba(255, 255, 255, 0.45);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+}
+.kofi-endgame:hover {
+    color: rgba(251, 191, 36, 0.9);
+}
+
+.kofi-link {
+    color: rgba(255, 255, 255, 0.35);
+    text-decoration: none;
+}
+.kofi-link:hover {
+    color: rgba(251, 191, 36, 0.8);
 }
 
 /* ===== MANCHE FINALE ATMOSPHERE ===== */

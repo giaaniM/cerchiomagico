@@ -293,7 +293,7 @@ export function trySolve() {
 
             if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-            showPopup(popup('💥', 'PERDITUTTO!', 'Soluzione errata — perdi tutto'), 4000, 'danger');
+            showPopup(popup('💥', 'CROLLO!', 'Soluzione errata — perdi tutto'), 4000, 'danger');
             setTimeout(passTurn, 4500);
         } else {
             soundManager.playError();

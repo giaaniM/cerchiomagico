@@ -202,7 +202,7 @@ const API_URL = window.location.origin;
 const gameState = {
     phrase: '',
     originalPhrase: '', // Original phrase for file removal
-    pendingPenalty: null, // Track PERDITUTTO or PASSA for jolly choice
+    pendingPenalty: null, // Track CROLLO or PASSA for jolly choice
     pointerAngle: 0, // Pointer oscillation angle for animation
     hint: '',
     normalizedPhrase: '',
@@ -764,7 +764,7 @@ function passTurn() {
 // Dark Blue: #1e3a8a (Blue 900)
 // Blue: #2563eb (Blue 600)
 // Light Blue: #60a5fa (Blue 400)
-// Specials: 1000, PASSA, PERDITUTTO, RADDOPPIA
+// Specials: 1000, PASSA, CROLLO, RADDOPPIA
 // Note: SCUDO replaces the "Purple" slot in the last group to fit.
 
 // ===== Wheel Segments =====
@@ -778,7 +778,7 @@ const WHEEL_SEGMENTS = [
     { value: 1000, color: 'RAINBOW', label: '1000€', glowing: true }, // 1000 Rainbow
 
     // Group 2
-    { value: 'PERDITUTTO', color: '#111827', label: 'PERDITUTTO' },
+    { value: 'CROLLO', color: '#111827', label: 'CROLLO' },
     { value: 350, color: '#9a3412', label: '350€' }, // Burnt Orange
     { value: 300, color: '#065f46', label: '300€' }, // Deep Emerald
     { value: 450, color: '#0f766e', label: '450€' }, // Teal
@@ -959,7 +959,7 @@ function renderWheelToCache() {
             ctx.shadowBlur = 0;
             ctx.strokeStyle = 'transparent'; // No stroke either
         }
-        else if (label === 'PERDITUTTO') ctx.fillStyle = '#FFFFFF';
+        else if (label === 'CROLLO') ctx.fillStyle = '#FFFFFF';
         else if (label === 'MEGATURNO') {
             ctx.fillStyle = '#fbbf24'; // Vivid yellow as requested
             ctx.shadowColor = '#000';
@@ -989,7 +989,7 @@ function renderWheelToCache() {
 
         // Text Styling (Refined)
         let fontSize = 21 * scale;
-        if (label === 'PERDITUTTO') fontSize = 10.5 * scale;
+        if (label === 'CROLLO') fontSize = 10.5 * scale;
         else if (label === 'PASSA') fontSize = 16 * scale;
         else if (label === 'RADDOPPIA') fontSize = 9 * scale;
         else if (label === 'MEGATURNO') fontSize = 10 * scale;
@@ -1006,14 +1006,14 @@ function renderWheelToCache() {
         if (label === 'PASSA') baseRadius = 0.87;
         if (label === 'RADDOPPIA') baseRadius = 0.89;
         if (label === 'EXPRESS') baseRadius = 0.88;
-        if (label === 'PERDITUTTO') baseRadius = 0.89;
+        if (label === 'CROLLO') baseRadius = 0.89;
         if (label === 'SCUDO') baseRadius = 0.87;
         if (label === '?500') baseRadius = 0.86;
 
         let currentRadius = radius * baseRadius;
 
         // Extremely tight spacing for long words
-        const charSpacing = (label === 'PERDITUTTO' || label === 'RADDOPPIA') ? 0.78 : 0.85;
+        const charSpacing = (label === 'CROLLO' || label === 'RADDOPPIA') ? 0.78 : 0.85;
 
         // Draw Characters
         chars.forEach(char => {
@@ -1202,7 +1202,7 @@ function onWheelStop(result) {
                 if (isMobileMode) syncGameState();
             }, 3000);
         } else {
-            // Failure: Special segment hit (PASSA, PERDITUTTO, etc.)
+            // Failure: Special segment hit (PASSA, CROLLO, etc.)
             soundManager.playError();
             gameState.wheelPhase = 'final_spin'; // Allow re-spin
             elements.currentWheelValue.textContent = 'GIRA ANCORA';
@@ -1261,20 +1261,20 @@ function onWheelStop(result) {
         updateUI();
         if (isMobileMode) syncGameState();
         showMessage('SCUDO! Chiama una consonante per ottenere la protezione!', 'info');
-    } else if (result.value === 'PERDITUTTO') {
+    } else if (result.value === 'CROLLO') {
         // Check if player has shield protection
         if (gameState.hasShield[player.name]) {
             // Offer choice: use Shield or accept Perditutto
-            handlePenaltyWithShield(player, 'PERDITUTTO');
+            handlePenaltyWithShield(player, 'CROLLO');
         } else {
             // Normal Perditutto - lose ALL scores (partial + total)
             soundManager.playGameOver();
-            elements.currentWheelValue.textContent = 'PERDITUTTO';
-            elements.currentWheelValue.className = 'wheel-value perditutto';
+            elements.currentWheelValue.textContent = 'CROLLO';
+            elements.currentWheelValue.className = 'wheel-value crollo';
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0; // Lose global score too
             renderPlayersList();
-            showPopup(popup('💥', 'PERDITUTTO!', 'Hai perso tutto il bottino'), 4000, 'danger');
+            showPopup(popup('💥', 'CROLLO!', 'Hai perso tutto il bottino'), 4000, 'danger');
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         }
@@ -1308,8 +1308,8 @@ function onWheelStop(result) {
 
 function handlePenaltyWithShield(player, penaltyType) {
     gameState.pendingPenalty = penaltyType;
-    const title = penaltyType === 'PERDITUTTO' ? '💥 PERDITUTTO!' : '⏭️ PASSA';
-    const penaltyText = penaltyType === 'PERDITUTTO'
+    const title = penaltyType === 'CROLLO' ? '💥 CROLLO!' : '⏭️ PASSA';
+    const penaltyText = penaltyType === 'CROLLO'
         ? 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per salvarti dalla Perditutto?'
         : 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per non perdere il turno?';
 
@@ -1329,7 +1329,7 @@ function handlePenaltyWithShield(player, penaltyType) {
                 <!-- Accept Penalty -->
                 <div class="mystery-card right" onclick="resolveShieldChoice(false)">
                     <div class="card-content">
-                        <span class="card-icon">${penaltyType === 'PERDITUTTO' ? '💥' : '⏭️'}</span>
+                        <span class="card-icon">${penaltyType === 'CROLLO' ? '💥' : '⏭️'}</span>
                         <span class="card-text">ACCETTA<br>${penaltyType}</span>
                     </div>
                 </div>
@@ -1359,12 +1359,12 @@ window.resolveShieldChoice = function (useShield) {
         }, 2500);
     } else {
         // Accept Penalty
-        if (penaltyType === 'PERDITUTTO') {
+        if (penaltyType === 'CROLLO') {
             soundManager.playGameOver();
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0;
             renderPlayersList();
-            showPopup(popup('💥', 'PERDITUTTO!', 'Hai perso tutto il bottino<br><small>(Scudo conservato)</small>'), 4000, 'danger');
+            showPopup(popup('💥', 'CROLLO!', 'Hai perso tutto il bottino<br><small>(Scudo conservato)</small>'), 4000, 'danger');
             if (isMobileMode) syncGameState();
             setTimeout(passTurn, 4500);
         } else {
@@ -1764,7 +1764,7 @@ function triggerExpressBankruptcy(reason) {
     // Remove Gold board style
     if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-    showPopup(popup('💥', 'PERDITUTTO!', reason), 4000, 'danger');
+    showPopup(popup('💥', 'CROLLO!', reason), 4000, 'danger');
     setTimeout(passTurn, 4500);
 }
 
@@ -1806,7 +1806,7 @@ function trySolve() {
             // Remove Gold board style
             if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-            showPopup(popup('💥', 'PERDITUTTO!', 'Soluzione errata — perdi tutto'), 4000, 'danger');
+            showPopup(popup('💥', 'CROLLO!', 'Soluzione errata — perdi tutto'), 4000, 'danger');
             setTimeout(passTurn, 4500);
         } else {
             soundManager.playError();

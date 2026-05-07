@@ -122,7 +122,7 @@ export function triggerExpressBankruptcy(reason) {
     // Remove Gold board style
     if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-    showPopup(popup('💥', 'PERDITUTTO!', reason), 4000, 'danger');
+    showPopup(popup('💥', 'CROLLO!', reason), 4000, 'danger');
     setTimeout(passTurn, 4500);
 }
 

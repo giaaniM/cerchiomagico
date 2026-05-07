@@ -35,9 +35,6 @@
     }
     </script>
     <link rel="stylesheet" href="style.css?v=3.3">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -126,6 +123,10 @@
                         Inizia Partita
                     </button>
                     <button id="how-to-play-btn" class="setup-howto-link">? Come si gioca</button>
+
+                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener" class="kofi-home-btn">
+                        ☕ Offrimi un caffè
+                    </a>
                 </div>
 
                 <div class="setup-experimental-banner" id="mode-smartphone-btn">
@@ -349,6 +350,10 @@
                 <button id="next-level-btn" class="btn-primary">
                     Prossimo Livello ➡️
                 </button>
+
+                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener" class="kofi-endgame">
+                    ☕ Ti è piaciuto? Offrimi un caffè
+                </a>
             </div>
         </div>
 
@@ -413,7 +418,7 @@
                         <div class="tut-rule"><span>🔤</span><div><strong>Chiama una Consonante</strong> → guadagni il valore × numero di occorrenze</div></div>
                         <div class="tut-rule"><span>🅰️</span><div><strong>Compra una Vocale</strong> → costa €1.000 dal tuo montepremi</div></div>
                         <div class="tut-rule success"><span>✏️</span><div><strong>Risolvi la Frase</strong> → premi "Risolvi" e indovina per vincere il round</div></div>
-                        <div class="tut-rule danger"><span>☠️</span><div><strong>PERDITUTTO</strong> → perdi tutto il montepremi accumulato nel round</div></div>
+                        <div class="tut-rule danger"><span>☠️</span><div><strong>CROLLO</strong> → perdi tutto il montepremi accumulato nel round</div></div>
                         <div class="tut-rule"><span>⏭️</span><div><strong>PASSA</strong> → perdi il turno, passa al prossimo giocatore</div></div>
                     </div>
                 </div>
@@ -424,7 +429,7 @@
                     <h2 class="tut-title">Spicchi Speciali della Ruota</h2>
                     <div class="tut-specials">
                         <div class="tut-special"><span class="tut-badge express">⚡ MEGATURNO</span><span>Modalità express! Consonanti +€500, vocali −€500. Giochi finché non sbagli — poi Perditutto!</span></div>
-                        <div class="tut-special"><span class="tut-badge shield">🛡️ SCUDO</span><span>Ti protegge una volta da PERDITUTTO o PASSA. Puoi scegliere se usarlo o conservarlo.</span></div>
+                        <div class="tut-special"><span class="tut-badge shield">🛡️ SCUDO</span><span>Ti protegge una volta da CROLLO o PASSA. Puoi scegliere se usarlo o conservarlo.</span></div>
                         <div class="tut-special"><span class="tut-badge double">✖️ RADDOPPIA</span><span>Raddoppia il tuo punteggio attuale. Se sei a €0, guadagni €500 per ogni lettera.</span></div>
                         <div class="tut-special"><span class="tut-badge mystery">🎰 ?500</span><span>Scegli: €500 sicuri oppure un valore estratto a sorte (da €200 a €1.000)!</span></div>
                         <div class="tut-special"><span class="tut-badge final">💎 MANCHE 5</span><span>Round finale! Gira una volta per fissare il valore, poi chiama lettere e risolvi.</span></div>
@@ -458,8 +463,8 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="js/confetti.min.js"></script>
+    <script src="js/socket.io.min.js"></script>
     <script src="puzzles.js"></script>
     <script type="module" src="js/main.js"></script>
     <script>
@@ -549,13 +554,30 @@
     })();
     </script>
 
+    <!-- ========== SEO CONTENT ========== -->
+    <section class="seo-section" aria-label="Informazioni sul gioco">
+        <div class="seo-content">
+            <h2>Cos'è Cerchio Magico?</h2>
+            <p>Cerchio Magico è un gioco di parole online gratuito ispirato ai classici giochi televisivi a turni. Gira la ruota virtuale, chiama le lettere e indovina la frase nascosta prima degli avversari per vincere il montepremi.</p>
+
+            <h3>Come si gioca</h3>
+            <p>Un giocatore alla volta gira la ruota e ottiene un valore in euro. Può quindi chiamare una consonante: se è presente nella frase, guadagna quel valore per ogni occorrenza. In alternativa, può acquistare una vocale a 500€ o tentare di risolvere la frase direttamente. Il turno passa al giocatore successivo in caso di lettera assente, spicchio speciale o risposta errata.</p>
+
+            <h3>Spicchi speciali</h3>
+            <p>La ruota contiene spicchi speciali che rendono ogni giro imprevedibile: <strong>CROLLO</strong> azzera il bottino del round, <strong>PASSA</strong> salta il turno, <strong>RADDOPPIA</strong> raddoppia il valore accumulato e <strong>MEGATURNO</strong> attiva una modalità bonus esclusiva. Lo <strong>SCUDO</strong> protegge una volta sola da CROLLO e PASSA.</p>
+
+            <h3>Gioca gratis, senza registrazione</h3>
+            <p>Cerchio Magico funziona direttamente nel browser, senza app da scaricare e senza account. Perfetto per serate in famiglia, feste o tornei tra amici. Supporta più giocatori in locale o proiettato su TV per un'esperienza da studio televisivo.</p>
+        </div>
+    </section>
+
     <!-- ========== SITE FOOTER ========== -->
     <footer class="site-footer">
         <div class="footer-content">
             <div class="footer-logo">✨ CERCHIO MAGICO</div>
             <div class="footer-copy">
                 &copy; 2026 Cerchio Magico Game. Tutti i diritti riservati.<br>
-                Sviluppato da giaaniM
+                Sviluppato da giaaniM &nbsp;·&nbsp; <a href="/privacy.html" class="footer-link">Privacy Policy</a>
             </div>
         </div>
     </footer>
