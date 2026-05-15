@@ -2754,69 +2754,175 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     }
 }
 
-@media (max-width: 1024px) and (orientation: landscape) {
-    body, html {
-        overflow-x: hidden;
-    }
+/* ===== MOBILE LANDSCAPE — 2-column layout via JS ===== */
 
-    .game-main-layout {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: flex-start;
-        gap: 6px;
-        padding: 0 8px;
-        width: 100%;
-        box-sizing: border-box;
-    }
+#game-screen.ml-active {
+    display: grid;
+    grid-template-columns: 62% 38%;
+    grid-template-rows: auto 1fr;
+    height: 100dvh;
+    overflow: hidden;
+    box-sizing: border-box;
+}
 
-    .board-area {
-        flex: 0 0 100%;
-        order: 1;
-        overflow: hidden;
-    }
+#game-screen.ml-active .game-top-bar {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    margin-bottom: 0;
+    padding: 3px 10px;
+}
+#game-screen.ml-active .compact-logo { display: none; }
+#game-screen.ml-active .manche-indicator { font-size: 0.82rem; }
+#game-screen.ml-active .skip-phrase-btn { font-size: 0.68rem; padding: 3px 10px; }
 
-    .players-sidebar {
-        flex: 1 1 45%;
-        max-width: 49%;
-        order: 2;
-        padding: 8px;
-        font-size: 0.75rem;
-        border-radius: 10px;
-    }
+/* Left panel: category + board */
+#ml-left {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 6px;
+    overflow: hidden;
+    gap: 6px;
+}
 
-    .wheel-value-sidebar {
-        flex: 1 1 45%;
-        max-width: 49%;
-        order: 3;
-        padding: 8px;
-        font-size: 0.75rem;
-        border-radius: 10px;
-        position: static;
-    }
+#ml-left .hint-display {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+    gap: 6px;
+}
 
-    .tile {
-        width: 40px;
-        height: 55px;
-        font-size: 1.3rem;
-    }
+#ml-left .board-container { padding: 0 6px; width: 100%; box-sizing: border-box; }
+#ml-left .board-frame { padding: 4px; }
+#ml-left .game-board-inner { padding: 4px; overflow: hidden; }
+#ml-left .tile.invisible { display: none; }
 
-    .board-row { gap: 2px; }
-    .game-board { gap: 2px; }
+#ml-left .tile {
+    /* clamp: fits 14 tiles in 62vw minus paddings/gaps */
+    width: clamp(22px, calc((62vw - 80px) / 14), 40px);
+    height: clamp(30px, calc((62vw - 80px) / 14 * 1.5), 60px);
+    font-size: clamp(0.6rem, 2.5vw, 1.2rem);
+    border-radius: 4px;
+}
+#ml-left .board-row { gap: 3px; }
+#ml-left .game-board { gap: 4px; }
 
-    .btn-spin {
-        padding: 10px 28px;
-        font-size: 1rem;
-    }
+/* Right panel: scores + action + controls */
+#ml-right {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 6px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
 
-    .hint-display {
-        font-size: 0.85rem;
-        padding: 4px 12px;
-    }
+/* Scores: 2 sidebar affiancate */
+#ml-scores {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+#ml-scores .players-sidebar,
+#ml-scores .wheel-value-sidebar {
+    flex: 1 1 120px;
+    min-width: 0;
+    padding: 5px 7px;
+    font-size: 0.68rem;
+    border-radius: 8px;
+    position: static;
+}
+#ml-scores .sidebar-title,
+#ml-scores .value-label { font-size: 0.58rem; margin-bottom: 2px; }
 
-    .wheel-container {
-        width: 260px;
-        height: 260px;
-    }
+/* MANCHE ATTUALE — uniforma dimensioni */
+#ml-scores .players-list { gap: 4px; }
+#ml-scores .players-list li { padding: 4px 6px; gap: 5px; border-radius: 7px; }
+#ml-scores .player-avatar-wrap,
+#ml-scores .player-avatar { width: 22px; height: 22px; }
+#ml-scores .player-name { font-size: 0.68rem; }
+#ml-scores .player-score { font-size: 0.7rem; }
+
+/* TOTALI GARA — uniforma a stessa struttura */
+#ml-scores .total-winnings-list { gap: 4px; }
+#ml-scores .total-winnings-list li { padding: 4px 6px; gap: 5px; border-radius: 7px; font-size: 0.68rem; }
+#ml-scores .total-avatar { width: 22px; height: 22px; }
+#ml-scores .win-name { font-size: 0.68rem; font-weight: 700; }
+#ml-scores .win-amount { font-size: 0.7rem; }
+
+/* Central action: prominent */
+#ml-right .central-action-area {
+    flex-shrink: 0;
+    min-height: 0;
+    margin-top: 0;
+    padding: 6px 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+#ml-right .btn-spin {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 40px;
+    max-width: 100%;
+}
+
+/* Game actions: vocale + soluzione */
+#ml-right .game-actions-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+#ml-right .letters-controls,
+#ml-right .solve-section-card {
+    padding: 6px 10px;
+    border-radius: 8px;
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
+    flex: none;
+    gap: 4px;
+    overflow: hidden;
+}
+#ml-right .letters-controls label,
+#ml-right .solve-section-card label {
+    font-size: 0.65rem;
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+}
+#ml-right .letters-controls input,
+#ml-right .solve-section-card input {
+    height: 30px;
+    font-size: 0.82rem;
+}
+#ml-right .btn-action, #ml-right .btn-solve, #ml-right .btn-pass {
+    height: 30px;
+    padding: 0 12px;
+    font-size: 0.78rem;
 }
 
 @media (max-width: 1024px) and (orientation: portrait) {
@@ -5655,4 +5761,22 @@ body.manche-finale .board-frame {
     .home-rule-arrow { display: none; }
     .setup-card { padding: 22px 20px; }
     .exp-text { display: none; }
+}
+
+/* ===== Mobile Landscape — popup manche ridotto ===== */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .popup-manche-start {
+        padding: 16px 24px;
+        gap: 4px;
+        width: 70%;
+    }
+    .popup-manche-hint-large {
+        font-size: clamp(1rem, 4vw, 1.6rem);
+        margin-bottom: 4px;
+    }
+    .popup-manche-hint { font-size: 1rem; margin-bottom: 4px; }
+    .popup-manche-number { font-size: 0.7rem; }
+    .popup-category-label { font-size: 0.62rem; }
+    .popup-turn-player { font-size: 0.9rem; margin-top: 4px; gap: 2px; }
+    .popup-name { font-size: 1.8rem; margin-top: 4px; }
 }

@@ -5,6 +5,7 @@
 import { gameState, socketState, VOWEL_COST, TOTAL_MANCHES, API_URL } from './state.js';
 import { elements } from './elements.js';
 import { normalizeChar, normalizePhrase, sanitizePhrase, isVowel, showScreen, showMessage, showPopup, popup, showFloatingScore } from './utils.js';
+import { applyMobileLayout } from './mobile-layout.js';
 import { soundManager } from './sound.js';
 import { getCurrentPlayer, passTurn, renderPlayersList } from './players.js';
 import { updateUI, showPartialRanking, showFinalResults, hideExpressBanner, hideFinalRoundBanner } from './ui.js';
@@ -552,6 +553,7 @@ export function startGameLocal() {
     gameState.currentPlayerIndex = (gameState.currentManche - 1) % gameState.players.length;
 
     showScreen('game-screen');
+    applyMobileLayout();
     document.getElementById('home-btn').style.display = 'flex';
 
     let valid = false;

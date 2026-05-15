@@ -28,7 +28,8 @@
       "Bash(curl -s -o \"js/socket.io.min.js\" \"https://cdn.socket.io/4.5.4/socket.io.min.js\")",
       "Bash(curl -s -o \"js/confetti.min.js\" \"https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js\")",
       "Bash(seomator audit *)",
-      "Bash(curl -s http://localhost:3000)"
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl -s http://localhost:3000/js/mobile-layout.js)"
     ]
   }
 }

@@ -24,6 +24,7 @@ import { callExpressConsonant, buyExpressVowel, setEndManche as expressSetEndMan
 import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndManche, setSyncGameState as finalRoundSetSyncGameState } from './finalRound.js';
 import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
 import { initSetup, setStartGameDirectly } from './setup.js';
+import { initMobileLayout } from './mobile-layout.js';
 
 // ===== Wire cross-module dependencies =====
 
@@ -155,6 +156,7 @@ window._skipToManche5 = () => {
 
 // ===== Initialize Setup Screen =====
 initSetup();
+initMobileLayout();
 
 // ===== Initial Render =====
 // The setup screen is shown by default via CSS (first .screen is active or setup-screen is active)
