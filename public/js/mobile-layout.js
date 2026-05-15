@@ -1,108 +1,126 @@
-let mlActive = false;
+let active = false;
 let saved = {};
+let _keyboardHandler = null;
 
-function isMobileLandscape() {
-    return window.innerWidth <= 1024 && window.innerWidth > window.innerHeight;
+function isMobile() {
+    return window.innerWidth <= 768;
 }
 
-function apply() {
-    if (mlActive) return;
-    const gameScreen = document.getElementById('game-screen');
-    if (!gameScreen?.classList.contains('active')) return;
+function collectElements() {
+    const get = id => document.getElementById(id);
+    const qs  = sel => document.querySelector(sel);
+    return {
+        hintDisplay:    get('hint-display'),
+        boardContainer: qs('.board-container'),
+        playersSidebar: qs('.players-sidebar'),
+        wheelSidebar:   qs('.wheel-value-sidebar'),
+        centralAction:  get('central-action-area'),
+        actionsRow:     qs('.game-actions-row'),
+        gameFooter:     qs('.game-footer'),
+        mainLayout:     qs('.game-main-layout'),
+        topBar:         qs('.game-top-bar'),
+        gameScreen:     get('game-screen'),
+    };
+}
+
+function applyPortrait() {
+    if (active) return;
+    const els = collectElements();
+    if (!els.gameScreen?.classList.contains('active')) return;
+    if (!els.hintDisplay || !els.boardContainer || !els.centralAction || !els.actionsRow) return;
+
+    const pos = el => el ? { parent: el.parentNode, next: el.nextSibling } : null;
+    saved = {
+        hintDisplay:    pos(els.hintDisplay),
+        boardContainer: pos(els.boardContainer),
+        playersSidebar: pos(els.playersSidebar),
+        wheelSidebar:   pos(els.wheelSidebar),
+        centralAction:  pos(els.centralAction),
+        actionsRow:     pos(els.actionsRow),
+    };
+
+    const col = document.createElement('div');
+    col.id = 'mp-column';
+    col.appendChild(els.hintDisplay);
+    col.appendChild(els.boardContainer);
+    col.appendChild(els.centralAction);
+    col.appendChild(els.actionsRow);
+
+    const scoresRow = document.createElement('div');
+    scoresRow.id = 'mp-scores';
+    scoresRow.appendChild(els.playersSidebar);
+    scoresRow.appendChild(els.wheelSidebar);
+    col.appendChild(scoresRow);
+
+    els.topBar.after(col);
+    els.mainLayout.style.display = 'none';
+    if (els.gameFooter) els.gameFooter.style.display = 'none';
+
+    document.body.style.padding = '0';
+    document.body.style.margin = '0';
+    document.body.style.overflow = 'hidden';
+
+    els.gameScreen.classList.add('mp-active');
+    active = true;
+
+    // Scroll input into view when keyboard opens
+    _keyboardHandler = (e) => {
+        const el = e.target;
+        if (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') return;
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 350);
+    };
+    document.addEventListener('focusin', _keyboardHandler);
+}
+
+function restoreLayout() {
+    if (!active) return;
+
+    if (_keyboardHandler) {
+        document.removeEventListener('focusin', _keyboardHandler);
+        _keyboardHandler = null;
+    }
 
     const get = id => document.getElementById(id);
     const qs  = sel => document.querySelector(sel);
-
-    const hintDisplay    = get('hint-display');
-    const boardContainer = qs('.board-container');
-    const playersSidebar = qs('.players-sidebar');
-    const wheelSidebar   = qs('.wheel-value-sidebar');
-    const centralAction  = get('central-action-area');
-    const actionsRow     = qs('.game-actions-row');
-    const gameFooter     = qs('.game-footer');
-    const mainLayout     = qs('.game-main-layout');
-
-    if (!hintDisplay || !boardContainer || !centralAction || !actionsRow) return;
-
-    // Save positions for restoration
-    const savePos = el => ({ parent: el.parentNode, next: el.nextSibling });
-    saved = {
-        hintDisplay:    savePos(hintDisplay),
-        boardContainer: savePos(boardContainer),
-        playersSidebar: savePos(playersSidebar),
-        wheelSidebar:   savePos(wheelSidebar),
-        centralAction:  savePos(centralAction),
-        actionsRow:     savePos(actionsRow),
-        mainLayout:     savePos(mainLayout),
-    };
-
-    // Left panel: category hint + board
-    const left = document.createElement('div');
-    left.id = 'ml-left';
-    left.appendChild(hintDisplay);
-    left.appendChild(boardContainer);
-
-    // Right panel: scores + action + controls
-    const right = document.createElement('div');
-    right.id = 'ml-right';
-
-    const scoresRow = document.createElement('div');
-    scoresRow.id = 'ml-scores';
-    scoresRow.appendChild(playersSidebar);
-    scoresRow.appendChild(wheelSidebar);
-    right.appendChild(scoresRow);
-    right.appendChild(centralAction);
-    right.appendChild(actionsRow);
-
-    const topBar = qs('.game-top-bar');
-    topBar.after(left, right);
-
-    mainLayout.style.display = 'none';
-    if (gameFooter) gameFooter.style.display = 'none';
-
-    gameScreen.classList.add('ml-active');
-    mlActive = true;
-}
-
-function restore() {
-    if (!mlActive) return;
-
     const restoreEl = (el, info) => {
         if (!el || !info?.parent) return;
         if (info.next) info.parent.insertBefore(el, info.next);
         else info.parent.appendChild(el);
     };
 
-    restoreEl(document.getElementById('hint-display'),       saved.hintDisplay);
-    restoreEl(document.querySelector('.board-container'),    saved.boardContainer);
-    restoreEl(document.querySelector('.players-sidebar'),    saved.playersSidebar);
-    restoreEl(document.querySelector('.wheel-value-sidebar'),saved.wheelSidebar);
-    restoreEl(document.getElementById('central-action-area'),saved.centralAction);
-    restoreEl(document.querySelector('.game-actions-row'),   saved.actionsRow);
+    restoreEl(get('hint-display'),        saved.hintDisplay);
+    restoreEl(qs('.board-container'),     saved.boardContainer);
+    restoreEl(qs('.players-sidebar'),     saved.playersSidebar);
+    restoreEl(qs('.wheel-value-sidebar'), saved.wheelSidebar);
+    restoreEl(get('central-action-area'), saved.centralAction);
+    restoreEl(qs('.game-actions-row'),    saved.actionsRow);
 
-    document.getElementById('ml-left')?.remove();
-    document.getElementById('ml-right')?.remove();
-    document.getElementById('ml-scores')?.remove();
+    get('mp-column')?.remove();
+    get('mp-scores')?.remove();
 
-    const mainLayout = document.querySelector('.game-main-layout');
+    const mainLayout = qs('.game-main-layout');
     if (mainLayout) mainLayout.style.display = '';
-    const gameFooter = document.querySelector('.game-footer');
+    const gameFooter = qs('.game-footer');
     if (gameFooter) gameFooter.style.display = '';
 
-    document.getElementById('game-screen')?.classList.remove('ml-active');
-    mlActive = false;
+    document.body.style.padding = '';
+    document.body.style.margin = '';
+    document.body.style.overflow = '';
+
+    get('game-screen')?.classList.remove('mp-active');
+    active = false;
 }
 
 export function applyMobileLayout() {
-    if (isMobileLandscape()) apply();
-    else restore();
+    if (isMobile()) applyPortrait();
+    else restoreLayout();
 }
 
 export function initMobileLayout() {
     window.addEventListener('resize', () => {
         const gs = document.getElementById('game-screen');
         if (!gs?.classList.contains('active')) return;
-        if (isMobileLandscape()) apply();
-        else restore();
+        if (isMobile()) applyPortrait();
+        else restoreLayout();
     });
 }

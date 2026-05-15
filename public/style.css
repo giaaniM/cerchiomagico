@@ -42,9 +42,8 @@
     40% { transform: rotate(90deg); }
     60% { transform: rotate(90deg); }
 }
-@media (max-width: 1024px) and (orientation: portrait) {
-    #rotate-overlay { display: flex; }
-}
+/* Portrait overlay disabilitato — ora gestiamo il layout verticale */
+/* @media (max-width: 1024px) and (orientation: portrait) { #rotate-overlay { display: flex; } } */
 
 /* ===== CSS Reset & Variables ===== */
 *,
@@ -5754,17 +5753,206 @@ body.manche-finale .board-frame {
     flex-shrink: 0;
 }
 
-@media (max-width: 600px) {
-    .home-hero { padding: 24px 16px 16px; }
-    .home-rules-strip { gap: 6px; }
-    .home-rule-chip { min-width: 90px; padding: 8px 10px; }
+@media (max-width: 768px) {
+    .home-hero { padding: 20px 14px 14px; }
+
+    /* Strip con steps orizzontale: scroll invece di wrap verticale */
+    .home-visual-strip {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .home-visual-strip::-webkit-scrollbar { display: none; }
+    .hvs-step { flex-shrink: 0; min-width: 120px; }
+    .hvs-arrow { flex-shrink: 0; }
+
+    .home-rules-strip {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        gap: 8px;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .home-rules-strip::-webkit-scrollbar { display: none; }
+    .home-rule-chip { min-width: 88px; flex-shrink: 0; padding: 8px 10px; }
     .home-rule-arrow { display: none; }
-    .setup-card { padding: 22px 20px; }
+    .setup-card { padding: 20px 16px; }
     .exp-text { display: none; }
 }
 
+/* ===== Mobile Portrait Layout (mp-active) ===== */
+
+#game-screen.mp-active {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100vw;
+    max-width: 100vw;
+    margin: 0;
+    height: 100dvh;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+#game-screen.mp-active .game-top-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    margin-bottom: 0;
+}
+#game-screen.mp-active .compact-logo { display: none; }
+#game-screen.mp-active .manche-indicator {
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+}
+#game-screen.mp-active #skip-phrase-btn { font-size: 0.68rem; padding: 4px 10px; }
+
+/* Colonna principale: board in alto, controlli+classifiche raggruppati in basso */
+#mp-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 6px 16px 12px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* Hint categoria — va a capo invece di tagliare */
+#mp-column .hint-display {
+    font-size: 0.85rem;
+    padding: 5px 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    text-align: center;
+    gap: 6px;
+    flex-shrink: 0;
+    white-space: normal;
+    word-break: break-word;
+    flex-wrap: wrap;
+}
+
+/* Board: tiles grandi, usa dvh */
+#mp-column .board-container { padding: 0; width: 100%; box-sizing: border-box; flex-shrink: 0; }
+#mp-column .board-frame { padding: 4px; }
+#mp-column .game-board-inner { padding: 4px; overflow: hidden; }
+#mp-column .tile.invisible { display: none; }
+
+#mp-column .tile {
+    /* deduction: mp-col pad 16×2=32 + frame 4×2=8 + inner 4×2=8 + 13gaps×2=26 + 4 safety = 78px */
+    width: clamp(20px, calc((100vw - 78px) / 14), 34px);
+    height: clamp(30px, calc((100vw - 78px) / 14 * 1.8), 58px);
+    font-size: clamp(0.55rem, 3.2vw, 0.95rem);
+    border-radius: 4px;
+}
+#mp-column .board-row { gap: 2px; }
+#mp-column .game-board { gap: 4px; }
+
+/* Pulsante gira */
+#mp-column .central-action-area {
+    flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 8px 0;
+    overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+#mp-column .btn-spin {
+    padding: 13px 36px;
+    font-size: 1.1rem;
+    border-radius: 50px;
+    max-width: 100%;
+}
+
+/* Vocale + Risolvi in colonna */
+#mp-column .game-actions-row {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+#mp-column .letters-controls,
+#mp-column .solve-section-card {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    max-width: none;
+    flex: none;
+    gap: 6px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+#mp-column .letters-controls label,
+#mp-column .solve-section-card label {
+    font-size: 0.62rem;
+    white-space: normal;
+    text-align: center;
+    width: 100%;
+    display: block;
+}
+#mp-column .letters-controls input,
+#mp-column .solve-section-card input { height: 34px; font-size: 0.88rem; }
+#mp-column .btn-action, #mp-column .btn-solve, #mp-column .btn-pass {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+}
+
+/* Classifiche in fondo */
+#mp-scores {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+#mp-scores .players-sidebar,
+#mp-scores .wheel-value-sidebar {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 8px 8px 10px;
+    font-size: 0.72rem;
+    border-radius: 10px;
+    position: static;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+#mp-scores .sidebar-title,
+#mp-scores .value-label { font-size: 0.62rem; margin-bottom: 3px; }
+#mp-scores .players-list { gap: 5px; }
+#mp-scores .players-list li { padding: 5px 7px; gap: 6px; border-radius: 8px; }
+#mp-scores .player-avatar-wrap,
+#mp-scores .player-avatar { width: 26px; height: 26px; }
+#mp-scores .player-name { font-size: 0.72rem; }
+#mp-scores .player-score { font-size: 0.75rem; }
+#mp-scores .total-winnings-list { gap: 5px; }
+#mp-scores .total-winnings-list li { padding: 5px 7px; gap: 6px; border-radius: 8px; font-size: 0.72rem; }
+#mp-scores .total-avatar { width: 26px; height: 26px; }
+#mp-scores .win-name { font-size: 0.72rem; font-weight: 700; }
+#mp-scores .win-amount { font-size: 0.75rem; }
+
 /* ===== Mobile Landscape — popup manche ridotto ===== */
-@media (max-width: 1024px) and (orientation: landscape) {
+@media (max-width: 768px) {
     .popup-manche-start {
         padding: 16px 24px;
         gap: 4px;
