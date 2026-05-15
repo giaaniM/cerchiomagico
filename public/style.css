@@ -793,8 +793,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 /* Empty/background tiles - VISIBLE */
 .tile.empty {
     background: rgba(15, 23, 42, 0.95);
-    border: 2px solid rgba(0, 242, 255, 0.5); /* Neon cyan border for visibility */
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 0 8px rgba(0, 242, 255, 0.1);
+    border: 2px solid rgba(0, 242, 255, 0.5);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
 }
 
 /* Revealed letter tiles - WHITE with BLACK TEXT */
@@ -5813,7 +5813,14 @@ body.manche-finale .board-frame {
     letter-spacing: 0.05em;
     opacity: 0.85;
 }
-#game-screen.mp-active #skip-phrase-btn { font-size: 0.68rem; padding: 4px 10px; }
+#game-screen.mp-active #skip-phrase-btn {
+    display: block;
+    margin: 6px auto 0;
+    font-size: 0.7rem;
+    padding: 5px 16px;
+    flex-shrink: 0;
+    opacity: 0.6;
+}
 
 /* Colonna principale: board in alto, controlli+classifiche raggruppati in basso */
 #mp-column {
@@ -5855,7 +5862,7 @@ body.manche-finale .board-frame {
     /* deduction: mp-col pad 16×2=32 + frame 4×2=8 + inner 4×2=8 + 13gaps×2=26 + 4 safety = 78px */
     width: clamp(20px, calc((100vw - 78px) / 14), 34px);
     height: clamp(30px, calc((100vw - 78px) / 14 * 1.8), 58px);
-    font-size: clamp(0.55rem, 3.2vw, 0.95rem);
+    font-size: clamp(0.75rem, 5.5vw, 1.3rem);
     border-radius: 4px;
 }
 #mp-column .board-row { gap: 2px; }

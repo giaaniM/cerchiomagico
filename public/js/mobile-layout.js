@@ -29,6 +29,9 @@ function applyPortrait() {
     if (!els.gameScreen?.classList.contains('active')) return;
     if (!els.hintDisplay || !els.boardContainer || !els.centralAction || !els.actionsRow) return;
 
+    const get = id => document.getElementById(id);
+    const skipBtn = get('skip-phrase-btn');
+
     const pos = el => el ? { parent: el.parentNode, next: el.nextSibling } : null;
     saved = {
         hintDisplay:    pos(els.hintDisplay),
@@ -37,6 +40,7 @@ function applyPortrait() {
         wheelSidebar:   pos(els.wheelSidebar),
         centralAction:  pos(els.centralAction),
         actionsRow:     pos(els.actionsRow),
+        skipBtn:        pos(skipBtn),
     };
 
     const col = document.createElement('div');
@@ -51,6 +55,8 @@ function applyPortrait() {
     scoresRow.appendChild(els.playersSidebar);
     scoresRow.appendChild(els.wheelSidebar);
     col.appendChild(scoresRow);
+
+    if (skipBtn) col.appendChild(skipBtn);
 
     els.topBar.after(col);
     els.mainLayout.style.display = 'none';
@@ -94,6 +100,7 @@ function restoreLayout() {
     restoreEl(qs('.wheel-value-sidebar'), saved.wheelSidebar);
     restoreEl(get('central-action-area'), saved.centralAction);
     restoreEl(qs('.game-actions-row'),    saved.actionsRow);
+    restoreEl(get('skip-phrase-btn'),     saved.skipBtn);
 
     get('mp-column')?.remove();
     get('mp-scores')?.remove();
