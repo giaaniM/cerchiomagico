@@ -177,7 +177,8 @@ app.post('/api/puzzle/remove', (req, res) => {
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+    const online = io.engine.clientsCount;
+    console.log(`[CONN] +1 connesso | online: ${online} | id: ${socket.id}`);
 
     // Host connects to lobby
     socket.on('host:join', (lobbyId) => {
@@ -254,6 +255,7 @@ io.on('connection', (socket) => {
             persistentPlayerId: persistentPlayerId
         };
         lobby.players.push(player);
+        console.log(`[LOBBY] ${playerName} è entrato nella lobby ${lobbyId} | giocatori: ${lobby.players.length}`);
         socket.join(`lobby:${lobbyId}`);
         socket.emit('player:joined', { playerId: socket.id, playerName, persistentPlayerId });
         io.to(`lobby:${lobbyId}`).emit('lobby:updated', {
@@ -271,6 +273,8 @@ io.on('connection', (socket) => {
         }
         lobby.status = 'playing';
         games.set(lobbyId, { lobbyId, gameState: null });
+        const playerNames = lobby.players.map(p => p.name).join(', ');
+        console.log(`[GAME] Partita avviata | lobby: ${lobbyId} | giocatori: ${playerNames}`);
         io.to(`lobby:${lobbyId}`).emit('game:started');
     });
 
@@ -392,7 +396,8 @@ io.on('connection', (socket) => {
 
     // Disconnect handling
     socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
+        const online = io.engine.clientsCount;
+        console.log(`[CONN] -1 disconnesso | online: ${online} | id: ${socket.id}`);
         // Find if this socket belongs to a host or player
         for (const [lobbyId, lobby] of lobbies.entries()) {
             if (lobby.hostSocketId === socket.id) {
@@ -400,17 +405,17 @@ io.on('connection', (socket) => {
                 lobbies.delete(lobbyId);
                 games.delete(lobbyId);
                 io.to(`lobby:${lobbyId}`).emit('lobby:closed');
-                console.log(`Lobby CLOSED because host ${socket.id} disconnected: ${lobbyId}`);
+                console.log(`[LOBBY] Chiusa perché l'host si è disconnesso | lobby: ${lobbyId}`);
                 break;
             } else {
                 const player = lobby.players.find(p => p.socketId === socket.id);
                 if (player) {
-                    console.log(`Player ${player.name} disconnected. Starting grace period.`);
+                    console.log(`[LOBBY] ${player.name} disconnesso | grace period 5 min | lobby: ${lobbyId}`);
                     const timerKey = `${lobbyId}:${player.persistentPlayerId}`;
 
                     // Set cleanup timer (grace period 5 minutes)
                     const timeout = setTimeout(() => {
-                        console.log(`Grace period expired for player ${player.name}. Removing.`);
+                        console.log(`[LOBBY] Grace period scaduto per ${player.name} — rimosso dalla lobby ${lobbyId}`);
                         const playerIndex = lobby.players.findIndex(p => p.persistentPlayerId === player.persistentPlayerId);
                         if (playerIndex !== -1) {
                             lobby.players.splice(playerIndex, 1);
