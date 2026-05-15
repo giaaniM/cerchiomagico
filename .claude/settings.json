@@ -4,7 +4,8 @@
       "Bash(git diff *)",
       "Bash(git show *)",
       "Read(//tmp/**)",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(grep -E '\\\\.\\(js|ts|json|mjs\\)$')"
     ]
   }
 }

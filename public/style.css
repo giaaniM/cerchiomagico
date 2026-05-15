@@ -5,6 +5,47 @@
 @font-face { font-family: 'Lexend'; font-weight: 700; font-display: swap; src: url('fonts/lexend-700.ttf') format('truetype'); }
 @font-face { font-family: 'Lexend'; font-weight: 800; font-display: swap; src: url('fonts/lexend-800.ttf') format('truetype'); }
 
+/* ===== Rotate Device Overlay ===== */
+#rotate-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #0f0f23;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    color: #f8fafc;
+    font-family: 'Lexend', sans-serif;
+    text-align: center;
+    padding: 40px;
+}
+#rotate-overlay .rotate-icon {
+    font-size: 4rem;
+    animation: rotate-hint 1.5s ease-in-out infinite;
+}
+#rotate-overlay p {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    max-width: 260px;
+    line-height: 1.5;
+}
+#rotate-overlay strong {
+    display: block;
+    font-size: 1.4rem;
+    color: #f59e0b;
+    margin-bottom: 8px;
+}
+@keyframes rotate-hint {
+    0%, 100% { transform: rotate(0deg); }
+    40% { transform: rotate(90deg); }
+    60% { transform: rotate(90deg); }
+}
+@media (max-width: 1024px) and (orientation: portrait) {
+    #rotate-overlay { display: flex; }
+}
+
 /* ===== CSS Reset & Variables ===== */
 *,
 *::before,
@@ -2713,32 +2754,92 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) and (orientation: landscape) {
+    body, html {
+        overflow-x: hidden;
+    }
+
+    .game-main-layout {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 0 8px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .board-area {
+        flex: 0 0 100%;
+        order: 1;
+        overflow: hidden;
+    }
+
+    .players-sidebar {
+        flex: 1 1 45%;
+        max-width: 49%;
+        order: 2;
+        padding: 8px;
+        font-size: 0.75rem;
+        border-radius: 10px;
+    }
+
+    .wheel-value-sidebar {
+        flex: 1 1 45%;
+        max-width: 49%;
+        order: 3;
+        padding: 8px;
+        font-size: 0.75rem;
+        border-radius: 10px;
+        position: static;
+    }
+
+    .tile {
+        width: 40px;
+        height: 55px;
+        font-size: 1.3rem;
+    }
+
+    .board-row { gap: 2px; }
+    .game-board { gap: 2px; }
+
+    .btn-spin {
+        padding: 10px 28px;
+        font-size: 1rem;
+    }
+
+    .hint-display {
+        font-size: 0.85rem;
+        padding: 4px 12px;
+    }
+
+    .wheel-container {
+        width: 260px;
+        height: 260px;
+    }
+}
+
+@media (max-width: 1024px) and (orientation: portrait) {
     .game-main-layout {
         flex-wrap: wrap;
-        /* Allow wrapping */
         justify-content: center;
     }
 
     .players-sidebar,
     .wheel-value-sidebar {
         flex: 1 1 45%;
-        /* Share width below board */
         order: 2;
-        /* Move to bottom */
         margin-top: 20px;
         max-width: none;
     }
 
     .board-area {
         order: 1;
-        /* Keep board on top */
         width: 100%;
         flex: 0 0 100%;
     }
 
     .wheel-value-sidebar {
-        /* Reset any fixed positioning if it existed */
         position: static;
     }
 
@@ -5271,7 +5372,6 @@ body.manche-finale .board-frame {
 .home-logo-icon {
     font-size: 3.8rem;
     filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.6));
-    animation: spin-slow 25s linear infinite;
     display: block;
 }
 
@@ -5280,6 +5380,10 @@ body.manche-finale .board-frame {
     flex-direction: column;
     align-items: flex-start;
     line-height: 0.88;
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    font-weight: inherit;
 }
 
 .home-tagline {

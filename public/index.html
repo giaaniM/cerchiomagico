@@ -15,10 +15,15 @@
     <meta property="og:description" content="Il classico gioco televisivo delle lettere, gratis e online. Gira il cerchio, chiama le lettere, risolvi la frase!">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://cerchiomagico.onrender.com">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://cerchiomagico.onrender.com/assets/og-image.svg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Cerchio Magico">
     <meta name="twitter:description" content="Il classico gioco televisivo delle lettere. Gratis, online, con gli amici.">
+    <meta name="twitter:image" content="https://cerchiomagico.onrender.com/assets/og-image.svg">
     <link rel="canonical" href="https://cerchiomagico.onrender.com">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -38,18 +43,26 @@
 </head>
 
 <body>
+    <div id="rotate-overlay">
+        <div class="rotate-icon">📱</div>
+        <div>
+            <strong>Ruota il dispositivo</strong>
+            <p>Il gioco funziona in orizzontale. Gira il telefono per giocare.</p>
+        </div>
+    </div>
+
     <div class="game-container">
         <!-- Setup Screen (Refactored) -->
         <div id="setup-screen" class="screen active">
             <div class="home-hero">
                 <div class="home-logo">
-                    <span class="home-logo-icon">🎡</span>
-                    <div class="home-logo-text">
+                    <span class="home-logo-icon" aria-hidden="true">🎡</span>
+                    <h1 class="home-logo-text">
                         <span class="logo-word-1">CERCHIO</span>
                         <span class="logo-word-2">MAGICO</span>
-                    </div>
+                    </h1>
                 </div>
-                <p class="home-tagline">Il gioco delle parole senza confini</p>
+                <p class="home-tagline">Il gioco delle parole da fare in compagnia</p>
                 <div class="home-visual-strip">
                     <div class="hvs-step">
                         <div class="hvs-visual">
@@ -124,7 +137,7 @@
                     </button>
                     <button id="how-to-play-btn" class="setup-howto-link">? Come si gioca</button>
 
-                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener" class="kofi-home-btn">
+                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-home-btn">
                         ☕ Offrimi un caffè
                     </a>
                 </div>
@@ -351,7 +364,7 @@
                     Prossimo Livello ➡️
                 </button>
 
-                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener" class="kofi-endgame">
+                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-endgame">
                     ☕ Ti è piaciuto? Offrimi un caffè
                 </a>
             </div>
@@ -428,7 +441,7 @@
                     <div class="tut-icon">⚡</div>
                     <h2 class="tut-title">Spicchi Speciali della Ruota</h2>
                     <div class="tut-specials">
-                        <div class="tut-special"><span class="tut-badge express">⚡ MEGATURNO</span><span>Modalità express! Consonanti +€500, vocali −€500. Giochi finché non sbagli — poi Perditutto!</span></div>
+                        <div class="tut-special"><span class="tut-badge express">⚡ MEGATURNO</span><span>Modalità express! Consonanti +€500, vocali −€500. Giochi finché non sbagli — poi CROLLO!</span></div>
                         <div class="tut-special"><span class="tut-badge shield">🛡️ SCUDO</span><span>Ti protegge una volta da CROLLO o PASSA. Puoi scegliere se usarlo o conservarlo.</span></div>
                         <div class="tut-special"><span class="tut-badge double">✖️ RADDOPPIA</span><span>Raddoppia il tuo punteggio attuale. Se sei a €0, guadagni €500 per ogni lettera.</span></div>
                         <div class="tut-special"><span class="tut-badge mystery">🎰 ?500</span><span>Scegli: €500 sicuri oppure un valore estratto a sorte (da €200 a €1.000)!</span></div>

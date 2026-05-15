@@ -346,6 +346,7 @@ export function spinWheel() {
 
     const overlay = document.getElementById('wheel-overlay');
     if (overlay) overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
 
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
     const isFinalSpin = gameState.currentManche === 5 && !gameState.finalSpinComplete;
@@ -414,6 +415,7 @@ export function spinWheel() {
             setTimeout(() => {
                 const overlay = document.getElementById('wheel-overlay');
                 if (overlay) overlay.classList.remove('active');
+                document.body.style.overflow = '';
             }, 2500);
         }
     }

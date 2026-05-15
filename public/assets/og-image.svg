@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f0f23"/>
+      <stop offset="100%" stop-color="#1a1a3e"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative wheel (left) -->
+  <circle cx="160" cy="315" r="220" fill="none" stroke="#f59e0b" stroke-width="4" opacity="0.15"/>
+  <circle cx="160" cy="315" r="170" fill="none" stroke="#8b5cf6" stroke-width="3" opacity="0.15"/>
+  <circle cx="160" cy="315" r="120" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.2"/>
+  <circle cx="160" cy="315" r="30" fill="#f59e0b" opacity="0.3"/>
+  <!-- Spokes -->
+  <line x1="160" y1="95" x2="160" y2="535" stroke="#f59e0b" stroke-width="2" opacity="0.15"/>
+  <line x1="-60" y1="315" x2="380" y2="315" stroke="#f59e0b" stroke-width="2" opacity="0.15"/>
+  <line x1="4.5" y1="159.5" x2="315.5" y2="470.5" stroke="#8b5cf6" stroke-width="2" opacity="0.15"/>
+  <line x1="315.5" y1="159.5" x2="4.5" y2="470.5" stroke="#8b5cf6" stroke-width="2" opacity="0.15"/>
+
+  <!-- Decorative wheel (right) -->
+  <circle cx="1040" cy="315" r="220" fill="none" stroke="#8b5cf6" stroke-width="4" opacity="0.15"/>
+  <circle cx="1040" cy="315" r="170" fill="none" stroke="#f59e0b" stroke-width="3" opacity="0.15"/>
+  <circle cx="1040" cy="315" r="120" fill="none" stroke="#8b5cf6" stroke-width="2" opacity="0.2"/>
+  <circle cx="1040" cy="315" r="30" fill="#8b5cf6" opacity="0.3"/>
+  <line x1="1040" y1="95" x2="1040" y2="535" stroke="#8b5cf6" stroke-width="2" opacity="0.15"/>
+  <line x1="820" y1="315" x2="1260" y2="315" stroke="#8b5cf6" stroke-width="2" opacity="0.15"/>
+  <line x1="884.5" y1="159.5" x2="1195.5" y2="470.5" stroke="#f59e0b" stroke-width="2" opacity="0.15"/>
+  <line x1="1195.5" y1="159.5" x2="884.5" y2="470.5" stroke="#f59e0b" stroke-width="2" opacity="0.15"/>
+
+  <!-- Center content -->
+  <!-- Emoji wheel icon -->
+  <text x="600" y="210" font-size="100" text-anchor="middle" font-family="Arial">🎡</text>
+
+  <!-- Title -->
+  <text x="600" y="320" font-size="88" font-weight="900" text-anchor="middle" font-family="Arial, sans-serif" fill="url(#gold)" letter-spacing="-2">CERCHIO</text>
+  <text x="600" y="400" font-size="88" font-weight="900" text-anchor="middle" font-family="Arial, sans-serif" fill="#8b5cf6" letter-spacing="8">MAGICO</text>
+
+  <!-- Tagline -->
+  <text x="600" y="460" font-size="28" text-anchor="middle" font-family="Arial, sans-serif" fill="#94a3b8" letter-spacing="2">Il gioco delle parole senza confini</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="560" width="1200" height="70" fill="#000000" opacity="0.4"/>
+  <text x="600" y="603" font-size="22" text-anchor="middle" font-family="Arial, sans-serif" fill="#64748b" letter-spacing="3">cerchiomagico.onrender.com</text>
+
+  <!-- Gold accent lines -->
+  <rect x="200" y="425" width="800" height="2" fill="url(#gold)" opacity="0.4"/>
+</svg>
