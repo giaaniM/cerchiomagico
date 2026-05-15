@@ -344,10 +344,13 @@ export function endManche() {
 
     markPhraseAsWon(gameState.originalPhrase || gameState.phrase);
 
+    const endGameId = gameState.gameId;
     setTimeout(() => {
+        if (gameState.gameId !== endGameId) return;
         showPartialRanking();
 
         setTimeout(() => {
+            if (gameState.gameId !== endGameId) return;
             elements.popupMessage.style.display = 'none';
             elements.modalOverlay.style.display = 'none';
 
@@ -493,6 +496,8 @@ export async function startGameDirectly(players) {
         return;
     }
 
+    gameState.gameId++;
+    gameState.currentManche = null;
     gameState.players = players.sort(() => Math.random() - 0.5);
     gameState.currentPlayerIndex = 0;
     gameState.totalScores = {};

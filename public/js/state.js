@@ -37,4 +37,5 @@ export const gameState = {
     finalSpinComplete: false,
     finalRoundValue: 0,
     expressAccumulated: 0,
+    gameId: 0,
 };
