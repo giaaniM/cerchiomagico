@@ -22,6 +22,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 app.use((req, res, next) => {
+    const host = req.hostname;
+    if (host && host.includes('onrender.com')) {
+        return res.redirect(301, `https://magicspingame.com${req.originalUrl}`);
+    }
+    next();
+});
+
+app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('X-Content-Type-Options', 'nosniff');
