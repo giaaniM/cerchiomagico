@@ -55,8 +55,8 @@
     <div id="rotate-overlay">
         <div class="rotate-icon">📱</div>
         <div>
-            <strong>Ruota il dispositivo</strong>
-            <p>Il gioco funziona in orizzontale. Gira il telefono per giocare.</p>
+            <strong data-i18n="rotate.title">Ruota il dispositivo</strong>
+            <p data-i18n="rotate.body">Il gioco funziona in orizzontale. Gira il telefono per giocare.</p>
         </div>
     </div>
 
@@ -67,11 +67,11 @@
                 <div class="home-logo">
                     <span class="home-logo-icon" aria-hidden="true">🎡</span>
                     <h1 class="home-logo-text">
-                        <span class="logo-word-1">CERCHIO</span>
-                        <span class="logo-word-2">MAGICO</span>
+                        <span class="logo-word-1" data-i18n="logo.word1">CERCHIO</span>
+                        <span class="logo-word-2" data-i18n="logo.word2">MAGICO</span>
                     </h1>
                 </div>
-                <p class="home-tagline">Il gioco delle parole da fare in compagnia</p>
+                <p class="home-tagline" data-i18n="home.tagline">Il gioco delle parole da fare in compagnia</p>
                 <div class="home-visual-strip">
                     <div class="hvs-step">
                         <div class="hvs-visual">
@@ -80,8 +80,8 @@
                                 <div class="hvs-wheel-pointer"></div>
                             </div>
                         </div>
-                        <span class="hvs-label">Gira il Cerchio</span>
-                        <span class="hvs-sub">ottieni un valore</span>
+                        <span class="hvs-label" data-i18n="home.step1.label">Gira il Cerchio</span>
+                        <span class="hvs-sub" data-i18n="home.step1.sub">ottieni un valore</span>
                     </div>
                     <div class="hvs-arrow">→</div>
                     <div class="hvs-step">
@@ -95,8 +95,8 @@
                                 <div class="hvs-tile hidden"></div>
                             </div>
                         </div>
-                        <span class="hvs-label">Chiama Lettere</span>
-                        <span class="hvs-sub">guadagni per occorrenza</span>
+                        <span class="hvs-label" data-i18n="home.step2.label">Chiama Lettere</span>
+                        <span class="hvs-sub" data-i18n="home.step2.sub">guadagni per occorrenza</span>
                     </div>
                     <div class="hvs-arrow">→</div>
                     <div class="hvs-step">
@@ -110,8 +110,8 @@
                                 <div class="hvs-tile revealed">!</div>
                             </div>
                         </div>
-                        <span class="hvs-label">Risolvi la Frase</span>
-                        <span class="hvs-sub">vinci il round</span>
+                        <span class="hvs-label" data-i18n="home.step3.label">Risolvi la Frase</span>
+                        <span class="hvs-sub" data-i18n="home.step3.sub">vinci il round</span>
                     </div>
                     <div class="hvs-arrow">→</div>
                     <div class="hvs-step hvs-step-win">
@@ -121,8 +121,8 @@
                                 <span class="hvs-prize-amt">€10.000</span>
                             </div>
                         </div>
-                        <span class="hvs-label">5 Manche</span>
-                        <span class="hvs-sub">chi ha più soldi vince</span>
+                        <span class="hvs-label" data-i18n="home.step4.label">5 Manche</span>
+                        <span class="hvs-sub" data-i18n="home.step4.sub">chi ha più soldi vince</span>
                     </div>
                 </div>
             </div>
@@ -130,7 +130,7 @@
             <div class="setup-layout">
                 <div class="setup-card">
                     <div class="setup-section">
-                        <label class="setup-label">Quanti giocatori?</label>
+                        <label class="setup-label" data-i18n="setup.howmany">Quanti giocatori?</label>
                         <div class="player-count-pills">
                             <button class="count-pill active" data-count="2">2</button>
                             <button class="count-pill" data-count="3">3</button>
@@ -141,30 +141,30 @@
 
                     <div id="local-names-container" class="names-grid"></div>
 
-                    <button id="start-local-game-btn" class="btn-primary setup-start-btn">
+                    <button id="start-local-game-btn" class="btn-primary setup-start-btn" data-i18n="setup.start">
                         Inizia Partita
                     </button>
-                    <button id="how-to-play-btn" class="setup-howto-link">? Come si gioca</button>
+                    <button id="how-to-play-btn" class="setup-howto-link" data-i18n="setup.howtoplay">? Come si gioca</button>
 
-                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-home-btn">
+                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-home-btn" data-i18n="setup.kofi">
                         ☕ Offrimi un caffè
                     </a>
                 </div>
 
                 <div class="setup-experimental-banner" id="mode-smartphone-btn">
-                    <span class="exp-badge">⚗️ SPERIMENTALE</span>
-                    <span class="exp-text">Gioca con gli smartphone come controller</span>
-                    <span class="exp-cta">📱 Attiva →</span>
+                    <span class="exp-badge" data-i18n="setup.experimental">⚗️ SPERIMENTALE</span>
+                    <span class="exp-text" data-i18n="setup.exp.text">Gioca con gli smartphone come controller</span>
+                    <span class="exp-cta" data-i18n="setup.exp.cta">📱 Attiva →</span>
                 </div>
             </div>
 
             <!-- Smartphone mode — hidden, preserved for future use -->
             <div id="setup-smartphone-mode" class="setup-step" style="display: none; width: 100%;">
                 <div class="big-lobby-container">
-                    <h2 style="color: var(--accent-gold); margin-bottom: 20px;">LOBBY APERTA</h2>
+                    <h2 style="color: var(--accent-gold); margin-bottom: 20px;" data-i18n="setup.lobby.open">LOBBY APERTA</h2>
                     <div class="lobby-info-row">
                         <div class="lobby-info-item">
-                            <p class="lobby-label">CODICE LOBBY</p>
+                            <p class="lobby-label" data-i18n="setup.lobby.code">CODICE LOBBY</p>
                             <div class="big-lobby-id" id="big-lobby-id-display">------</div>
                         </div>
                         <div class="lobby-divider-v"></div>
@@ -173,17 +173,17 @@
                         </div>
                         <div class="lobby-divider-v"></div>
                         <div class="lobby-info-item">
-                            <p class="lobby-label">LINK DI GIOCO</p>
+                            <p class="lobby-label" data-i18n="setup.lobby.link">LINK DI GIOCO</p>
                             <div id="big-mobile-link" class="lobby-url-text"></div>
                         </div>
                     </div>
-                    <div class="divider" style="margin: 20px 0;"><span>GIOCATORI CONNESSI</span></div>
+                    <div class="divider" style="margin: 20px 0;"><span data-i18n="setup.lobby.connected">GIOCATORI CONNESSI</span></div>
                     <div id="big-players-grid" class="big-players-grid">
-                        <p style="color: #64748b; font-style: italic; font-size: 0.9rem;">In attesa di giocatori...</p>
+                        <p style="color: #64748b; font-style: italic; font-size: 0.9rem;" data-i18n="setup.lobby.waiting">In attesa di giocatori...</p>
                     </div>
                     <div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center;">
-                        <button id="start-smartphone-game-btn" class="btn-primary pulse" style="max-width: 300px;" disabled>AVVIA PARTITA</button>
-                        <button class="btn-secondary back-mode-btn" style="width: auto;">Annulla</button>
+                        <button id="start-smartphone-game-btn" class="btn-primary pulse" style="max-width: 300px;" disabled data-i18n="setup.lobby.start">AVVIA PARTITA</button>
+                        <button class="btn-secondary back-mode-btn" style="width: auto;" data-i18n="setup.lobby.cancel">Annulla</button>
                     </div>
                 </div>
             </div>
@@ -201,22 +201,22 @@
                 <div class="compact-logo">
                     <span class="logo-icon-small">🎡</span>
                     <span class="logo-text-small">
-                        <span class="cw1">CERCHIO</span> <span class="cw2">MAGICO</span>
+                        <span class="cw1" data-i18n="logo.compact1">CERCHIO</span> <span class="cw2" data-i18n="logo.compact2">MAGICO</span>
                     </span>
                 </div>
                 <div class="manche-indicator">
-                    <span>MANCHE</span>
+                    <span data-i18n="game.manche">MANCHE</span>
                     <span id="manche-number" class="manche-number">1</span>
                     <span>/ 5</span>
                 </div>
-                <button id="skip-phrase-btn" class="btn-skip-phrase">↻ Cambia frase</button>
+                <button id="skip-phrase-btn" class="btn-skip-phrase" data-i18n="game.changephrase">↻ Cambia frase</button>
             </div>
 
             <!-- Main Game Layout -->
             <div class="game-main-layout">
                 <!-- Left: Players Sidebar -->
                 <aside class="players-sidebar">
-                    <h3 class="sidebar-title">MANCHE ATTUALE</h3>
+                    <h3 class="sidebar-title" data-i18n="game.sidebar.title">MANCHE ATTUALE</h3>
                     <ul id="players-list" class="players-list">
                         <!-- Injected via JS -->
                     </ul>
@@ -226,7 +226,7 @@
                 <div class="board-area">
                     <!-- Hint -->
                     <div id="hint-display" class="hint-display">
-                        <span class="hint-label">Categoria:</span>
+                        <span class="hint-label" data-i18n="game.hint">Categoria:</span>
                         <span id="hint-text">...</span>
                     </div>
                     <!-- Board -->
@@ -244,17 +244,17 @@
                     <!-- Spin Button Center & Consonant Call Area -->
                     <div id="central-action-area" class="central-action-area">
                         <!-- State 1: Spin -->
-                        <button id="spin-btn" class="btn-spin">GIRA LA RUOTA</button>
+                        <button id="spin-btn" class="btn-spin" data-i18n="game.spin">GIRA IL CERCHIO</button>
 
                         <!-- State 2: Call Consonant (Hidden by default) -->
                         <div id="consonant-call-container" class="consonant-call-container" style="display: none;">
                             <div class="value-box">
-                                <span class="value-label-small">VALORE</span>
+                                <span class="value-label-small" data-i18n="game.value">VALORE</span>
                                 <span id="current-wheel-value" class="value-amount">-</span>
                             </div>
                             <div class="consonant-input-wrapper">
                                 <input type="text" id="consonant-input" maxlength="1" autocomplete="off">
-                                <button id="consonant-btn" class="btn-action">CHIAMA</button>
+                                <button id="consonant-btn" class="btn-action" data-i18n="game.call">CHIAMA</button>
                             </div>
                         </div>
 
@@ -262,17 +262,17 @@
                         <div id="express-input-container" class="express-call-container" style="display: none;">
                             <div class="express-input-capsule">
                                 <div class="express-input-group">
-                                    <span class="express-input-label">CONSONANTE</span>
+                                    <span class="express-input-label" data-i18n="game.consonant">CONSONANTE</span>
                                     <input type="text" id="express-consonant-input" maxlength="1" autocomplete="off"
                                         class="express-field">
-                                    <button id="express-consonant-btn" class="express-field-btn">CHIAMA</button>
+                                    <button id="express-consonant-btn" class="express-field-btn" data-i18n="game.call">CHIAMA</button>
                                 </div>
                                 <div class="express-input-divider"></div>
                                 <div class="express-input-group">
-                                    <span class="express-input-label">VOCALE (€500)</span>
+                                    <span class="express-input-label" data-i18n="game.vowel.express">VOCALE (€500)</span>
                                     <input type="text" id="express-vowel-input" maxlength="1" autocomplete="off"
                                         class="express-field">
-                                    <button id="express-vowel-btn" class="express-field-btn vowel">COMPRA</button>
+                                    <button id="express-vowel-btn" class="express-field-btn vowel" data-i18n="game.buy.express">COMPRA</button>
                                 </div>
                             </div>
                         </div>
@@ -282,22 +282,22 @@
                             style="display: none;">
                             <div class="final-round-value-header">
                                 <span class="final-round-value-icon">💎</span>
-                                <span class="final-round-value-label">PER CONSONANTE</span>
+                                <span class="final-round-value-label" data-i18n="game.perconsonant">PER CONSONANTE</span>
                                 <span id="final-banner-value" class="final-round-value-amount">€0</span>
                             </div>
                             <div class="final-round-input-capsule">
                                 <div class="final-input-group">
-                                    <span class="final-input-label">CONSONANTE</span>
+                                    <span class="final-input-label" data-i18n="game.consonant">CONSONANTE</span>
                                     <input type="text" id="final-consonant-input" maxlength="1" autocomplete="off"
                                         class="final-field">
-                                    <button id="final-consonant-btn" class="final-field-btn">CHIAMA</button>
+                                    <button id="final-consonant-btn" class="final-field-btn" data-i18n="game.call.final">CHIAMA</button>
                                 </div>
                                 <div class="final-input-divider"></div>
                                 <div class="final-input-group">
-                                    <span class="final-input-label">VOCALE (0€)</span>
+                                    <span class="final-input-label" data-i18n="game.vowel.final">VOCALE (0€)</span>
                                     <input type="text" id="final-vowel-input" maxlength="1" autocomplete="off"
                                         class="final-field">
-                                    <button id="final-vowel-btn" class="final-field-btn vowel">CHIAMA</button>
+                                    <button id="final-vowel-btn" class="final-field-btn vowel" data-i18n="game.call.final">CHIAMA</button>
                                 </div>
                             </div>
                         </div>
@@ -308,7 +308,7 @@
                 <aside class="wheel-value-sidebar">
                     <!-- New: Total Winnings Box -->
                     <div class="total-winnings-card">
-                        <span class="value-label">TOTALI GARA</span>
+                        <span class="value-label" data-i18n="game.total">TOTALI GARA</span>
                         <ul id="total-winnings-list" class="total-winnings-list">
                             <!-- Populated by JS -->
                         </ul>
@@ -322,10 +322,10 @@
                 <div class="letters-controls">
                     <!-- Vowel Input -->
                     <div class="control-group" id="vowel-group">
-                        <label>Compra una VOCALE (€1000):</label>
+                        <label data-i18n="game.buyvowel">Compra una VOCALE (€1000):</label>
                         <div class="input-group">
                             <input type="text" id="vowel-input" maxlength="1" autocomplete="off" disabled>
-                            <button id="vowel-btn" class="btn-action btn-vowel" disabled>COMPRA</button>
+                            <button id="vowel-btn" class="btn-action btn-vowel" disabled data-i18n="game.buy">COMPRA</button>
                         </div>
                     </div>
 
@@ -336,12 +336,12 @@
                 <!-- Solve Section (A destra) -->
                 <div class="solve-section-card">
                     <div class="control-group" id="solve-group">
-                        <label>Risolvi la frase:</label>
+                        <label data-i18n="game.solve.label">Risolvi la frase:</label>
                         <div class="input-group full-width">
-                            <input type="text" id="solution-input" placeholder="Scrivi la soluzione..."
+                            <input type="text" id="solution-input" data-i18n-placeholder="game.solve.placeholder" placeholder="Scrivi la soluzione..."
                                 autocomplete="off">
-                            <button id="solve-btn" class="btn-solve">RISOLVI</button>
-                            <button id="pass-btn" class="btn-pass" style="display: none;">PASSA</button>
+                            <button id="solve-btn" class="btn-solve" data-i18n="game.solve">RISOLVI</button>
+                            <button id="pass-btn" class="btn-pass" style="display: none;" data-i18n="game.pass">PASSA</button>
                         </div>
                     </div>
                 </div>
@@ -349,7 +349,7 @@
 
             <!-- New Game Button -->
             <div class="game-footer">
-                <button id="new-game-btn" class="btn-secondary">Nuova Partita</button>
+                <button id="new-game-btn" class="btn-secondary" data-i18n="game.newgame">Nuova Partita</button>
             </div>
         </div>
 
@@ -358,7 +358,7 @@
         <div id="win-screen" class="screen">
             <div class="win-card">
                 <div class="confetti">🎉</div>
-                <h2 id="win-title">HAI VINTO!</h2>
+                <h2 id="win-title" data-i18n="win.title">HAI VINTO!</h2>
 
                 <div id="final-image-container" class="final-image-container" style="display: none;">
                     <img id="final-image" src="" alt="Regalo Finale">
@@ -374,8 +374,8 @@
                 </button>
 
                 <div class="kofi-endgame-block">
-                    <p class="kofi-endgame-msg">Grazie per aver giocato a Cerchio Magico!<br>Se il gioco ti è piaciuto, offrimi un caffè ☕</p>
-                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-endgame">
+                    <p class="kofi-endgame-msg" data-i18n-html="win.kofi">Grazie per aver giocato a Cerchio Magico!<br>Se il gioco ti è piaciuto, offrimi un caffè ☕</p>
+                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-endgame" data-i18n="win.kofi.btn">
                         ☕ Offrimi un caffè
                     </a>
                 </div>
@@ -393,6 +393,7 @@
 
     <!-- Quick Actions (Fixed, top-right) -->
     <div class="quick-actions-container">
+        <button id="lang-toggle-btn" class="quick-action-btn" title="Change language / Cambia lingua" style="font-size:12px;letter-spacing:0.5px;">🇬🇧 EN</button>
         <button id="home-btn" class="quick-action-btn home-btn" title="Torna alla Home" style="display:none;">🏠</button>
         <button id="audio-toggle-btn" class="quick-action-btn" title="Attiva/Disattiva Audio">
             <svg id="audio-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
@@ -411,63 +412,63 @@
                 <!-- Slide 1 -->
                 <div class="tutorial-slide active" data-slide="0">
                     <div class="tut-icon">🎡</div>
-                    <h2 class="tut-title">Benvenuto nel Cerchio Magico!</h2>
-                    <p class="tut-body">Il gioco delle frasi più divertente d'Italia.<br>Gira la ruota, chiama le lettere e risolvi la frase per vincere il montepremi!</p>
+                    <h2 class="tut-title" data-i18n="tut.s1.title">Benvenuto nel Cerchio Magico!</h2>
+                    <p class="tut-body" data-i18n-html="tut.s1.body">Il gioco delle frasi più divertente d'Italia.<br>Gira la ruota, chiama le lettere e risolvi la frase per vincere il montepremi!</p>
                     <div class="tut-flow">
-                        <div class="tut-chip" style="--c:#8b5cf6">🎡 Gira la Ruota</div>
+                        <div class="tut-chip" style="--c:#8b5cf6" data-i18n="tut.s1.chip1">🎡 Gira la Ruota</div>
                         <div class="tut-arrow">→</div>
-                        <div class="tut-chip" style="--c:#fbbf24">🔤 Chiama Lettere</div>
+                        <div class="tut-chip" style="--c:#fbbf24" data-i18n="tut.s1.chip2">🔤 Chiama Lettere</div>
                         <div class="tut-arrow">→</div>
-                        <div class="tut-chip" style="--c:#10b981">✏️ Risolvi la Frase</div>
+                        <div class="tut-chip" style="--c:#10b981" data-i18n="tut.s1.chip3">✏️ Risolvi la Frase</div>
                     </div>
                 </div>
 
                 <!-- Slide 2 -->
                 <div class="tutorial-slide" data-slide="1">
                     <div class="tut-icon">🖥️</div>
-                    <h2 class="tut-title">Come si Gioca</h2>
-                    <p class="tut-body">Un <strong style="color:#fbbf24">Master</strong> gestisce il tabellone e i turni.<br>Proietta su TV per un'esperienza da studio televisivo!</p>
+                    <h2 class="tut-title" data-i18n="tut.s2.title">Come si Gioca</h2>
+                    <p class="tut-body" data-i18n-html="tut.s2.body">Un <strong style="color:#fbbf24">Master</strong> gestisce il tabellone e i turni.<br>Proietta su TV per un'esperienza da studio televisivo!</p>
                     <div class="tut-tips">
-                        <div class="tut-tip"><span>🎬</span><div><strong>Il Master conduce</strong><br><small>Fa girare la ruota e inserisce le lettere degli altri giocatori</small></div></div>
-                        <div class="tut-tip"><span>📺</span><div><strong>HDMI → TV</strong><br><small>Collega il cavo e seleziona "Duplica schermo" per proiettare</small></div></div>
-                        <div class="tut-tip"><span>🍎</span><div><strong>AirPlay (MacBook)</strong><br><small>Centro di Controllo → Duplica schermo → Apple TV</small></div></div>
+                        <div class="tut-tip"><span>🎬</span><div><strong data-i18n="tut.s2.t1.title">Il Master conduce</strong><br><small data-i18n="tut.s2.t1.body">Fa girare la ruota e inserisce le lettere degli altri giocatori</small></div></div>
+                        <div class="tut-tip"><span>📺</span><div><strong data-i18n="tut.s2.t2.title">HDMI → TV</strong><br><small data-i18n="tut.s2.t2.body">Collega il cavo e seleziona "Duplica schermo" per proiettare</small></div></div>
+                        <div class="tut-tip"><span>🍎</span><div><strong data-i18n="tut.s2.t3.title">AirPlay (MacBook)</strong><br><small data-i18n="tut.s2.t3.body">Centro di Controllo → Duplica schermo → Apple TV</small></div></div>
                     </div>
                 </div>
 
                 <!-- Slide 3 -->
                 <div class="tutorial-slide" data-slide="2">
                     <div class="tut-icon">🎯</div>
-                    <h2 class="tut-title">Le Regole Base</h2>
+                    <h2 class="tut-title" data-i18n="tut.s3.title">Le Regole Base</h2>
                     <div class="tut-rules">
-                        <div class="tut-rule"><span>🎡</span><div><strong>Gira la Ruota</strong> → ottieni un valore in denaro per quel turno</div></div>
-                        <div class="tut-rule"><span>🔤</span><div><strong>Chiama una Consonante</strong> → guadagni il valore × numero di occorrenze</div></div>
-                        <div class="tut-rule"><span>🅰️</span><div><strong>Compra una Vocale</strong> → costa €1.000 dal tuo montepremi</div></div>
-                        <div class="tut-rule success"><span>✏️</span><div><strong>Risolvi la Frase</strong> → premi "Risolvi" e indovina per vincere il round</div></div>
-                        <div class="tut-rule danger"><span>☠️</span><div><strong>CROLLO</strong> → perdi tutto il montepremi accumulato nel round</div></div>
-                        <div class="tut-rule"><span>⏭️</span><div><strong>PASSA</strong> → perdi il turno, passa al prossimo giocatore</div></div>
+                        <div class="tut-rule"><span>🎡</span><div data-i18n-html="tut.s3.r1"><strong>Gira la Ruota</strong> → ottieni un valore in denaro per quel turno</div></div>
+                        <div class="tut-rule"><span>🔤</span><div data-i18n-html="tut.s3.r2"><strong>Chiama una Consonante</strong> → guadagni il valore × numero di occorrenze</div></div>
+                        <div class="tut-rule"><span>🅰️</span><div data-i18n-html="tut.s3.r3"><strong>Compra una Vocale</strong> → costa €1.000 dal tuo montepremi</div></div>
+                        <div class="tut-rule success"><span>✏️</span><div data-i18n-html="tut.s3.r4"><strong>Risolvi la Frase</strong> → premi "Risolvi" e indovina per vincere il round</div></div>
+                        <div class="tut-rule danger"><span>☠️</span><div data-i18n-html="tut.s3.r5"><strong>CROLLO</strong> → perdi tutto il montepremi accumulato nel round</div></div>
+                        <div class="tut-rule"><span>⏭️</span><div data-i18n-html="tut.s3.r6"><strong>PASSA</strong> → perdi il turno, passa al prossimo giocatore</div></div>
                     </div>
                 </div>
 
                 <!-- Slide 4 -->
                 <div class="tutorial-slide" data-slide="3">
                     <div class="tut-icon">⚡</div>
-                    <h2 class="tut-title">Spicchi Speciali della Ruota</h2>
+                    <h2 class="tut-title" data-i18n="tut.s4.title">Spicchi Speciali della Ruota</h2>
                     <div class="tut-specials">
-                        <div class="tut-special"><span class="tut-badge express">⚡ MEGATURNO</span><span>Modalità express! Consonanti +€500, vocali −€500. Giochi finché non sbagli — poi CROLLO!</span></div>
-                        <div class="tut-special"><span class="tut-badge shield">🛡️ SCUDO</span><span>Ti protegge una volta da CROLLO o PASSA. Puoi scegliere se usarlo o conservarlo.</span></div>
-                        <div class="tut-special"><span class="tut-badge double">✖️ RADDOPPIA</span><span>Raddoppia il tuo punteggio attuale. Se sei a €0, guadagni €500 per ogni lettera.</span></div>
-                        <div class="tut-special"><span class="tut-badge mystery">🎰 ?500</span><span>Scegli: €500 sicuri oppure un valore estratto a sorte (da €200 a €1.000)!</span></div>
-                        <div class="tut-special"><span class="tut-badge final">💎 MANCHE 5</span><span>Round finale! Gira una volta per fissare il valore, poi chiama lettere e risolvi.</span></div>
+                        <div class="tut-special"><span class="tut-badge express" data-i18n="tut.s4.b1">⚡ MEGATURNO</span><span data-i18n="tut.s4.t1">Modalità express! Consonanti +€500, vocali −€500. Giochi finché non sbagli — poi CROLLO!</span></div>
+                        <div class="tut-special"><span class="tut-badge shield" data-i18n="tut.s4.b2">🛡️ SCUDO</span><span data-i18n="tut.s4.t2">Ti protegge una volta da CROLLO o PASSA. Puoi scegliere se usarlo o conservarlo.</span></div>
+                        <div class="tut-special"><span class="tut-badge double" data-i18n="tut.s4.b3">✖️ RADDOPPIA</span><span data-i18n="tut.s4.t3">Raddoppia il tuo punteggio attuale. Se sei a €0, guadagni €500 per ogni lettera.</span></div>
+                        <div class="tut-special"><span class="tut-badge mystery" data-i18n="tut.s4.b4">🎰 ?500</span><span data-i18n="tut.s4.t4">Scegli: €500 sicuri oppure un valore estratto a sorte (da €200 a €1.000)!</span></div>
+                        <div class="tut-special"><span class="tut-badge final" data-i18n="tut.s4.b5">💎 MANCHE 5</span><span data-i18n="tut.s4.t5">Round finale! Gira una volta per fissare il valore, poi chiama lettere e risolvi.</span></div>
                     </div>
                 </div>
 
                 <!-- Slide 5 -->
                 <div class="tutorial-slide" data-slide="4">
                     <div class="tut-icon" style="font-size:5rem">🎡</div>
-                    <h2 class="tut-title">Pronti a Giocare?</h2>
-                    <p class="tut-body">Inserite i vostri nomi, premete <strong style="color:#fbbf24">Inizia Partita</strong> e che il Cerchio Magico abbia inizio!<br><br>Buona fortuna a tutti! 🍀</p>
-                    <button id="tutorial-start-btn" class="tut-start-btn">🎡 Torna alla Partita</button>
-                    <p class="tut-reopen-hint">Puoi riaprire questo tutorial premendo il tasto <strong>?</strong> in alto a destra</p>
+                    <h2 class="tut-title" data-i18n="tut.s5.title">Pronti a Giocare?</h2>
+                    <p class="tut-body" data-i18n-html="tut.s5.body">Inserite i vostri nomi, premete <strong style="color:#fbbf24">Inizia Partita</strong> e che il Cerchio Magico abbia inizio!<br><br>Buona fortuna a tutti! 🍀</p>
+                    <button id="tutorial-start-btn" class="tut-start-btn" data-i18n="tut.s5.btn">🎡 Torna alla Partita</button>
+                    <p class="tut-reopen-hint" data-i18n-html="tut.s5.hint">Puoi riaprire questo tutorial premendo il tasto <strong>?</strong> in alto a destra</p>
                 </div>
             </div>
 
@@ -482,8 +483,8 @@
 
             <!-- Nav -->
             <div class="tutorial-nav">
-                <button id="tut-prev-btn" class="tut-nav-btn" style="visibility:hidden">← Indietro</button>
-                <button id="tut-next-btn" class="tut-nav-btn primary">Avanti →</button>
+                <button id="tut-prev-btn" class="tut-nav-btn" style="visibility:hidden" data-i18n="tut.prev">← Indietro</button>
+                <button id="tut-next-btn" class="tut-nav-btn primary" data-i18n="tut.next">Avanti →</button>
             </div>
         </div>
     </div>
@@ -527,7 +528,9 @@
                 next.style.display = 'none';
             } else {
                 next.style.display = 'block';
-                next.textContent = currentSlide === TOTAL - 2 ? 'Fine ✓' : 'Avanti →';
+                const _t = window.t || (k => k);
+                next.textContent = currentSlide === TOTAL - 2 ? _t('tut.finish') : _t('tut.next');
+                prev.textContent = _t('tut.prev');
             }
         }
 

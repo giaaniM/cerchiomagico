@@ -1,6 +1,7 @@
 import { gameState } from './state.js';
 import { elements } from './elements.js';
 import { showPopup, popup } from './utils.js';
+import { t } from './lang.js';
 
 // Forward reference — updateUI and syncGameState injected to avoid circular deps
 let _updateUI = () => {};
@@ -100,5 +101,5 @@ export function passTurn() {
 
     const nextPlayer = getCurrentPlayer();
     // Show turn popup (without hint - hint only at manche start)
-    showPopup(popup('🎯', `TURNO DI ${nextPlayer.name}`), 2500);
+    showPopup(popup('🎯', `${t('msg.turno')} ${nextPlayer.name}`), 2500);
 }

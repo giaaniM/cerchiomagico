@@ -1,0 +1,327 @@
+const translations = {
+  it: {
+    // Rotate overlay
+    'rotate.title': 'Ruota il dispositivo',
+    'rotate.body': 'Il gioco funziona in orizzontale. Gira il telefono per giocare.',
+    // Logo
+    'logo.word1': 'CERCHIO',
+    'logo.word2': 'MAGICO',
+    'logo.compact1': 'CERCHIO',
+    'logo.compact2': 'MAGICO',
+    // Home
+    'home.tagline': 'Il gioco delle parole da fare in compagnia',
+    'home.step1.label': 'Gira il Cerchio',
+    'home.step1.sub': 'ottieni un valore',
+    'home.step2.label': 'Chiama Lettere',
+    'home.step2.sub': 'guadagni per occorrenza',
+    'home.step3.label': 'Risolvi la Frase',
+    'home.step3.sub': 'vinci il round',
+    'home.step4.label': '5 Manche',
+    'home.step4.sub': 'chi ha più soldi vince',
+    // Setup
+    'setup.howmany': 'Quanti giocatori?',
+    'setup.start': 'Inizia Partita',
+    'setup.howtoplay': '? Come si gioca',
+    'setup.kofi': '☕ Offrimi un caffè',
+    'setup.experimental': '⚗️ SPERIMENTALE',
+    'setup.exp.text': 'Gioca con gli smartphone come controller',
+    'setup.exp.cta': '📱 Attiva →',
+    'setup.player': 'Giocatore',
+    'setup.lobby.open': 'LOBBY APERTA',
+    'setup.lobby.code': 'CODICE LOBBY',
+    'setup.lobby.link': 'LINK DI GIOCO',
+    'setup.lobby.connected': 'GIOCATORI CONNESSI',
+    'setup.lobby.waiting': 'In attesa di giocatori...',
+    'setup.lobby.start': 'AVVIA PARTITA',
+    'setup.lobby.cancel': 'Annulla',
+    // Game screen
+    'game.manche': 'MANCHE',
+    'game.changephrase': '↻ Cambia frase',
+    'game.sidebar.title': 'MANCHE ATTUALE',
+    'game.total': 'TOTALI GARA',
+    'game.hint': 'Categoria:',
+    'game.spin': 'GIRA IL CERCHIO',
+    'game.spin.final': 'GIRA PER IL VALORE',
+    'game.value': 'VALORE',
+    'game.call': 'CHIAMA',
+    'game.consonant': 'CONSONANTE',
+    'game.vowel.express': 'VOCALE (€500)',
+    'game.buy.express': 'COMPRA',
+    'game.vowel.final': 'VOCALE (0€)',
+    'game.call.final': 'CHIAMA',
+    'game.perconsonant': 'PER CONSONANTE',
+    'game.buyvowel': 'Compra una VOCALE (€1000):',
+    'game.buy': 'COMPRA',
+    'game.solve.label': 'Risolvi la frase:',
+    'game.solve.placeholder': 'Scrivi la soluzione...',
+    'game.solve': 'RISOLVI',
+    'game.pass': 'PASSA',
+    'game.newgame': 'Nuova Partita',
+    'game.passturn': 'PASSA IL TURNO',
+    // Win screen
+    'win.title': 'HAI VINTO!',
+    'win.kofi': 'Grazie per aver giocato a Cerchio Magico!<br>Se il gioco ti è piaciuto, offrimi un caffè ☕',
+    'win.kofi.btn': '☕ Offrimi un caffè',
+    'win.winner': 'ha vinto!',
+    'win.newgame': 'NUOVA PARTITA',
+    'win.jackpot': 'Montepremi',
+    // Ranking popup
+    'ranking.title': 'CLASSIFICA',
+    'ranking.remaining': 'Ancora',
+    'ranking.rounds': 'manche',
+    // Game messages
+    'msg.invalidletter': 'Inserisci una lettera valida!',
+    'msg.calledvowel': 'Devi chiamare una CONSONANTE, non una vocale!',
+    'msg.insertedvowel.title': 'HAI INSERITO UNA VOCALE!',
+    'msg.insertedvowel.body': 'Le vocali si comprano a €1000',
+    'msg.alreadycalled.title': 'LETTERA GIÀ CHIAMATA!',
+    'msg.alreadycalled.body': 'Il turno passa al prossimo giocatore',
+    'msg.notfound': 'NON PRESENTE',
+    'msg.turnoflost': 'Turno perso',
+    'msg.invalidvowel': 'Inserisci una vocale valida (A, E, I, O, U)!',
+    'msg.insertvowel': 'Devi inserire una VOCALE!',
+    'msg.notenoughmoney': 'Non hai abbastanza soldi! Servono €',
+    'msg.vowelalreadycalled.title': 'VOCALE GIÀ CHIAMATA!',
+    'msg.writesolution': 'Scrivi la soluzione!',
+    'msg.correct': '🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉',
+    'msg.wrongsolution': '❌ Soluzione errata!',
+    'msg.wrongsolution.title': 'SOLUZIONE SBAGLIATA!',
+    'msg.crollo.title': 'CROLLO!',
+    'msg.crollo.body': 'Soluzione errata — perdi tutto',
+    'msg.consonantsfinished.title': 'CONSONANTI TERMINATE!',
+    'msg.consonantsfinished.body': 'Ora puoi solo acquistare vocali o risolvere',
+    'msg.manchewon': 'MANCHE {n} VINTA!',
+    'msg.turno': 'TURNO DI',
+    'msg.shield.title': 'SCUDO OTTENUTO!',
+    'msg.shield.body': 'è protetto',
+    'msg.raddoppia.title': 'RADDOPPIA!',
+    // Skip phrase popup
+    'skip.title': 'CAMBIA FRASE?',
+    'skip.body': 'I punteggi di questa manche verranno azzerati.<br>Il totale gara rimane invariato.',
+    'skip.cancel': 'Annulla',
+    'skip.confirm': 'Cambia',
+    // Tutorial
+    'tut.s1.title': 'Benvenuto nel Cerchio Magico!',
+    'tut.s1.body': 'Il gioco delle frasi più divertente d\'Italia.<br>Gira la ruota, chiama le lettere e risolvi la frase per vincere il montepremi!',
+    'tut.s1.chip1': '🎡 Gira la Ruota',
+    'tut.s1.chip2': '🔤 Chiama Lettere',
+    'tut.s1.chip3': '✏️ Risolvi la Frase',
+    'tut.s2.title': 'Come si Gioca',
+    'tut.s2.body': 'Un <strong style="color:#fbbf24">Master</strong> gestisce il tabellone e i turni.<br>Proietta su TV per un\'esperienza da studio televisivo!',
+    'tut.s2.t1.title': 'Il Master conduce',
+    'tut.s2.t1.body': 'Fa girare la ruota e inserisce le lettere degli altri giocatori',
+    'tut.s2.t2.title': 'HDMI → TV',
+    'tut.s2.t2.body': 'Collega il cavo e seleziona "Duplica schermo" per proiettare',
+    'tut.s2.t3.title': 'AirPlay (MacBook)',
+    'tut.s2.t3.body': 'Centro di Controllo → Duplica schermo → Apple TV',
+    'tut.s3.title': 'Le Regole Base',
+    'tut.s3.r1': '<strong>Gira la Ruota</strong> → ottieni un valore in denaro per quel turno',
+    'tut.s3.r2': '<strong>Chiama una Consonante</strong> → guadagni il valore × numero di occorrenze',
+    'tut.s3.r3': '<strong>Compra una Vocale</strong> → costa €1.000 dal tuo montepremi',
+    'tut.s3.r4': '<strong>Risolvi la Frase</strong> → premi "Risolvi" e indovina per vincere il round',
+    'tut.s3.r5': '<strong>CROLLO</strong> → perdi tutto il montepremi accumulato nel round',
+    'tut.s3.r6': '<strong>PASSA</strong> → perdi il turno, passa al prossimo giocatore',
+    'tut.s4.title': 'Spicchi Speciali della Ruota',
+    'tut.s4.b1': '⚡ MEGATURNO',
+    'tut.s4.t1': 'Modalità express! Consonanti +€500, vocali −€500. Giochi finché non sbagli — poi CROLLO!',
+    'tut.s4.b2': '🛡️ SCUDO',
+    'tut.s4.t2': 'Ti protegge una volta da CROLLO o PASSA. Puoi scegliere se usarlo o conservarlo.',
+    'tut.s4.b3': '✖️ RADDOPPIA',
+    'tut.s4.t3': 'Raddoppia il tuo punteggio attuale. Se sei a €0, guadagni €500 per ogni lettera.',
+    'tut.s4.b4': '🎰 ?500',
+    'tut.s4.t4': 'Scegli: €500 sicuri oppure un valore estratto a sorte (da €200 a €1.000)!',
+    'tut.s4.b5': '💎 MANCHE 5',
+    'tut.s4.t5': 'Round finale! Gira una volta per fissare il valore, poi chiama lettere e risolvi.',
+    'tut.s5.title': 'Pronti a Giocare?',
+    'tut.s5.body': 'Inserite i vostri nomi, premete <strong style="color:#fbbf24">Inizia Partita</strong> e che il Cerchio Magico abbia inizio!<br><br>Buona fortuna a tutti! 🍀',
+    'tut.s5.btn': '🎡 Torna alla Partita',
+    'tut.s5.hint': 'Puoi riaprire questo tutorial premendo il tasto <strong>?</strong> in alto a destra',
+    'tut.prev': '← Indietro',
+    'tut.next': 'Avanti →',
+    'tut.finish': 'Fine ✓',
+  },
+  en: {
+    // Rotate overlay
+    'rotate.title': 'Rotate your device',
+    'rotate.body': 'The game works in landscape mode. Turn your phone sideways to play.',
+    // Logo
+    'logo.word1': 'MAGIC',
+    'logo.word2': 'SPIN',
+    'logo.compact1': 'MAGIC',
+    'logo.compact2': 'SPIN',
+    // Home
+    'home.tagline': 'The word game to play with friends',
+    'home.step1.label': 'Spin the Wheel',
+    'home.step1.sub': 'get a value',
+    'home.step2.label': 'Call Letters',
+    'home.step2.sub': 'earn per occurrence',
+    'home.step3.label': 'Solve the Phrase',
+    'home.step3.sub': 'win the round',
+    'home.step4.label': '5 Rounds',
+    'home.step4.sub': 'most money wins',
+    // Setup
+    'setup.howmany': 'How many players?',
+    'setup.start': 'Start Game',
+    'setup.howtoplay': '? How to play',
+    'setup.kofi': '☕ Buy me a coffee',
+    'setup.experimental': '⚗️ EXPERIMENTAL',
+    'setup.exp.text': 'Play with smartphones as controllers',
+    'setup.exp.cta': '📱 Enable →',
+    'setup.player': 'Player',
+    'setup.lobby.open': 'OPEN LOBBY',
+    'setup.lobby.code': 'LOBBY CODE',
+    'setup.lobby.link': 'GAME LINK',
+    'setup.lobby.connected': 'CONNECTED PLAYERS',
+    'setup.lobby.waiting': 'Waiting for players...',
+    'setup.lobby.start': 'START GAME',
+    'setup.lobby.cancel': 'Cancel',
+    // Game screen
+    'game.manche': 'ROUND',
+    'game.changephrase': '↻ Change phrase',
+    'game.sidebar.title': 'CURRENT ROUND',
+    'game.total': 'TOTAL SCORES',
+    'game.hint': 'Category:',
+    'game.spin': 'SPIN THE WHEEL',
+    'game.spin.final': 'SPIN FOR VALUE',
+    'game.value': 'VALUE',
+    'game.call': 'CALL',
+    'game.consonant': 'CONSONANT',
+    'game.vowel.express': 'VOWEL (€500)',
+    'game.buy.express': 'BUY',
+    'game.vowel.final': 'VOWEL (€0)',
+    'game.call.final': 'CALL',
+    'game.perconsonant': 'PER CONSONANT',
+    'game.buyvowel': 'Buy a VOWEL (€1000):',
+    'game.buy': 'BUY',
+    'game.solve.label': 'Solve the phrase:',
+    'game.solve.placeholder': 'Type the solution...',
+    'game.solve': 'SOLVE',
+    'game.pass': 'PASS',
+    'game.newgame': 'New Game',
+    'game.passturn': 'PASS TURN',
+    // Win screen
+    'win.title': 'YOU WON!',
+    'win.kofi': 'Thanks for playing MagicSpin!<br>If you enjoyed the game, buy me a coffee ☕',
+    'win.kofi.btn': '☕ Buy me a coffee',
+    'win.winner': 'wins!',
+    'win.newgame': 'NEW GAME',
+    'win.jackpot': 'Jackpot',
+    // Ranking popup
+    'ranking.title': 'RANKING',
+    'ranking.remaining': 'Still',
+    'ranking.rounds': 'rounds',
+    // Game messages
+    'msg.invalidletter': 'Enter a valid letter!',
+    'msg.calledvowel': 'You must call a CONSONANT, not a vowel!',
+    'msg.insertedvowel.title': 'YOU ENTERED A VOWEL!',
+    'msg.insertedvowel.body': 'Vowels cost €1000 to buy',
+    'msg.alreadycalled.title': 'LETTER ALREADY CALLED!',
+    'msg.alreadycalled.body': 'Turn passes to the next player',
+    'msg.notfound': 'NOT IN PHRASE',
+    'msg.turnoflost': 'Turn lost',
+    'msg.invalidvowel': 'Enter a valid vowel (A, E, I, O, U)!',
+    'msg.insertvowel': 'You must enter a VOWEL!',
+    'msg.notenoughmoney': 'Not enough money! You need €',
+    'msg.vowelalreadycalled.title': 'VOWEL ALREADY CALLED!',
+    'msg.writesolution': 'Type the solution!',
+    'msg.correct': '🎉🎉 CORRECT! YOU GOT IT! 🎉🎉',
+    'msg.wrongsolution': '❌ Wrong solution!',
+    'msg.wrongsolution.title': 'WRONG SOLUTION!',
+    'msg.crollo.title': 'BANKRUPT!',
+    'msg.crollo.body': 'Wrong solution — lose everything',
+    'msg.consonantsfinished.title': 'NO MORE CONSONANTS!',
+    'msg.consonantsfinished.body': 'You can only buy vowels or solve now',
+    'msg.manchewon': 'ROUND {n} WON!',
+    'msg.turno': 'TURN:',
+    'msg.shield.title': 'SHIELD OBTAINED!',
+    'msg.shield.body': 'is protected',
+    'msg.raddoppia.title': 'DOUBLE UP!',
+    // Skip phrase popup
+    'skip.title': 'CHANGE PHRASE?',
+    'skip.body': 'This round\'s scores will be reset.<br>Total game scores remain unchanged.',
+    'skip.cancel': 'Cancel',
+    'skip.confirm': 'Change',
+    // Tutorial
+    'tut.s1.title': 'Welcome to MagicSpin!',
+    'tut.s1.body': 'The most fun word game around!<br>Spin the wheel, call letters and solve the phrase to win the jackpot!',
+    'tut.s1.chip1': '🎡 Spin the Wheel',
+    'tut.s1.chip2': '🔤 Call Letters',
+    'tut.s1.chip3': '✏️ Solve the Phrase',
+    'tut.s2.title': 'How to Play',
+    'tut.s2.body': 'One <strong style="color:#fbbf24">Host</strong> manages the board and turns.<br>Project on TV for a real game-show experience!',
+    'tut.s2.t1.title': 'The Host runs the show',
+    'tut.s2.t1.body': 'Spins the wheel and enters letters for other players',
+    'tut.s2.t2.title': 'HDMI → TV',
+    'tut.s2.t2.body': 'Plug in the cable and select "Mirror Display" to project',
+    'tut.s2.t3.title': 'AirPlay (MacBook)',
+    'tut.s2.t3.body': 'Control Center → Mirror Display → Apple TV',
+    'tut.s3.title': 'Basic Rules',
+    'tut.s3.r1': '<strong>Spin the Wheel</strong> → get a cash value for that turn',
+    'tut.s3.r2': '<strong>Call a Consonant</strong> → earn value × number of occurrences',
+    'tut.s3.r3': '<strong>Buy a Vowel</strong> → costs €1,000 from your winnings',
+    'tut.s3.r4': '<strong>Solve the Phrase</strong> → press "Solve" and guess to win the round',
+    'tut.s3.r5': '<strong>BANKRUPT</strong> → lose all winnings accumulated in the round',
+    'tut.s3.r6': '<strong>PASS</strong> → lose your turn, next player goes',
+    'tut.s4.title': 'Special Wheel Segments',
+    'tut.s4.b1': '⚡ MEGATURN',
+    'tut.s4.t1': 'Express mode! Consonants +€500, vowels −€500. Keep going until you miss — then BANKRUPT!',
+    'tut.s4.b2': '🛡️ SHIELD',
+    'tut.s4.t2': 'Protects you once from BANKRUPT or PASS. Choose to use it now or save it.',
+    'tut.s4.b3': '✖️ DOUBLE UP',
+    'tut.s4.t3': 'Doubles your current score. If you\'re at €0, earn €500 per letter instead.',
+    'tut.s4.b4': '🎰 ?500',
+    'tut.s4.t4': 'Choose: €500 guaranteed or a random value drawn (€200 to €1,000)!',
+    'tut.s4.b5': '💎 ROUND 5',
+    'tut.s4.t5': 'Final round! Spin once to lock the value, then call letters and solve.',
+    'tut.s5.title': 'Ready to Play?',
+    'tut.s5.body': 'Enter your names, press <strong style="color:#fbbf24">Start Game</strong> and let MagicSpin begin!<br><br>Good luck to everyone! 🍀',
+    'tut.s5.btn': '🎡 Back to Game',
+    'tut.s5.hint': 'You can reopen this tutorial by pressing <strong>?</strong> at the top right',
+    'tut.prev': '← Back',
+    'tut.next': 'Next →',
+    'tut.finish': 'Done ✓',
+  }
+};
+
+let currentLang = detectLang();
+const listeners = [];
+
+function detectLang() {
+  const saved = localStorage.getItem('magicspin_lang');
+  if (saved === 'it' || saved === 'en') return saved;
+  const browser = (navigator.language || '').substring(0, 2).toLowerCase();
+  return browser === 'en' ? 'en' : 'it';
+}
+
+export function getCurrentLang() { return currentLang; }
+
+export function setLang(lang) {
+  if (lang !== 'it' && lang !== 'en') return;
+  currentLang = lang;
+  localStorage.setItem('magicspin_lang', lang);
+  applyTranslations();
+  listeners.forEach(fn => fn(lang));
+}
+
+export function onLangChange(fn) { listeners.push(fn); }
+
+export function t(key) {
+  return translations[currentLang]?.[key] ?? translations.it[key] ?? key;
+}
+
+export function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.getAttribute('data-i18n-html'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+
+  const langBtn = document.getElementById('lang-toggle-btn');
+  if (langBtn) langBtn.textContent = currentLang === 'it' ? '🇬🇧 EN' : '🇮🇹 IT';
+
+  document.documentElement.lang = currentLang;
+}

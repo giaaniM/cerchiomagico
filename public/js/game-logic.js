@@ -3,6 +3,7 @@
  * This is the NEW modular equivalent of the "core" parts of the monolithic game.js
  */
 import { gameState, socketState, VOWEL_COST, TOTAL_MANCHES, API_URL } from './state.js';
+import { t, getCurrentLang } from './lang.js';
 import { elements } from './elements.js';
 import { normalizeChar, normalizePhrase, sanitizePhrase, isVowel, showScreen, showMessage, showPopup, popup, showFloatingScore } from './utils.js';
 import { applyMobileLayout } from './mobile-layout.js';
@@ -13,38 +14,60 @@ import { createBoard, revealLetter, countLetterOccurrences, checkAllConsonantsRe
 import { drawWheel, renderWheelToCache, WHEEL_SEGMENTS } from './wheel.js';
 import { syncGameState } from './socket.js';
 
-const OFFLINE_PHRASES = [
+const OFFLINE_PHRASES_IT = [
     { phrase: "CHI DORME NON PIGLIA PESCI", hint: "Proverbio" },
     { phrase: "NON DIRE GATTO SE NON CE L HAI NEL SACCO", hint: "Proverbio" },
     { phrase: "LA RUOTA DELLA FORTUNA GIRA PER TUTTI", hint: "Modo di dire" },
     { phrase: "NON TUTTO QUEL CHE LUCCICA E ORO", hint: "Proverbio" },
     { phrase: "CHI TROVA UN AMICO TROVA UN TESORO", hint: "Proverbio" },
     { phrase: "FINCHE LA BARCA VA LASCIALA ANDARE", hint: "Canzone" },
-    { phrase: "CANTARE SOTTO LA PIOGGIA BATTENTE", hint: "Film (Titolo lungo)" },
-    { phrase: "L IMPORTANTE NON E VINCERE MA PARTECIPARE", hint: "Citazione Sportiva" },
+    { phrase: "CANTARE SOTTO LA PIOGGIA BATTENTE", hint: "Film" },
+    { phrase: "L IMPORTANTE NON E VINCERE MA PARTECIPARE", hint: "Citazione" },
     { phrase: "ROSSO DI SERA BEL TEMPO SI SPERA", hint: "Proverbio" },
     { phrase: "A CAVAL DONATO NON SI GUARDA IN BOCCA", hint: "Proverbio" },
-    { phrase: "BALLA COI LUPI NELLA FORESTA", hint: "Film (Esteso)" },
+    { phrase: "BALLA COI LUPI NELLA FORESTA", hint: "Film" },
     { phrase: "L APPETITO VIEN MANGIANDO E BEVENDO", hint: "Modo di dire" },
     { phrase: "MOGLIE E BUOI DEI PAESI TUOI", hint: "Proverbio" },
     { phrase: "IL MATTINO HA L ORO IN BOCCA", hint: "Proverbio" },
     { phrase: "TUTTE LE STRADE PORTANO A ROMA", hint: "Proverbio" }
 ];
 
-let puzzleDatabase = [...OFFLINE_PHRASES];
+const OFFLINE_PHRASES_EN = [
+    { phrase: "THE EARLY BIRD CATCHES THE WORM", hint: "Proverb" },
+    { phrase: "ALL THAT GLITTERS IS NOT GOLD", hint: "Proverb" },
+    { phrase: "ACTIONS SPEAK LOUDER THAN WORDS", hint: "Proverb" },
+    { phrase: "EVERY CLOUD HAS A SILVER LINING", hint: "Proverb" },
+    { phrase: "BETTER LATE THAN NEVER", hint: "Proverb" },
+    { phrase: "THE PEN IS MIGHTIER THAN THE SWORD", hint: "Proverb" },
+    { phrase: "DONT COUNT YOUR CHICKENS BEFORE THEY HATCH", hint: "Proverb" },
+    { phrase: "A PICTURE IS WORTH A THOUSAND WORDS", hint: "Saying" },
+    { phrase: "WHERE THERE IS A WILL THERE IS A WAY", hint: "Proverb" },
+    { phrase: "YOU CANT JUDGE A BOOK BY ITS COVER", hint: "Proverb" },
+    { phrase: "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG", hint: "Phrase" },
+    { phrase: "GONE WITH THE WIND", hint: "Movie" },
+    { phrase: "TO BE OR NOT TO BE THAT IS THE QUESTION", hint: "Shakespeare" },
+    { phrase: "MAY THE FORCE BE WITH YOU", hint: "Movie" },
+    { phrase: "THERE IS NO PLACE LIKE HOME", hint: "Movie" }
+];
+
+let puzzleDatabase = [...OFFLINE_PHRASES_IT];
 
 export async function loadPuzzles() {
+    const lang = getCurrentLang();
+    const offlineFallback = lang === 'en' ? OFFLINE_PHRASES_EN : OFFLINE_PHRASES_IT;
     try {
-        const res = await fetch('/api/puzzles');
+        const res = await fetch(`/api/puzzles?lang=${lang}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
             puzzleDatabase = data;
-            console.log(`[PUZZLES] Loaded ${data.length} phrases from Supabase`);
+            console.log(`[PUZZLES] Loaded ${data.length} phrases (lang=${lang}) from Supabase`);
         } else {
+            puzzleDatabase = offlineFallback;
             console.warn('[PUZZLES] Empty response, using offline fallback');
         }
     } catch (err) {
+        puzzleDatabase = offlineFallback;
         console.warn('[PUZZLES] Failed to load from server, using offline fallback:', err);
     }
 }
@@ -94,7 +117,7 @@ export function callConsonant() {
     elements.consonantInput.value = '';
 
     if (!letter || !/^[A-ZÀ-ÿ]$/.test(letter)) {
-        showMessage('Inserisci una lettera valida!', 'error');
+        showMessage(t('msg.invalidletter'), 'error');
         soundManager.playError();
         return;
     }
@@ -103,15 +126,15 @@ export function callConsonant() {
 
     if (isVowel(letter)) {
         soundManager.playError();
-        showMessage('Devi chiamare una CONSONANTE, non una vocale!', 'error');
-        showPopup(popup('🚫', 'HAI INSERITO UNA VOCALE!', 'Le vocali si comprano a €1000'), 2500, 'danger');
+        showMessage(t('msg.calledvowel'), 'error');
+        showPopup(popup('🚫', t('msg.insertedvowel.title'), t('msg.insertedvowel.body')), 2500, 'danger');
         return;
     }
 
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
         soundManager.playError();
-        showPopup(popup('🚫', 'LETTERA GIÀ CHIAMATA!', 'Il turno passa al prossimo giocatore'), 3000, 'danger');
+        showPopup(popup('🚫', t('msg.alreadycalled.title'), t('msg.alreadycalled.body')), 3000, 'danger');
         setTimeout(passTurn, 3000);
         return;
     }
@@ -169,7 +192,7 @@ export function callConsonant() {
                 soundManager.playCash();
             } else if (specialAction === 'SCUDO') {
                 gameState.hasShield[player.name] = true;
-                showPopup(popup('🛡️', 'SCUDO OTTENUTO!', `${player.name} è protetto`), 2500, 'subtle-success');
+                showPopup(popup('🛡️', t('msg.shield.title'), `${player.name} ${t('msg.shield.body')}`), 2500, 'subtle-success');
                 renderPlayersList();
             }
 
@@ -182,7 +205,7 @@ export function callConsonant() {
                 gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
 
                 if (!wasFinished && gameState.allConsonantsRevealed) {
-                    showPopup(popup('✅', 'CONSONANTI TERMINATE!', 'Ora puoi solo acquistare vocali o risolvere'), 2500);
+                    showPopup(popup('✅', t('msg.consonantsfinished.title'), t('msg.consonantsfinished.body')), 2500);
                 }
 
                 if (gameState.currentManche === 5) {
@@ -201,7 +224,7 @@ export function callConsonant() {
         soundManager.playError();
         gameState.pendingWheelValue = null;
         elements.currentWheelValue.textContent = '-';
-        showPopup(popup('❌', `"${letter}" NON PRESENTE`, 'Turno perso'), 3000, 'danger');
+        showPopup(popup('❌', `"${letter}" ${t('msg.notfound')}`, t('msg.turnoflost')), 3000, 'danger');
         setTimeout(passTurn, 3000);
     }
 }
@@ -212,29 +235,29 @@ export function buyVowel() {
     const player = getCurrentPlayer();
 
     if (!letter || !/^[AEIOUÀÈÌÒÙàèìòù]$/i.test(letter)) {
-        showMessage('Inserisci una vocale valida (A, E, I, O, U)!', 'error');
+        showMessage(t('msg.invalidvowel'), 'error');
         soundManager.playError();
         return;
     }
 
     if (!isVowel(letter)) {
-        showMessage('Devi inserire una VOCALE!', 'error');
+        showMessage(t('msg.insertvowel'), 'error');
         soundManager.playError();
         return;
     }
 
     // Free Vowels in Final Round
     if (gameState.wheelPhase !== 'final_play' && gameState.partialScores[player.name] < VOWEL_COST) {
-        showMessage(`Non hai abbastanza soldi! Servono €${VOWEL_COST}`, 'error');
+        showMessage(`${t('msg.notenoughmoney')}${VOWEL_COST}`, 'error');
         soundManager.playError();
         return;
     }
 
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        showMessage(`La vocale "${letter}" è già stata chiamata!`, 'error');
+        showMessage(`"${letter}" ${t('msg.alreadycalled.body')}`, 'error');
         soundManager.playError();
-        showPopup(popup('🚫', 'VOCALE GIÀ CHIAMATA!', 'Turno perso'), 2000, 'danger');
+        showPopup(popup('🚫', t('msg.vowelalreadycalled.title'), t('msg.turnoflost')), 2000, 'danger');
         setTimeout(passTurn, 2500);
         return;
     }
@@ -251,7 +274,7 @@ export function buyVowel() {
 
     if (occurrences > 0) {
         revealLetter(letter, true, null);
-        showMessage(`🎉 "${letter}" trovata ${occurrences} volta/e!`, 'success');
+        showMessage(`🎉 "${letter}" ×${occurrences}`, 'success');
 
         if (checkWin()) {
             setTimeout(endManche, 1500);
@@ -267,8 +290,8 @@ export function buyVowel() {
     } else {
         soundManager.playError();
         const costText = (gameState.currentManche === 5) ? "" : ` (-€${VOWEL_COST})`;
-        showMessage(`❌ "${letter}" non c'è nella frase.${costText}`, 'error');
-        showPopup(popup('❌', `"${letter}" NON PRESENTE`, 'Turno perso'), 2000, 'danger');
+        showMessage(`❌ "${letter}" ${t('msg.notfound')}${costText}`, 'error');
+        showPopup(popup('❌', `"${letter}" ${t('msg.notfound')}`, t('msg.turnoflost')), 2000, 'danger');
         setTimeout(passTurn, 2500);
     }
 }
@@ -278,7 +301,7 @@ export function trySolve() {
     elements.solutionInput.value = '';
 
     if (!guess) {
-        showMessage('Scrivi la soluzione!', 'error');
+        showMessage(t('msg.writesolution'), 'error');
         return;
     }
 
@@ -291,7 +314,7 @@ export function trySolve() {
             if (elements.boardInner) elements.boardInner.classList.remove('express-active');
         }
         soundManager.playWin();
-        showMessage('🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉', 'success');
+        showMessage(t('msg.correct'), 'success');
         document.querySelectorAll('.tile.letter').forEach(tile => {
             tile.classList.add('revealed');
         });
@@ -309,12 +332,12 @@ export function trySolve() {
 
             if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-            showPopup(popup('💥', 'CROLLO!', 'Soluzione errata — perdi tutto'), 4000, 'danger');
+            showPopup(popup('💥', t('msg.crollo.title'), t('msg.crollo.body')), 4000, 'danger');
             setTimeout(passTurn, 4500);
         } else {
             soundManager.playError();
-            showMessage('❌ Soluzione errata!', 'error');
-            showPopup(popup('❌', 'SOLUZIONE SBAGLIATA!', 'Turno perso'), 2500, 'danger');
+            showMessage(t('msg.wrongsolution'), 'error');
+            showPopup(popup('❌', t('msg.wrongsolution.title'), t('msg.turnoflost')), 2500, 'danger');
             setTimeout(passTurn, 2500);
         }
     }
@@ -352,7 +375,7 @@ export function endManche() {
     soundManager.playWinner();
     soundManager.playCrowdCheer();
 
-    showPopup(popup('🏆', `MANCHE ${gameState.currentManche} VINTA!`, `${winner.name}<br><strong style="color:#4ade80;font-size:1.3em">+€${winnings.toLocaleString('it-IT')}</strong>`), 3000, 'subtle-success');
+    showPopup(popup('🏆', t('msg.manchewon').replace('{n}', gameState.currentManche), `${winner.name}<br><strong style="color:#4ade80;font-size:1.3em">+€${winnings.toLocaleString('it-IT')}</strong>`), 3000, 'subtle-success');
 
     // Clear board
     if (elements.gameBoard) elements.gameBoard.innerHTML = '';

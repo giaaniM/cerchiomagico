@@ -1,4 +1,5 @@
 import { socketState } from './state.js';
+import { t } from './lang.js';
 import { soundManager } from './sound.js';
 import { initSmartphoneLobby } from './socket.js'; // MOBILE
 
@@ -29,7 +30,7 @@ export function initSetup() {
             const players = [];
             for (let i = 1; i <= playerCount; i++) {
                 const input = document.getElementById(`player-name-${i}`);
-                const name = input ? (input.value.trim() || input.placeholder) : `Giocatore ${i}`;
+                const name = input ? (input.value.trim() || input.placeholder) : `${t('setup.player')} ${i}`;
                 players.push({ name, id: `local-${i}` });
             }
             _startGameDirectly(players);
@@ -76,7 +77,7 @@ function renderNameInputs() {
     for (let i = 1; i <= playerCount; i++) {
         const div = document.createElement('div');
         div.className = 'name-input-wrap';
-        div.innerHTML = `<input type="text" id="player-name-${i}" class="player-name-input" placeholder="Giocatore ${i}" maxlength="20" autocomplete="off">`;
+        div.innerHTML = `<input type="text" id="player-name-${i}" class="player-name-input" placeholder="${t('setup.player')} ${i}" maxlength="20" autocomplete="off">`;
         container.appendChild(div);
     }
     const first = document.getElementById('player-name-1');

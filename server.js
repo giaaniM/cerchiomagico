@@ -146,15 +146,15 @@ app.get('/api/lobbies', (req, res) => {
 
 // Get all active puzzles from Supabase
 app.get('/api/puzzles', async (req, res) => {
-    const { data, error } = await supabase
-        .from('puzzles')
-        .select('hint, phrase')
-        .eq('active', true);
+    const lang = req.query.lang === 'en' ? 'en' : 'it';
+    let query = supabase.from('puzzles').select('hint, phrase').eq('active', true);
+    query = query.eq('lang', lang);
+    const { data, error } = await query;
     if (error) {
         console.error('[SUPABASE] Error fetching puzzles:', JSON.stringify(error));
         return res.status(500).json({ error: 'Failed to fetch puzzles', detail: JSON.stringify(error) });
     }
-    res.json(data);
+    res.json(data ?? []);
 });
 
 // Mark puzzle as inactive in Supabase

@@ -13,6 +13,10 @@ import { soundManager } from './sound.js';
 import { elements } from './elements.js';
 import { gameState, socketState } from './state.js';
 import { showScreen, showPopup } from './utils.js';
+import { t, applyTranslations, setLang, getCurrentLang } from './lang.js';
+
+window.t = t;
+applyTranslations();
 
 // ===== Module imports =====
 import { updateUI } from './ui.js';
@@ -74,11 +78,11 @@ document.getElementById('home-btn')?.addEventListener('click', newGame);
 document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
     showPopup(`<div class="popup-body">
         <div class="popup-icon">↻</div>
-        <div class="popup-title">CAMBIA FRASE?</div>
-        <div class="popup-text">I punteggi di questa manche verranno azzerati.<br>Il totale gara rimane invariato.</div>
+        <div class="popup-title">${t('skip.title')}</div>
+        <div class="popup-text">${t('skip.body')}</div>
         <div style="display:flex;gap:12px;justify-content:center;margin-top:16px">
-            <button onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'" class="btn-secondary" style="padding:8px 20px">Annulla</button>
-            <button onclick="window._confirmSkipPhrase()" class="btn-solve" style="padding:8px 20px">Cambia</button>
+            <button onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'" class="btn-secondary" style="padding:8px 20px">${t('skip.cancel')}</button>
+            <button onclick="window._confirmSkipPhrase()" class="btn-solve" style="padding:8px 20px">${t('skip.confirm')}</button>
         </div>
     </div>`, 0);
     window._confirmSkipPhrase = () => {
@@ -86,6 +90,12 @@ document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
         document.getElementById('popup-message').style.display = 'none';
         skipPhrase();
     };
+});
+
+document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
+    const newLang = getCurrentLang() === 'it' ? 'en' : 'it';
+    setLang(newLang);
+    loadPuzzles();
 });
 
 // Consonant input

@@ -2,6 +2,7 @@ import { gameState, TOTAL_MANCHES, VOWEL_COST } from './state.js';
 import { elements } from './elements.js';
 import { showPopup, showMessage } from './utils.js';
 import { renderPlayersList, getCurrentPlayer } from './players.js';
+import { t } from './lang.js';
 
 // ===== UI Updates =====
 export function updateUI() {
@@ -26,7 +27,7 @@ export function updateUI() {
         if (phase === 'final_spin') {
             if (centralArea) centralArea.style.display = 'flex';
             spinBtn.style.display = 'block';
-            spinBtn.textContent = 'GIRA PER IL VALORE';
+            spinBtn.textContent = t('game.spin.final');
             spinBtn.disabled = false;
             consonantContainer.style.display = 'none';
             elements.expressContainer.style.display = 'none';
@@ -85,7 +86,7 @@ export function updateUI() {
             if (elements.passBtn) {
                 elements.passBtn.style.display = 'inline-block';
                 elements.passBtn.disabled = false;
-                elements.passBtn.textContent = 'PASSA IL TURNO';
+                elements.passBtn.textContent = t('game.passturn');
             }
             if (elements.solutionInput) setTimeout(() => elements.solutionInput.focus(), 50);
             checkFinalRoundBanner();
@@ -133,7 +134,7 @@ export function updateUI() {
         spinBtn.style.display = 'block';
         consonantContainer.style.display = 'none';
         elements.expressContainer.style.display = 'none';
-        if (spinBtn) spinBtn.textContent = 'GIRA IL CERCHIO';
+        if (spinBtn) spinBtn.textContent = t('game.spin');
 
         // Enable Spin if allowed
         spinBtn.disabled = !(phase === 'idle' || phase === 'choose_action') || allConsRevealed;
@@ -183,8 +184,8 @@ export function showPartialRanking() {
     const medals = ['🥇', '🥈', '🥉'];
 
     let html = `<div class="popup-ranking-partial">
-        <div class="ranking-manche-badge">MANCHE ${gameState.currentManche} / ${TOTAL_MANCHES}</div>
-        <div class="ranking-header">CLASSIFICA</div>
+        <div class="ranking-manche-badge">${t('game.manche')} ${gameState.currentManche} / ${TOTAL_MANCHES}</div>
+        <div class="ranking-header">${t('ranking.title')}</div>
         <div class="ranking-list">`;
 
     sortedPlayers.forEach((p, i) => {
@@ -202,7 +203,7 @@ export function showPartialRanking() {
 
     html += `</div>`;
     if (manchesLeft > 0) {
-        html += `<div class="ranking-footer">Ancora ${manchesLeft} manche${manchesLeft > 1 ? 's' : ''}</div>`;
+        html += `<div class="ranking-footer">${t('ranking.remaining')} ${manchesLeft} ${t('ranking.rounds')}</div>`;
     }
     html += `</div>`;
     showPopup(html, 0);
@@ -254,10 +255,10 @@ export function showFinalResults(newGame) {
         resultsHtml += '</div>';
     }
 
-    elements.winTitle.innerHTML = `<span class="win-title-name">${winner.name}</span><br><span class="win-title-sub">ha vinto!</span>`;
+    elements.winTitle.innerHTML = `<span class="win-title-name">${winner.name}</span><br><span class="win-title-sub">${t('win.winner')}</span>`;
     elements.winPhrase.innerHTML = resultsHtml;
-    elements.winMessage.textContent = `Montepremi: ${fmt(maxScore)}`;
-    elements.nextLevelBtn.textContent = 'NUOVA PARTITA';
+    elements.winMessage.textContent = `${t('win.jackpot')}: ${fmt(maxScore)}`;
+    elements.nextLevelBtn.textContent = t('win.newgame');
     elements.nextLevelBtn.onclick = newGame;
 
     // Show win screen
@@ -282,7 +283,7 @@ export function checkExpressBanner() {
     banner.innerHTML = `
         <div class="express-banner-icon">⚡</div>
         <div class="express-banner-content">
-            <span class="express-banner-title">MEGATURNO</span>
+            <span class="express-banner-title">${t('tut.s4.b1')}</span>
             <div class="express-banner-divider"></div>
             <span class="express-banner-player">${player.name}</span>
             <div class="express-banner-amount">€${totalExpress}</div>
