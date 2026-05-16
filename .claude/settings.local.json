@@ -37,7 +37,8 @@
       "mcp__supabase__get_publishable_keys",
       "mcp__supabase__list_tables",
       "Bash(curl -s http://localhost:3000/api/puzzles)",
-      "Bash(xargs kill -9)"
+      "Bash(xargs kill -9)",
+      "Bash(curl *)"
     ]
   }
 }

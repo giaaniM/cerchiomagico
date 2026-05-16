@@ -144,7 +144,7 @@ app.get('/api/puzzles', async (req, res) => {
         .eq('active', true);
     if (error) {
         console.error('[SUPABASE] Error fetching puzzles:', error);
-        return res.status(500).json({ error: 'Failed to fetch puzzles' });
+        return res.status(500).json({ error: 'Failed to fetch puzzles', detail: error.message, code: error.code });
     }
     res.json(data);
 });
