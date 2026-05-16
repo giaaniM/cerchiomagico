@@ -3786,14 +3786,15 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .popup-manche-hint-large {
-    font-size: clamp(1.5rem, 8vw, 2.4rem); /* Dynamic font size to ensure it fits */
+    font-size: clamp(1.2rem, 5vw, 2.4rem);
     font-weight: 900;
     color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 1px;
     text-shadow: 0 0 20px rgba(56, 189, 248, 0.5), 0 2px 4px rgba(0, 0, 0, 0.8);
     line-height: 1.1;
-    white-space: nowrap; /* Prevent word break */
+    word-break: break-word;
+    overflow-wrap: break-word;
     margin-bottom: 12px;
 }
 
@@ -5827,7 +5828,7 @@ body.manche-finale .board-frame {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 6px 12px;
     margin-bottom: 0;
 }
@@ -5849,6 +5850,7 @@ body.manche-finale .board-frame {
 /* Colonna principale: board in alto, controlli+classifiche raggruppati in basso */
 #mp-column {
     flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -5990,8 +5992,10 @@ body.manche-finale .board-frame {
         width: 70%;
     }
     .popup-manche-hint-large {
-        font-size: clamp(1rem, 4vw, 1.6rem);
+        font-size: clamp(0.9rem, 3.5vw, 1.4rem);
         margin-bottom: 4px;
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
     .popup-manche-hint { font-size: 1rem; margin-bottom: 4px; }
     .popup-manche-number { font-size: 0.7rem; }
