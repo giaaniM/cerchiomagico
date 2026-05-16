@@ -22,7 +22,7 @@ applyTranslations();
 import { updateUI } from './ui.js';
 import { passTurn, setUpdateUI as playersSetUpdateUI, setSyncGameState as playersSetSyncGameState } from './players.js';
 import { setUpdateUI as boardSetUpdateUI } from './board.js';
-import { spinWheel, drawWheel, renderWheelToCache } from './wheel.js';
+import { spinWheel, drawWheel, renderWheelToCache, clearWheelCache } from './wheel.js';
 import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche, skipPhrase, loadPuzzles } from './game-logic.js';
 import { callExpressConsonant, buyExpressVowel, setEndManche as expressSetEndManche } from './express.js';
 import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndManche, setSyncGameState as finalRoundSetSyncGameState } from './finalRound.js';
@@ -95,6 +95,9 @@ document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
 document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
     const newLang = getCurrentLang() === 'it' ? 'en' : 'it';
     setLang(newLang);
+    clearWheelCache();
+    renderWheelToCache();
+    drawWheel(gameState.wheelRotation);
     loadPuzzles();
 });
 

@@ -1,4 +1,5 @@
 import { gameState } from './state.js';
+import { t, getCurrentLang } from './lang.js';
 import { elements } from './elements.js';
 import { showPopup, showMessage, popup } from './utils.js';
 import { soundManager } from './sound.js';
@@ -9,6 +10,13 @@ import { updateUI, checkFinalRoundBanner, checkExpressBanner } from './ui.js';
 let wheelCacheCanvas = null;
 let wheelCacheCtx = null;
 let wheelAnimationId = null;
+
+export function clearWheelCache() { wheelCacheCanvas = null; }
+
+const SPECIAL_LABELS = ['PASSA', 'CROLLO', 'MEGATURNO', 'SCUDO', 'RADDOPPIA'];
+function wLabel(label) {
+    return SPECIAL_LABELS.includes(label) ? t(`wheel.label.${label}`) : label;
+}
 
 // ===== Wheel Segments =====
 export const WHEEL_SEGMENTS = [
@@ -228,15 +236,16 @@ export function renderWheelToCache() {
         ctx.textAlign = 'center';
         if (label !== 'PASSA') ctx.lineWidth = 3 * scale;
 
-        const chars = label.replace(/\s/g, '').split('');
+        const displayLabel = wLabel(label);
+        const chars = displayLabel.replace(/\s/g, '').split('');
 
-        // Text Styling (Refined)
+        // Text Styling (Refined) — font size keyed on label (internal identifier), adjusted per lang
         let fontSize = 21 * scale;
-        if (label === 'CROLLO') fontSize = 10.5 * scale;
-        else if (label === 'PASSA') fontSize = 16 * scale;
-        else if (label === 'RADDOPPIA') fontSize = 9 * scale;
+        if (label === 'CROLLO') fontSize = (getCurrentLang() === 'en' ? 9 : 10.5) * scale;
+        else if (label === 'PASSA') fontSize = (getCurrentLang() === 'en' ? 18 : 16) * scale;
+        else if (label === 'RADDOPPIA') fontSize = (getCurrentLang() === 'en' ? 12 : 9) * scale;
         else if (label === 'MEGATURNO') fontSize = 10 * scale;
-        else if (label === 'SCUDO') fontSize = 13 * scale;
+        else if (label === 'SCUDO') fontSize = (getCurrentLang() === 'en' ? 12 : 13) * scale;
         else if (label === '?500') fontSize = 18 * scale;
         else if (label === 'EXPRESS') fontSize = 14 * scale;
 
@@ -256,7 +265,7 @@ export function renderWheelToCache() {
         let currentRadius = radius * baseRadius;
 
         // Extremely tight spacing for long words
-        const charSpacing = (label === 'CROLLO' || label === 'RADDOPPIA') ? 0.78 : 0.85;
+        const charSpacing = (label === 'CROLLO' || label === 'RADDOPPIA' || label === 'MEGATURNO') ? 0.78 : 0.85;
 
         // Draw Characters
         chars.forEach(char => {
@@ -440,7 +449,7 @@ export function onWheelStop(result) {
 
             checkFinalRoundBanner();
 
-            showPopup(popup('⭐', 'VALORE FISSATO!', `€${baseValue} + €1000 bonus<br>Ogni lettera vale <strong style="color:#fbbf24">€${gameState.finalRoundValue}</strong><br><br>Gioca: ${getCurrentPlayer().name}`), 6000, 'warning');
+            showPopup(popup('⭐', t('wheel.valueset.title'), `€${baseValue} + €1000 bonus<br>${t('wheel.valueset.eachworth')} <strong style="color:#fbbf24">€${gameState.finalRoundValue}</strong><br><br>${t('wheel.valueset.plays')}: ${getCurrentPlayer().name}`), 6000, 'warning');
 
             setTimeout(() => {
                 updateUI();
@@ -450,11 +459,11 @@ export function onWheelStop(result) {
             // Failure: Special segment hit (PASSA, CROLLO, etc.)
             soundManager.playError();
             gameState.wheelPhase = 'final_spin'; // Allow re-spin
-            elements.currentWheelValue.textContent = 'GIRA ANCORA';
+            elements.currentWheelValue.textContent = t('wheel.spinagain');
             updateUI();
 
             const label = result.label || result.value;
-            showPopup(popup('⚠️', 'VALORE NON VALIDO', `Uscito: ${label} — Gira di nuovo`), 3500, 'danger');
+            showPopup(popup('⚠️', t('wheel.invalidvalue.title'), `${wLabel(label)} ${t('wheel.invalidspin.suffix')}`), 3500, 'danger');
         }
         return; // Important: Consume the event
     }
@@ -462,7 +471,7 @@ export function onWheelStop(result) {
     if (result.value === 'MEGATURNO' || result.value === 'EXPRESS') {
         soundManager.init();
         soundManager.playExpress();
-        elements.currentWheelValue.textContent = 'MEGATURNO';
+        elements.currentWheelValue.textContent = t('wheel.display.MEGATURNO');
         elements.currentWheelValue.className = 'wheel-value express-active';
         gameState.wheelPhase = 'express';
         gameState.expressAccumulated = 0;
@@ -471,7 +480,7 @@ export function onWheelStop(result) {
 
         updateUI();
         checkExpressBanner();
-        showPopup(popup('⚡', 'MEGATURNO!', 'Consonante: +€500 per occorrenza<br>Vocale: −€500<br><br>⚠️ Sbagliare = Perditutto!'), 5000, 'special');
+        showPopup(popup('⚡', t('wheel.megaturno.popup.title'), t('wheel.megaturno.popup.body')), 5000, 'special');
         return;
     }
 
@@ -482,36 +491,36 @@ export function onWheelStop(result) {
             handlePenaltyWithShield(player, 'PASSA');
         } else {
             soundManager.playError();
-            elements.currentWheelValue.textContent = 'PASSA';
+            elements.currentWheelValue.textContent = t('wheel.display.PASSA');
             elements.currentWheelValue.className = 'wheel-value passa';
-            showPopup(popup('⏭️', 'PASSA!', 'Turno perso'), 2000, 'warning');
+            showPopup(popup('⏭️', t('wheel.passa.title'), t('msg.turnoflost')), 2000, 'warning');
             setTimeout(passTurn, 2500);
         }
     } else if (result.value === 'RADDOPPIA') {
-        elements.currentWheelValue.textContent = 'RADDOPPIA';
+        elements.currentWheelValue.textContent = t('wheel.display.RADDOPPIA');
         elements.currentWheelValue.className = 'wheel-value raddoppia';
         gameState.pendingWheelValue = 'RADDOPPIA';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
-        showMessage('RADDOPPIA! Chiama una consonante per raddoppiare il tuo punteggio!', 'info');
+        showMessage(t('wheel.raddoppia.msg'), 'info');
     } else if (result.value === 'SCUDO') {
-        elements.currentWheelValue.textContent = 'SCUDO';
+        elements.currentWheelValue.textContent = t('wheel.display.SCUDO');
         elements.currentWheelValue.className = 'wheel-value megaturno';
         gameState.pendingWheelValue = 'SCUDO';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
-        showMessage('SCUDO! Chiama una consonante per ottenere la protezione!', 'info');
+        showMessage(t('wheel.scudo.msg'), 'info');
     } else if (result.value === 'CROLLO') {
         if (gameState.hasShield[player.name]) {
             handlePenaltyWithShield(player, 'CROLLO');
         } else {
             soundManager.playGameOver();
-            elements.currentWheelValue.textContent = 'CROLLO';
+            elements.currentWheelValue.textContent = t('wheel.display.CROLLO');
             elements.currentWheelValue.className = 'wheel-value crollo';
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0;
             renderPlayersList();
-            showPopup(popup('💥', 'CROLLO!', 'Hai perso tutto il bottino'), 4000, 'danger');
+            showPopup(popup('💥', t('msg.crollo.title'), t('wheel.crollo.popup.body')), 4000, 'danger');
             setTimeout(passTurn, 4500);
         }
     } else if (result.value === '?500') {
@@ -530,10 +539,10 @@ export function onWheelStop(result) {
 
         // Reset multiplier after use
         if (gameState.nextValueMultiplier > 1) {
-            showMessage(`🔥 Valore RADDOPPIATO! Chiama una consonante (vale €${finalValue})`, 'success');
+            showMessage(t('wheel.doubled.msg').replace('{val}', finalValue), 'success');
             gameState.nextValueMultiplier = 1;
         } else {
-            showMessage(`Chiama una consonante (vale €${finalValue})`, 'info');
+            showMessage(t('wheel.callconsonant.msg').replace('{val}', finalValue), 'info');
         }
 
         gameState.wheelPhase = 'call_consonant';
@@ -543,10 +552,10 @@ export function onWheelStop(result) {
 
 function handlePenaltyWithShield(player, penaltyType) {
     gameState.pendingPenalty = penaltyType;
-    const title = penaltyType === 'CROLLO' ? '💥 CROLLO!' : '⏭️ PASSA';
+    const title = penaltyType === 'CROLLO' ? `💥 ${t('msg.crollo.title')}` : `⏭️ ${t('wheel.passa.title')}`;
     const penaltyText = penaltyType === 'CROLLO'
-        ? 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per salvarti dalla Perditutto?'
-        : 'Hai lo SCUDO DI PROTEZIONE! 🛡️<br>Vuoi usarlo per non perdere il turno?';
+        ? t('wheel.shield.choice.crollo')
+        : t('wheel.shield.choice.passa');
 
     const html = `
         <div class="popup-megaturno-choice">
@@ -557,7 +566,7 @@ function handlePenaltyWithShield(player, penaltyType) {
                 <div class="mystery-card left" onclick="resolveShieldChoice(true)">
                     <div class="card-content">
                         <span class="card-icon">🛡️</span>
-                        <span class="card-text">USA<br>SCUDO</span>
+                        <span class="card-text">${t('wheel.shield.use')}</span>
                     </div>
                 </div>
 
@@ -565,7 +574,7 @@ function handlePenaltyWithShield(player, penaltyType) {
                 <div class="mystery-card right" onclick="resolveShieldChoice(false)">
                     <div class="card-content">
                         <span class="card-icon">${penaltyType === 'CROLLO' ? '💥' : '⏭️'}</span>
-                        <span class="card-text">ACCETTA<br>${penaltyType}</span>
+                        <span class="card-text">${t('wheel.shield.accept')}<br>${t('wheel.display.' + penaltyType)}</span>
                     </div>
                 </div>
             </div>
@@ -584,12 +593,12 @@ window.resolveShieldChoice = function (useShield) {
         soundManager.playReveal();
         gameState.hasShield[player.name] = false;
         renderPlayersList();
-        showPopup(popup('🛡️', 'SCUDO UTILIZZATO!', `${player.name} è salvo!`), 2500, 'subtle-success');
+        showPopup(popup('🛡️', t('wheel.shield.used.title'), `${player.name} ${t('wheel.shield.safe')}`), 2500, 'subtle-success');
 
         setTimeout(() => {
             gameState.wheelPhase = 'idle';
             updateUI();
-            showMessage('Sei salvo! Gira di nuovo!', 'success');
+            showMessage(t('wheel.shield.respin'), 'success');
         }, 2500);
     } else {
         if (penaltyType === 'CROLLO') {
@@ -597,11 +606,11 @@ window.resolveShieldChoice = function (useShield) {
             gameState.partialScores[player.name] = 0;
             gameState.totalScores[player.name] = 0;
             renderPlayersList();
-            showPopup(popup('💥', 'CROLLO!', 'Hai perso tutto il bottino<br><small>(Scudo conservato)</small>'), 4000, 'danger');
+            showPopup(popup('💥', t('msg.crollo.title'), t('wheel.shield.saved.crollo')), 4000, 'danger');
             setTimeout(passTurn, 4500);
         } else {
             soundManager.playError();
-            showPopup(popup('⏭️', 'PASSA', `${player.name} passa la mano<br><small>(Scudo conservato)</small>`), 2500, 'warning');
+            showPopup(popup('⏭️', t('wheel.passa.title'), `${player.name} ${t('wheel.shield.saved.passa')}`), 2500, 'warning');
             setTimeout(passTurn, 3000);
         }
     }
@@ -611,13 +620,13 @@ window.resolveShieldChoice = function (useShield) {
 function handleMysterySegment() {
     const html = `
         <div class="popup-mystery-minimal">
-            <div class="mystery-title">SCELTA MISTERIOSA</div>
+            <div class="mystery-title">${t('wheel.mystery.title')}</div>
             <div class="mystery-cards-container">
-                <!-- Card 1: Risk (500) -->
+                <!-- Card 1: Safe (500) -->
                 <div class="mystery-card left" onclick="resolveMysteryChoice(500)">
                     <div class="card-content">
                         <span class="card-icon">💶</span>
-                        <span class="card-text">SICURO<br>€500</span>
+                        <span class="card-text">${t('wheel.mystery.safe')}<br>€500</span>
                     </div>
                 </div>
 
@@ -625,11 +634,11 @@ function handleMysterySegment() {
                 <div class="mystery-card right" onclick="resolveMysteryChoice('RAFFLE')">
                     <div class="card-content">
                         <span class="card-icon">🎲</span>
-                        <span class="card-text">RISCHIA<br>ESTRAI</span>
+                        <span class="card-text">${t('wheel.mystery.risk')}<br>${t('wheel.mystery.draw')}</span>
                     </div>
                 </div>
             </div>
-            <p class="mystery-note">Scegli tra i 500€ sicuri o tenta la sorte!</p>
+            <p class="mystery-note">${t('wheel.mystery.note')}</p>
         </div>
     `;
     showPopup(html, 0); // Permanent until clicked
@@ -646,11 +655,11 @@ window.resolveMysteryChoice = function (choice) {
         const selectedIdx = Math.floor(Math.random() * rafflePool.length);
         finalValue = rafflePool[selectedIdx];
 
-        showPopup(popup('🎲', 'ESTRATTO!', `€${finalValue}`), 2000, 'warning');
+        showPopup(popup('🎲', t('wheel.mystery.drawn'), `€${finalValue}`), 2000, 'warning');
     } else {
         soundManager.playReveal();
         finalValue = Number(choice);
-        showPopup(popup('💶', 'HAI SCELTO', `€${finalValue}`), 2000, 'warning');
+        showPopup(popup('💶', t('wheel.mystery.chose'), `€${finalValue}`), 2000, 'warning');
     }
 
     gameState.pendingWheelValue = finalValue;
@@ -661,6 +670,6 @@ window.resolveMysteryChoice = function (choice) {
         elements.currentWheelValue.className = 'wheel-value';
         gameState.wheelPhase = 'call_consonant';
         updateUI();
-        showMessage(`Chiama una consonante (vale €${gameState.pendingWheelValue})`, 'info');
+        showMessage(t('wheel.callconsonant.msg').replace('{val}', gameState.pendingWheelValue), 'info');
     }, 2000);
 };

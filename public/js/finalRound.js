@@ -1,4 +1,5 @@
 import { gameState } from './state.js';
+import { t } from './lang.js';
 import { elements } from './elements.js';
 import { showPopup, showMessage, popup, normalizeChar, isVowel, showFloatingScore } from './utils.js';
 import { soundManager } from './sound.js';
@@ -22,14 +23,14 @@ export function callFinalConsonant() {
 
     if (!letter) return;
     if (isVowel(letter)) {
-        showMessage('Solo CONSONANTI qui!', 'error');
+        showMessage(t('msg.consonantsonly'), 'error');
         return;
     }
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
         soundManager.playError();
-        showMessage(`❌ "${letter}" già chiamata! Turno perso.`, 'error');
-        showPopup(popup('❌', `"${letter}" GIÀ CHIAMATA`, 'Turno perso'), 2000, 'danger');
+        showMessage(`❌ "${letter}" ${t('msg.alreadycalled.inline')}`, 'error');
+        showPopup(popup('❌', `"${letter}" ${t('msg.alreadycalled.short')}`, t('msg.turnoflost')), 2000, 'danger');
         setTimeout(passTurn, 2500);
         return;
     }
@@ -67,8 +68,8 @@ export function callFinalConsonant() {
     } else {
         // Incorrect Guess -> Invalid turn -> Pass
         soundManager.playError();
-        showMessage(`❌ "${letter}" non c'è. Turno perso.`, 'error');
-        showPopup(popup('❌', `"${letter}" NON PRESENTE`, 'Turno perso'), 2000, 'danger');
+        showMessage(`❌ "${letter}" ${t('msg.notpresent.inline')}`, 'error');
+        showPopup(popup('❌', `"${letter}" ${t('msg.notfound')}`, t('msg.turnoflost')), 2000, 'danger');
         setTimeout(passTurn, 2500);
     }
 }
@@ -80,14 +81,14 @@ export function callFinalVowel() {
 
     if (!letter) return;
     if (!isVowel(letter)) {
-        showMessage('Solo VOCALI qui!', 'error');
+        showMessage(t('msg.vowelsonly'), 'error');
         return;
     }
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
         soundManager.playError();
-        showMessage(`❌ "${letter}" già chiamata! Turno perso.`, 'error');
-        showPopup(popup('❌', `"${letter}" GIÀ CHIAMATA`, 'Turno perso'), 2000, 'danger');
+        showMessage(`❌ "${letter}" ${t('msg.alreadycalled.inline')}`, 'error');
+        showPopup(popup('❌', `"${letter}" ${t('msg.alreadycalled.short')}`, t('msg.turnoflost')), 2000, 'danger');
         setTimeout(passTurn, 2500);
         return;
     }
@@ -115,8 +116,8 @@ export function callFinalVowel() {
     } else {
         // Incorrect Guess -> Pass
         soundManager.playError();
-        showMessage(`❌ "${letter}" non c'è. Turno perso.`, 'error');
-        showPopup(popup('❌', `"${letter}" NON PRESENTE`, 'Turno perso'), 2000, 'danger');
+        showMessage(`❌ "${letter}" ${t('msg.notpresent.inline')}`, 'error');
+        showPopup(popup('❌', `"${letter}" ${t('msg.notfound')}`, t('msg.turnoflost')), 2000, 'danger');
         setTimeout(passTurn, 2500);
     }
 }

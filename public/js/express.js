@@ -1,4 +1,5 @@
 import { gameState } from './state.js';
+import { t } from './lang.js';
 import { elements } from './elements.js';
 import { showPopup, showMessage, popup, flashExpressBanner, normalizeChar, isVowel, showFloatingScore } from './utils.js';
 import { soundManager } from './sound.js';
@@ -14,12 +15,12 @@ export function callExpressConsonant() {
 
     if (!letter) return;
     if (isVowel(letter)) {
-        showMessage('Solo CONSONANTI qui!', 'error');
+        showMessage(t('msg.consonantsonly'), 'error');
         return;
     }
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        triggerExpressBankruptcy("Lettera già chiamata!");
+        triggerExpressBankruptcy(t('msg.alreadycalled.inline'));
         return;
     }
 
@@ -50,7 +51,7 @@ export function callExpressConsonant() {
             }
         }, occurrences * 1500 + 500);
     } else {
-        triggerExpressBankruptcy("Lettera non presente!");
+        triggerExpressBankruptcy(t('msg.notpresent.inline'));
     }
 }
 
@@ -61,20 +62,20 @@ export function buyExpressVowel() {
 
     if (!letter) return;
     if (!isVowel(letter)) {
-        showMessage('Solo VOCALI qui!', 'error');
+        showMessage(t('msg.vowelsonly'), 'error');
         return;
     }
 
     const cost = 500;
     const currentTotal = (gameState.partialScores[player.name] || 0) + gameState.expressAccumulated;
     if (currentTotal < cost) {
-        showMessage("Saldo insufficiente!", 'error');
+        showMessage(t('msg.insufficientbalance'), 'error');
         return;
     }
 
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        triggerExpressBankruptcy("Vocale già chiamata!");
+        triggerExpressBankruptcy(t('msg.alreadycalled.inline'));
         return;
     }
 
@@ -104,7 +105,7 @@ export function buyExpressVowel() {
             }
         }, occurrences * 1500 + 500);
     } else {
-        triggerExpressBankruptcy("Vocale non presente!");
+        triggerExpressBankruptcy(t('msg.notpresent.inline'));
     }
 }
 
@@ -122,7 +123,7 @@ export function triggerExpressBankruptcy(reason) {
     // Remove Gold board style
     if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-    showPopup(popup('💥', 'CROLLO!', reason), 4000, 'danger');
+    showPopup(popup('💥', t('msg.crollo.title'), reason), 4000, 'danger');
     setTimeout(passTurn, 4500);
 }
 
