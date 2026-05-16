@@ -29,7 +29,15 @@
       "Bash(curl -s -o \"js/confetti.min.js\" \"https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js\")",
       "Bash(seomator audit *)",
       "Bash(curl -s http://localhost:3000)",
-      "Bash(curl -s http://localhost:3000/js/mobile-layout.js)"
+      "Bash(curl -s http://localhost:3000/js/mobile-layout.js)",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_publishable_keys",
+      "mcp__supabase__list_tables",
+      "Bash(curl -s http://localhost:3000/api/puzzles)",
+      "Bash(xargs kill -9)"
     ]
   }
 }

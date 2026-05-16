@@ -4,6 +4,9 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 const app = express();
 app.use(cors());
@@ -133,45 +136,40 @@ app.get('/api/lobbies', (req, res) => {
     res.json(lobbyList);
 });
 
-// Remove puzzle from puzzles.js file
-app.post('/api/puzzle/remove', (req, res) => {
+// Get all active puzzles from Supabase
+app.get('/api/puzzles', async (req, res) => {
+    const { data, error } = await supabase
+        .from('puzzles')
+        .select('hint, phrase')
+        .eq('active', true);
+    if (error) {
+        console.error('[SUPABASE] Error fetching puzzles:', error);
+        return res.status(500).json({ error: 'Failed to fetch puzzles' });
+    }
+    res.json(data);
+});
+
+// Mark puzzle as inactive in Supabase
+app.post('/api/puzzle/remove', async (req, res) => {
     const { phrase } = req.body;
     if (!phrase) return res.status(400).json({ error: 'Phrase required' });
 
-    const fs = require('fs');
-    const puzzlesPath = path.join(__dirname, 'public', 'puzzles.js');
+    const { data, error } = await supabase
+        .from('puzzles')
+        .update({ active: false })
+        .eq('phrase', phrase)
+        .select();
 
-    try {
-        let content = fs.readFileSync(puzzlesPath, 'utf8');
-
-        // Match the object containing the phrase. 
-        // We use a regex to find the object and any trailing comma/spaces.
-        // We handle both simple quotes and double quotes.
-        // We also need to be careful with apostrophes in the phrase being escaped or not.
-        // Since we sanitizePhrase before selecting, the phrase on disk and the phrase in memory should match.
-        // Escape special regex characters in the phrase
-        const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-        // This regex is very flexible but precise:
-        // - \{[^{]*? ensures we start at the opening brace of the target object
-        // - phrase:\s*["']${escapedPhrase}["'] finds the exact phrase
-        // - [^}]*?\} ensures we end at the closing brace of the same object
-        const regex = new RegExp(`\\{[^{]*?phrase:\\s*["']${escapedPhrase}["'][^}]*?\\},?\\s*`, 'g');
-
-        const newContent = content.replace(regex, '');
-
-        if (content !== newContent) {
-            fs.writeFileSync(puzzlesPath, newContent, 'utf8');
-            console.log(`[FILE SUCCESS] Removed phrase from puzzles.js: "${phrase}"`);
-            res.json({ success: true });
-        } else {
-            console.warn(`[FILE WARNING] Phrase NOT found in puzzles.js: "${phrase}"`);
-            console.warn(`[FILE INFO] Search term (escaped): ${escapedPhrase}`);
-            res.json({ success: false, message: 'Phrase not found' });
-        }
-    } catch (err) {
-        console.error('[FILE] Error updating puzzles.js:', err);
-        res.status(500).json({ error: 'Internal server error' });
+    if (error) {
+        console.error('[SUPABASE] Error removing phrase:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+    if (data && data.length > 0) {
+        console.log(`[SUPABASE] Phrase deactivated: "${phrase}"`);
+        res.json({ success: true });
+    } else {
+        console.warn(`[SUPABASE] Phrase not found: "${phrase}"`);
+        res.json({ success: false, message: 'Phrase not found' });
     }
 });
 

@@ -1444,17 +1444,18 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     backdrop-filter: blur(20px);
     border: 3px solid var(--accent-gold);
     border-radius: 30px;
-    padding: 60px 40px;
+    padding: 20px 30px;
     text-align: center;
     max-width: 900px;
     width: 90%;
+    max-height: 96vh;
+    overflow-y: auto;
     box-shadow: 0 0 50px rgba(251, 191, 36, 0.3), inset 0 0 30px rgba(255, 255, 255, 0.05);
     animation: winEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
-    overflow: hidden;
 }
 
 @keyframes winEntrance {
@@ -1482,8 +1483,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .confetti {
-    font-size: 4rem;
-    margin-bottom: 20px;
+    font-size: 2.2rem;
+    margin-bottom: 6px;
     animation: bounce 1s infinite;
 }
 
@@ -1500,10 +1501,9 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .win-card h2 {
-    font-size: 3rem;
-    /* Increased from 2.5rem */
+    font-size: 2rem;
     color: var(--accent-gold);
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
     line-height: 1.2;
 }
@@ -2186,9 +2186,9 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .win-card h2 {
-    font-size: 3.5rem;
+    font-size: 2.4rem;
     font-weight: 900;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     background: linear-gradient(to bottom, #fff, var(--accent-gold));
     -webkit-background-clip: text;
     background-clip: text;
@@ -2199,7 +2199,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 /* Podio Risultati */
 .win-title-name {
-    font-size: 3.2rem;
+    font-size: 2.2rem;
     font-weight: 900;
     color: var(--accent-gold);
     text-shadow: 0 0 30px rgba(251,191,36,0.6);
@@ -2207,7 +2207,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .win-title-sub {
-    font-size: 1.3rem;
+    font-size: 1rem;
     font-weight: 600;
     color: rgba(255,255,255,0.7);
     letter-spacing: 4px;
@@ -2219,8 +2219,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    gap: 12px;
-    margin: 30px 0 20px;
+    gap: 10px;
+    margin: 10px 0 8px;
     width: 100%;
 }
 
@@ -2228,11 +2228,11 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     flex: 1;
-    max-width: 200px;
-    border-radius: 16px 16px 0 0;
-    padding: 20px 12px 0;
+    max-width: 180px;
+    border-radius: 14px 14px 0 0;
+    padding: 10px 8px 0;
     border: 1px solid rgba(255,255,255,0.1);
     transition: transform 0.3s ease;
     position: relative;
@@ -2254,7 +2254,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     order: 2;
     padding-bottom: 0;
 }
-.podium-place.first .podium-bar { height: 80px; background: rgba(251,191,36,0.35); }
+.podium-place.first .podium-bar { height: 44px; background: rgba(251,191,36,0.35); }
 
 .podium-place.second {
     background: rgba(255,255,255,0.04);
@@ -2262,7 +2262,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     order: 1;
     padding-bottom: 0;
 }
-.podium-place.second .podium-bar { height: 52px; background: rgba(203,213,225,0.2); }
+.podium-place.second .podium-bar { height: 28px; background: rgba(203,213,225,0.2); }
 
 .podium-place.third {
     background: rgba(255,255,255,0.03);
@@ -2270,30 +2270,30 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     order: 3;
     padding-bottom: 0;
 }
-.podium-place.third .podium-bar { height: 30px; background: rgba(146,64,14,0.25); }
+.podium-place.third .podium-bar { height: 16px; background: rgba(146,64,14,0.25); }
 
 .place-icon {
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     line-height: 1;
     animation: podiumBounce 1.5s ease-in-out infinite;
 }
 
 .podium-avatar {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.15);
     background: white;
-    padding: 3px;
+    padding: 2px;
 }
 
 .podium-place.first .podium-avatar {
-    width: 76px;
-    height: 76px;
+    width: 58px;
+    height: 58px;
     border-color: rgba(251,191,36,0.6);
-    box-shadow: 0 0 16px rgba(251,191,36,0.4);
+    box-shadow: 0 0 14px rgba(251,191,36,0.4);
     background: white;
-    padding: 3px;
+    padding: 2px;
 }
 
 @keyframes podiumBounce {
@@ -2324,11 +2324,11 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .win-message {
-    font-size: 1.6rem;
+    font-size: 1.2rem;
     font-weight: 900;
     color: var(--accent-gold);
     text-shadow: 0 0 20px rgba(251,191,36,0.5);
-    margin: 16px 0 24px;
+    margin: 8px 0 14px;
     letter-spacing: 1px;
 }
 
@@ -5211,16 +5211,40 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     color: rgba(251, 191, 36, 1);
 }
 
+.kofi-endgame-block {
+    margin-top: 14px;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 12px;
+}
+
+.kofi-endgame-msg {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
 .kofi-endgame {
-    display: block;
-    margin-top: 16px;
-    color: rgba(255, 255, 255, 0.45);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    background: rgba(251,191,36,0.12);
+    border: 1px solid rgba(251,191,36,0.35);
+    border-radius: 20px;
+    color: rgba(251,191,36,0.85);
     text-decoration: none;
-    font-size: 0.85rem;
-    transition: color 0.2s;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
 }
 .kofi-endgame:hover {
-    color: rgba(251, 191, 36, 0.9);
+    background: rgba(251,191,36,0.25);
+    border-color: rgba(251,191,36,0.65);
+    color: #fbbf24;
+    transform: translateY(-1px);
 }
 
 .kofi-link {

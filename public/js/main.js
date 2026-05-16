@@ -19,7 +19,7 @@ import { updateUI } from './ui.js';
 import { passTurn, setUpdateUI as playersSetUpdateUI, setSyncGameState as playersSetSyncGameState } from './players.js';
 import { setUpdateUI as boardSetUpdateUI } from './board.js';
 import { spinWheel, drawWheel, renderWheelToCache } from './wheel.js';
-import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche, skipPhrase } from './game-logic.js';
+import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche, skipPhrase, loadPuzzles } from './game-logic.js';
 import { callExpressConsonant, buyExpressVowel, setEndManche as expressSetEndManche } from './express.js';
 import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndManche, setSyncGameState as finalRoundSetSyncGameState } from './finalRound.js';
 import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
@@ -153,6 +153,9 @@ window._skipToManche5 = () => {
     gameState.currentManche = 4;
     endManche();
 };
+
+// ===== Load puzzles from Supabase =====
+loadPuzzles();
 
 // ===== Initialize Setup Screen =====
 initSetup();

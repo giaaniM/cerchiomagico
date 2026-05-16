@@ -13,9 +13,6 @@ import { createBoard, revealLetter, countLetterOccurrences, checkAllConsonantsRe
 import { drawWheel, renderWheelToCache, WHEEL_SEGMENTS } from './wheel.js';
 import { syncGameState } from './socket.js';
 
-// PUZZLE_DATABASE is a global loaded from puzzles.js
-/* global PUZZLE_DATABASE */
-
 const OFFLINE_PHRASES = [
     { phrase: "CHI DORME NON PIGLIA PESCI", hint: "Proverbio" },
     { phrase: "NON DIRE GATTO SE NON CE L HAI NEL SACCO", hint: "Proverbio" },
@@ -33,6 +30,24 @@ const OFFLINE_PHRASES = [
     { phrase: "IL MATTINO HA L ORO IN BOCCA", hint: "Proverbio" },
     { phrase: "TUTTE LE STRADE PORTANO A ROMA", hint: "Proverbio" }
 ];
+
+let puzzleDatabase = [...OFFLINE_PHRASES];
+
+export async function loadPuzzles() {
+    try {
+        const res = await fetch('/api/puzzles');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+            puzzleDatabase = data;
+            console.log(`[PUZZLES] Loaded ${data.length} phrases from Supabase`);
+        } else {
+            console.warn('[PUZZLES] Empty response, using offline fallback');
+        }
+    } catch (err) {
+        console.warn('[PUZZLES] Failed to load from server, using offline fallback:', err);
+    }
+}
 
 // ===== Confetti helpers =====
 function triggerConfettiRain() {
@@ -400,7 +415,7 @@ export function startNextManche() {
     // AI PHRASE GENERATION — disabilitato, riattiva decommentando il blocco sotto
     // showPopup(`<div class="popup-loading">Generando frase per Manche ${gameState.currentManche}...</div>`, 0);
 
-    // Select phrase from local PUZZLE_DATABASE
+    // Select phrase from local puzzleDatabase
     let valid = false;
     let attempts = 0;
 
@@ -435,7 +450,7 @@ export function startNextManche() {
 
     while (!valid && attempts < 200) {
         attempts++;
-        const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
+        const randomPuzzle = puzzleDatabase[Math.floor(Math.random() * puzzleDatabase.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
         const isNotUsed = !gameState.usedPhrases.has(normalized);
         const isNotExcluded = !gameState.excludedPhrases.has(normalized);
@@ -575,14 +590,14 @@ export function startGameLocal() {
         gameState.excludedPhrases = new Set(list.map(p => normalizePhrase(p)));
     }
 
-    if (gameState.usedPhrases.size >= PUZZLE_DATABASE.length) {
+    if (gameState.usedPhrases.size >= puzzleDatabase.length) {
         console.log('All phrases used! Resetting pool.');
         gameState.usedPhrases.clear();
     }
 
     while (!valid && attempts < 1000) {
         attempts++;
-        const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
+        const randomPuzzle = puzzleDatabase[Math.floor(Math.random() * puzzleDatabase.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
         const fits = !!splitPhraseIntoRows(randomPuzzle.phrase.split(' '), [12, 14, 14, 12]);
         if (!gameState.usedPhrases.has(normalized) && fits) {
@@ -594,7 +609,7 @@ export function startGameLocal() {
         }
     }
     if (!valid) {
-        const fallback = PUZZLE_DATABASE.find(p => {
+        const fallback = puzzleDatabase.find(p => {
             const words = p.phrase.split(' ');
             return !!splitPhraseIntoRows(words, [12, 14, 14, 12]);
         }) || OFFLINE_PHRASES[0];
@@ -671,7 +686,7 @@ export function skipPhrase() {
     let attempts = 0;
     while (!valid && attempts < 200) {
         attempts++;
-        const randomPuzzle = PUZZLE_DATABASE[Math.floor(Math.random() * PUZZLE_DATABASE.length)];
+        const randomPuzzle = puzzleDatabase[Math.floor(Math.random() * puzzleDatabase.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
         const isNotUsed = !gameState.usedPhrases.has(normalized);
         const isNotExcluded = !gameState.excludedPhrases.has(normalized);
