@@ -65,9 +65,16 @@ function applyPortrait() {
     document.body.style.padding = '0';
     document.body.style.margin = '0';
     document.body.style.overflow = 'hidden';
+    window.scrollTo(0, 0);
 
     els.gameScreen.classList.add('mp-active');
     active = true;
+
+    // Reset scroll position after DOM rearrangement (iOS can restore old position)
+    requestAnimationFrame(() => {
+        col.scrollTop = 0;
+        window.scrollTo(0, 0);
+    });
 
     // Scroll input into view when keyboard opens
     _keyboardHandler = (e) => {
