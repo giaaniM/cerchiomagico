@@ -143,8 +143,8 @@ app.get('/api/puzzles', async (req, res) => {
         .select('hint, phrase')
         .eq('active', true);
     if (error) {
-        console.error('[SUPABASE] Error fetching puzzles:', error);
-        return res.status(500).json({ error: 'Failed to fetch puzzles', detail: error.message, code: error.code });
+        console.error('[SUPABASE] Error fetching puzzles:', JSON.stringify(error));
+        return res.status(500).json({ error: 'Failed to fetch puzzles', detail: JSON.stringify(error) });
     }
     res.json(data);
 });
