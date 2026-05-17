@@ -46,9 +46,14 @@ export function isConsonant(letter) {
     return /[A-Z]/.test(normalizeChar(letter)) && !isVowel(letter);
 }
 
+const GAME_SCREENS = ['game-screen', 'win-screen'];
+
 export function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(screenId)?.classList.add('active');
+
+    const langBtn = document.getElementById('lang-toggle-btn');
+    if (langBtn) langBtn.style.display = GAME_SCREENS.includes(screenId) ? 'none' : '';
 }
 
 export function showMessage(text, type = 'info') {

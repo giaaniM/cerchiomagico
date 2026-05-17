@@ -38,7 +38,16 @@
       "mcp__supabase__list_tables",
       "Bash(curl -s http://localhost:3000/api/puzzles)",
       "Bash(xargs kill -9)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(git remote *)",
+      "Bash(sed -n '214,225p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)",
+      "Bash(sed -n '5814,5860p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)",
+      "Bash(sed -n '1918,1980p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)",
+      "Bash(sed -n '5826,5850p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)",
+      "Bash(sed -n '4748,4800p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)",
+      "Bash(sed -n '390,410p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/index.html)",
+      "Bash(sed -n '3737,3810p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)",
+      "Bash(sed -n '5987,6005p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)"
     ]
   }
 }
