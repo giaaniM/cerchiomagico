@@ -5,6 +5,7 @@ import { showPopup, showMessage, popup } from './utils.js';
 import { soundManager } from './sound.js';
 import { getCurrentPlayer, passTurn, renderPlayersList } from './players.js';
 import { updateUI, checkFinalRoundBanner, checkExpressBanner } from './ui.js';
+import { addTimePenalty } from './solo.js';
 
 // Wheel Animation Cache Variables
 let wheelCacheCanvas = null;
@@ -45,13 +46,48 @@ export const WHEEL_SEGMENTS = [
     { value: '?500', color: '#166534', label: '?500' }, // Forest Green
 
     // Group 4
-    { value: 'SCUDO', color: '#0369a1', label: 'SCUDO' }, // Ocean Blue
+    { value: 'SCUDO', color: '#9333EA', label: 'SCUDO' }, // Ocean Blue
     { value: 300, color: '#065f46', label: '300€' }, // Deep Emerald
     { value: 500, color: '#0891b2', label: '500€' }, // Cyan
     { value: 200, color: '#34d399', label: '200€' }, // Mint
     { value: 'PASSA', color: '#FFFFFF', label: 'PASSA' },
     { value: 200, color: '#b45309', label: '200€' } // Amber
 ];
+
+// Solo mode wheel: PASSA→time penalties, MEGATURNO→600€
+export const SOLO_WHEEL_SEGMENTS = [
+    { value: 300,  color: '#b45309', label: '300€' },
+    { value: 200,  color: '#065f46', label: '200€' },
+    { value: 700,  color: '#0f766e', label: '700€' },
+    { value: 500,  color: '#0891b2', label: '500€' },
+    { value: 'TEMPO+10', color: '#FFFFFF', label: '+10s' },
+    { value: 1000, color: 'RAINBOW', label: '1000€', glowing: true },
+
+    { value: 'TEMPO+60', color: '#111827', label: '+60s' },
+    { value: 350,  color: '#9a3412', label: '350€' },
+    { value: 300,  color: '#065f46', label: '300€' },
+    { value: 450,  color: '#0f766e', label: '450€' },
+    { value: 700,  color: '#0891b2', label: '700€' },
+    { value: 'TEMPO+20', color: '#FFFFFF', label: '+20s' },
+
+    { value: 'RADDOPPIA', color: 'GOLD', label: 'RADDOPPIA', glowing: true },
+    { value: 'TEMPO+15', color: '#FFFFFF', label: '+15s' },
+    { value: 800,  color: '#0f766e', label: '800€' },
+    { value: 300,  color: '#0891b2', label: '300€' },
+    { value: 600,  color: '#7c3aed', label: '600€' },
+    { value: '?500', color: '#166534', label: '?500' },
+
+    { value: 'SCUDO', color: '#9333EA', label: 'SCUDO' },
+    { value: 300,  color: '#065f46', label: '300€' },
+    { value: 500,  color: '#0891b2', label: '500€' },
+    { value: 200,  color: '#34d399', label: '200€' },
+    { value: 'TEMPO+30', color: '#FFFFFF', label: '+30s' },
+    { value: 200,  color: '#b45309', label: '200€' },
+];
+
+function activeSegments() {
+    return gameState.soloMode ? SOLO_WHEEL_SEGMENTS : WHEEL_SEGMENTS;
+}
 
 // ===== Wheel Drawing =====
 export function renderWheelToCache() {
@@ -74,9 +110,10 @@ export function renderWheelToCache() {
 
     ctx.clearRect(0, 0, wheelCacheCanvas.width, wheelCacheCanvas.height);
 
-    const segmentAngle = (2 * Math.PI) / WHEEL_SEGMENTS.length;
+    const segments = activeSegments();
+    const segmentAngle = (2 * Math.PI) / segments.length;
 
-    WHEEL_SEGMENTS.forEach((segment, i) => {
+    segments.forEach((segment, i) => {
         const startAngle = i * segmentAngle;
         const endAngle = startAngle + segmentAngle;
 
@@ -211,6 +248,18 @@ export function renderWheelToCache() {
             ctx.strokeStyle = 'transparent'; // No stroke either
         }
         else if (label === 'CROLLO') ctx.fillStyle = '#FFFFFF';
+        else if (label === '+60s') {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'transparent';
+        }
+        else if (label.startsWith('+') && label.endsWith('s')) {
+            ctx.fillStyle = '#000000';
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'transparent';
+        }
         else if (label === 'MEGATURNO') {
             ctx.fillStyle = '#fbbf24'; // Vivid yellow as requested
             ctx.shadowColor = '#000';
@@ -357,20 +406,21 @@ export function spinWheel() {
     if (overlay) overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
-    const isFinalSpin = gameState.currentManche === 5 && !gameState.finalSpinComplete;
+    const segs = activeSegments();
+    const segmentAngle = 360 / segs.length;
+    const isFinalSpin = gameState.currentManche === 5 && !gameState.finalSpinComplete && !gameState.soloMode;
 
     let randomSegmentIndex;
     if (isFinalSpin) {
-        const numericIndices = WHEEL_SEGMENTS
+        const numericIndices = segs
             .map((s, i) => ({ s, i }))
             .filter(({ s }) => typeof s.value === 'number' && s.value > 0)
             .map(({ i }) => i);
         randomSegmentIndex = numericIndices[Math.floor(Math.random() * numericIndices.length)];
     } else {
-        randomSegmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+        randomSegmentIndex = Math.floor(Math.random() * segs.length);
     }
-    const resultFragment = WHEEL_SEGMENTS[randomSegmentIndex];
+    const resultFragment = segs[randomSegmentIndex];
 
     // Stop near the EDGE of the segment (in bilico)
     const edgeSide = Math.random() > 0.5 ? 1 : -1;
@@ -380,12 +430,12 @@ export function spinWheel() {
     let targetRotationDelta = 270 - segmentCenter + (edgeOffset * segmentAngle);
     targetRotationDelta = (targetRotationDelta % 360 + 360) % 360;
 
-    const minSpins = 3 + Math.floor(Math.random() * 2);
+    const minSpins = 2 + Math.floor(Math.random() * 2);
     const startRotation = gameState.wheelRotation;
     const targetRotation = startRotation + targetRotationDelta + (minSpins * 360);
     const totalRotation = targetRotation - startRotation;
 
-    const duration = 8000;
+    const duration = 5000;
     const startTime = performance.now();
     let lastTickSegment = -1;
     let lastRotation = startRotation;
@@ -417,15 +467,14 @@ export function spinWheel() {
             // Calculate the ACTUAL segment from final position
             const finalAngle = ((270 - currentRotation) % 360 + 360) % 360;
             const actualSegmentIndex = Math.floor(finalAngle / segmentAngle);
-            const actualResult = WHEEL_SEGMENTS[actualSegmentIndex];
-
-            setTimeout(() => onWheelStop(actualResult), 1500);
+            const actualResult = segs[actualSegmentIndex];
 
             setTimeout(() => {
                 const overlay = document.getElementById('wheel-overlay');
                 if (overlay) overlay.classList.remove('active');
                 document.body.style.overflow = '';
-            }, 2500);
+                onWheelStop(actualResult);
+            }, 500);
         }
     }
 
@@ -486,6 +535,22 @@ export function onWheelStop(result) {
 
     const player = getCurrentPlayer();
 
+    // ===== SOLO MODE: time penalty segments =====
+    if (gameState.soloMode && typeof result.value === 'string' && result.value.startsWith('TEMPO+')) {
+        if (gameState.hasShield[player.name]) {
+            handlePenaltyWithShield(player, result.value);
+        } else {
+            const seconds = parseInt(result.value.replace('TEMPO+', ''), 10);
+            soundManager.playError();
+            addTimePenalty(seconds);
+            elements.currentWheelValue.textContent = `+${seconds}s`;
+            elements.currentWheelValue.className = 'wheel-value passa';
+            gameState.wheelPhase = 'idle';
+            updateUI();
+        }
+        return;
+    }
+
     if (result.value === 'PASSA') {
         if (gameState.hasShield[player.name]) {
             handlePenaltyWithShield(player, 'PASSA');
@@ -518,7 +583,6 @@ export function onWheelStop(result) {
             elements.currentWheelValue.textContent = t('wheel.display.CROLLO');
             elements.currentWheelValue.className = 'wheel-value crollo';
             gameState.partialScores[player.name] = 0;
-            gameState.totalScores[player.name] = 0;
             renderPlayersList();
             showPopup(popup('💥', t('msg.crollo.title'), t('wheel.crollo.popup.body')), 4000, 'danger');
             setTimeout(passTurn, 4500);
@@ -552,10 +616,23 @@ export function onWheelStop(result) {
 
 function handlePenaltyWithShield(player, penaltyType) {
     gameState.pendingPenalty = penaltyType;
-    const title = penaltyType === 'CROLLO' ? `💥 ${t('msg.crollo.title')}` : `⏭️ ${t('wheel.passa.title')}`;
+    const isTempo = typeof penaltyType === 'string' && penaltyType.startsWith('TEMPO+');
+    const tempoSec = isTempo ? parseInt(penaltyType.replace('TEMPO+', ''), 10) : 0;
+
+    const title = penaltyType === 'CROLLO'
+        ? `💥 ${t('msg.crollo.title')}`
+        : isTempo
+            ? `⏱️ +${tempoSec}s`
+            : `⏭️ ${t('wheel.passa.title')}`;
     const penaltyText = penaltyType === 'CROLLO'
         ? t('wheel.shield.choice.crollo')
-        : t('wheel.shield.choice.passa');
+        : isTempo
+            ? t('solo.penalty.body')
+            : t('wheel.shield.choice.passa');
+    const acceptIcon = penaltyType === 'CROLLO' ? '💥' : isTempo ? '⏱️' : '⏭️';
+    const acceptLabel = isTempo
+        ? `+${tempoSec}s`
+        : t('wheel.display.' + penaltyType);
 
     const html = `
         <div class="popup-megaturno-choice">
@@ -573,8 +650,8 @@ function handlePenaltyWithShield(player, penaltyType) {
                 <!-- Accept Penalty -->
                 <div class="mystery-card right" onclick="resolveShieldChoice(false)">
                     <div class="card-content">
-                        <span class="card-icon">${penaltyType === 'CROLLO' ? '💥' : '⏭️'}</span>
-                        <span class="card-text">${t('wheel.shield.accept')}<br>${t('wheel.display.' + penaltyType)}</span>
+                        <span class="card-icon">${acceptIcon}</span>
+                        <span class="card-text">${t('wheel.shield.accept')}<br>${acceptLabel}</span>
                     </div>
                 </div>
             </div>
@@ -604,10 +681,15 @@ window.resolveShieldChoice = function (useShield) {
         if (penaltyType === 'CROLLO') {
             soundManager.playGameOver();
             gameState.partialScores[player.name] = 0;
-            gameState.totalScores[player.name] = 0;
             renderPlayersList();
             showPopup(popup('💥', t('msg.crollo.title'), t('wheel.shield.saved.crollo')), 4000, 'danger');
             setTimeout(passTurn, 4500);
+        } else if (typeof penaltyType === 'string' && penaltyType.startsWith('TEMPO+')) {
+            const sec = parseInt(penaltyType.replace('TEMPO+', ''), 10);
+            soundManager.playError();
+            addTimePenalty(sec);
+            gameState.wheelPhase = 'idle';
+            updateUI();
         } else {
             soundManager.playError();
             showPopup(popup('⏭️', t('wheel.passa.title'), `${player.name} ${t('wheel.shield.saved.passa')}`), 2500, 'warning');

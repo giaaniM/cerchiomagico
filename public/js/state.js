@@ -38,4 +38,7 @@ export const gameState = {
     finalRoundValue: 0,
     expressAccumulated: 0,
     gameId: 0,
+    soloMode: false,
+    soloElapsedSeconds: 0,
+    soloRoundSplits: [],
 };

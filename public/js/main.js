@@ -23,11 +23,11 @@ import { updateUI } from './ui.js';
 import { passTurn, setUpdateUI as playersSetUpdateUI, setSyncGameState as playersSetSyncGameState } from './players.js';
 import { setUpdateUI as boardSetUpdateUI } from './board.js';
 import { spinWheel, drawWheel, renderWheelToCache, clearWheelCache } from './wheel.js';
-import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche, skipPhrase, loadPuzzles } from './game-logic.js';
+import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche, skipPhrase, loadPuzzles, setOnNewGame } from './game-logic.js';
 import { callExpressConsonant, buyExpressVowel, setEndManche as expressSetEndManche } from './express.js';
 import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndManche, setSyncGameState as finalRoundSetSyncGameState } from './finalRound.js';
 import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
-import { initSetup, setStartGameDirectly } from './setup.js';
+import { initSetup, setStartGameDirectly, initSoloButton, resetSoloSelection } from './setup.js';
 import { initMobileLayout } from './mobile-layout.js';
 
 // ===== Wire cross-module dependencies =====
@@ -64,6 +64,7 @@ socketSetHandlers({
 
 // setup.js needs startGameDirectly
 setStartGameDirectly(startGameDirectly);
+setOnNewGame(resetSoloSelection);
 
 // ===== Attach Event Listeners =====
 
@@ -172,6 +173,7 @@ loadPuzzles();
 
 // ===== Initialize Setup Screen =====
 initSetup();
+initSoloButton();
 initMobileLayout();
 
 // ===== Initial Render =====

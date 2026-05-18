@@ -114,7 +114,6 @@ export function triggerExpressBankruptcy(reason) {
     soundManager.playGameOver();
     const player = getCurrentPlayer();
     gameState.partialScores[player.name] = 0;
-    gameState.totalScores[player.name] = 0;
     gameState.expressAccumulated = 0;
     gameState.wheelPhase = 'idle';
     renderPlayersList();

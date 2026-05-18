@@ -3,6 +3,10 @@
  * This is the NEW modular equivalent of the "core" parts of the monolithic game.js
  */
 import { gameState, socketState, VOWEL_COST, TOTAL_MANCHES, API_URL } from './state.js';
+import { startSoloTimer, stopSoloTimer, recordRoundSplit, showSoloResults, SOLO_ROUNDS, addTimePenalty } from './solo.js';
+
+let _onNewGame = () => {};
+export function setOnNewGame(fn) { _onNewGame = fn; }
 import { t, getCurrentLang } from './lang.js';
 import { elements } from './elements.js';
 import { normalizeChar, normalizePhrase, sanitizePhrase, isVowel, showScreen, showMessage, showPopup, popup, showFloatingScore } from './utils.js';
@@ -51,14 +55,17 @@ const OFFLINE_PHRASES_EN = [
 ];
 
 let puzzleDatabase = [...OFFLINE_PHRASES_IT];
+let _loadGen = 0;
 
 export async function loadPuzzles() {
+    const gen = ++_loadGen;
     const lang = getCurrentLang();
     const offlineFallback = lang === 'en' ? OFFLINE_PHRASES_EN : OFFLINE_PHRASES_IT;
     try {
         const res = await fetch(`/api/puzzles?lang=${lang}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+        if (gen !== _loadGen) return; // stale — a newer request already won
         if (Array.isArray(data) && data.length > 0) {
             puzzleDatabase = data;
             console.log(`[PUZZLES] Loaded ${data.length} phrases (lang=${lang}) from Supabase`);
@@ -67,6 +74,7 @@ export async function loadPuzzles() {
             console.warn('[PUZZLES] Empty response, using offline fallback');
         }
     } catch (err) {
+        if (gen !== _loadGen) return;
         puzzleDatabase = offlineFallback;
         console.warn('[PUZZLES] Failed to load from server, using offline fallback:', err);
     }
@@ -134,8 +142,17 @@ export function callConsonant() {
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
         soundManager.playError();
-        showPopup(popup('🚫', t('msg.alreadycalled.title'), t('msg.alreadycalled.body')), 3000, 'danger');
-        setTimeout(passTurn, 3000);
+        if (gameState.soloMode) {
+            const sec = 15;
+            addTimePenalty(sec);
+            gameState.pendingWheelValue = null;
+            elements.currentWheelValue.textContent = '-';
+            gameState.wheelPhase = 'idle';
+            updateUI();
+        } else {
+            showPopup(popup('🚫', t('msg.alreadycalled.title'), t('msg.alreadycalled.body')), 3000, 'danger');
+            setTimeout(passTurn, 3000);
+        }
         return;
     }
 
@@ -224,8 +241,15 @@ export function callConsonant() {
         soundManager.playError();
         gameState.pendingWheelValue = null;
         elements.currentWheelValue.textContent = '-';
-        showPopup(popup('❌', `"${letter}" ${t('msg.notfound')}`, t('msg.turnoflost')), 3000, 'danger');
-        setTimeout(passTurn, 3000);
+        if (gameState.soloMode) {
+            const sec = 20;
+            addTimePenalty(sec);
+            gameState.wheelPhase = 'idle';
+            updateUI();
+        } else {
+            showPopup(popup('❌', `"${letter}" ${t('msg.notfound')}`, t('msg.turnoflost')), 3000, 'danger');
+            setTimeout(passTurn, 3000);
+        }
     }
 }
 
@@ -326,7 +350,6 @@ export function trySolve() {
             soundManager.playGameOver();
             const player = getCurrentPlayer();
             gameState.partialScores[player.name] = 0;
-            gameState.totalScores[player.name] = 0;
             gameState.wheelPhase = 'idle';
             renderPlayersList();
 
@@ -334,6 +357,12 @@ export function trySolve() {
 
             showPopup(popup('💥', t('msg.crollo.title'), t('msg.crollo.body')), 4000, 'danger');
             setTimeout(passTurn, 4500);
+        } else if (gameState.soloMode) {
+            const sec = 30;
+            soundManager.playError();
+            addTimePenalty(sec);
+            gameState.wheelPhase = 'idle';
+            updateUI();
         } else {
             soundManager.playError();
             showMessage(t('msg.wrongsolution'), 'error');
@@ -366,6 +395,8 @@ export function endManche() {
     const winnings = Number(gameState.partialScores[winner.name]) || 0;
     gameState.totalScores[winner.name] = (Number(gameState.totalScores[winner.name]) || 0) + winnings;
 
+    if (gameState.soloMode) recordRoundSplit();
+
     gameState.lastMancheWinnerIndex = gameState.currentPlayerIndex;
 
     updateUI();
@@ -375,7 +406,12 @@ export function endManche() {
     soundManager.playWinner();
     soundManager.playCrowdCheer();
 
-    showPopup(popup('🏆', t('msg.manchewon').replace('{n}', gameState.currentManche), `${winner.name}<br><strong style="color:#4ade80;font-size:1.3em">+€${winnings.toLocaleString('it-IT')}</strong>`), 3000, 'subtle-success');
+    const totalManche = gameState.soloMode ? SOLO_ROUNDS : TOTAL_MANCHES;
+    const mancheLabel = gameState.soloMode
+        ? t('solo.round.popup').replace('{n}', gameState.currentManche)
+        : t('msg.manchewon').replace('{n}', gameState.currentManche);
+
+    showPopup(popup('🏆', mancheLabel, `${winner.name}<br><strong style="color:#4ade80;font-size:1.3em">+€${winnings.toLocaleString('it-IT')}</strong>`), 3000, 'subtle-success');
 
     // Clear board
     if (elements.gameBoard) elements.gameBoard.innerHTML = '';
@@ -385,20 +421,30 @@ export function endManche() {
     const endGameId = gameState.gameId;
     setTimeout(() => {
         if (gameState.gameId !== endGameId) return;
-        showPartialRanking();
 
-        setTimeout(() => {
-            if (gameState.gameId !== endGameId) return;
+        if (gameState.soloMode) {
             elements.popupMessage.style.display = 'none';
             elements.modalOverlay.style.display = 'none';
-
-            if (gameState.currentManche >= TOTAL_MANCHES) {
-                showFinalResults(newGame);
+            if (gameState.currentManche >= SOLO_ROUNDS) {
+                showSoloResults(newGame);
             } else {
                 gameState.currentManche++;
                 startNextManche();
             }
-        }, 4000);
+        } else {
+            showPartialRanking();
+            setTimeout(() => {
+                if (gameState.gameId !== endGameId) return;
+                elements.popupMessage.style.display = 'none';
+                elements.modalOverlay.style.display = 'none';
+                if (gameState.currentManche >= TOTAL_MANCHES) {
+                    showFinalResults(newGame);
+                } else {
+                    gameState.currentManche++;
+                    startNextManche();
+                }
+            }, 4000);
+        }
     }, 3000);
 }
 
@@ -491,7 +537,8 @@ export function startNextManche() {
     }
 
     if (!valid) {
-        const fallback = OFFLINE_PHRASES[0];
+        const fallbackDb = gameState.soloMode ? OFFLINE_PHRASES_EN : OFFLINE_PHRASES_IT;
+        const fallback = fallbackDb[0];
         gameState.originalPhrase = fallback.phrase;
         gameState.phrase = sanitizePhrase(fallback.phrase);
         gameState.hint = fallback.hint;
@@ -527,16 +574,20 @@ export function startNextManche() {
     </div>`, 4000, 'transparent-wrapper');
 }
 
-export async function startGameDirectly(players) {
-    console.log('startGameDirectly called with:', players);
+export function startGameDirectly(players, soloMode = false) {
+    console.log('startGameDirectly called with:', players, 'solo:', soloMode);
     if (!players || players.length === 0) {
         console.error('Cannot start game directly with 0 players');
         return;
     }
 
+    gameState.soloMode = soloMode;
+    gameState.soloElapsedSeconds = 0;
+    gameState.soloRoundSplits = [];
+
     gameState.gameId++;
     gameState.currentManche = null;
-    gameState.players = players.sort(() => Math.random() - 0.5);
+    gameState.players = soloMode ? players : players.sort(() => Math.random() - 0.5);
     gameState.currentPlayerIndex = 0;
     gameState.totalScores = {};
     gameState.partialScores = {};
@@ -549,15 +600,19 @@ export async function startGameDirectly(players) {
 
     if (elements.setupScreen) elements.setupScreen.classList.remove('active');
     if (elements.gameScreen) elements.gameScreen.classList.add('active');
-
-    // AI PHRASE GENERATION — disabilitato, riattiva decommentando le righe sotto
-    // showPopup('<div class="popup-loading">✨ Preparando la partita...</div>', 0);
-    // await fetchAIPhrases();
-    // elements.popupMessage.style.display = 'none';
-    // elements.modalOverlay.style.display = 'none';
+    const loader = document.getElementById('game-loader');
+    if (loader) loader.classList.add('visible');
 
     startNewManche();
     renderPlayersList();
+
+    // hide loader after board has painted
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (loader) {
+            loader.classList.add('hiding');
+            setTimeout(() => loader.classList.remove('visible', 'hiding'), 350);
+        }
+    }));
 }
 
 async function fetchAIPhrases() {
@@ -586,10 +641,9 @@ export function startGameLocal() {
 
     const base1000Value = 1000;
     const currentWheelTopValue = base1000Value * gameState.currentManche;
-    const topSegment = WHEEL_SEGMENTS.find(s => s.isTopValue);
-    if (topSegment) {
-        topSegment.value = currentWheelTopValue;
-        topSegment.label = `${currentWheelTopValue}€`;
+    if (WHEEL_SEGMENTS[5]) {
+        WHEEL_SEGMENTS[5].value = currentWheelTopValue;
+        WHEEL_SEGMENTS[5].label = `${currentWheelTopValue}€`;
     }
     renderWheelToCache();
 
@@ -635,7 +689,7 @@ export function startGameLocal() {
         const fallback = puzzleDatabase.find(p => {
             const words = p.phrase.split(' ');
             return !!splitPhraseIntoRows(words, [12, 14, 14, 12]);
-        }) || OFFLINE_PHRASES[0];
+        }) || OFFLINE_PHRASES_IT[0];
         gameState.phrase = sanitizePhrase(fallback.phrase);
         gameState.originalPhrase = fallback.phrase;
         gameState.hint = fallback.hint;
@@ -647,8 +701,8 @@ export function startGameLocal() {
     gameState.usedLetters = new Set();
     gameState.wheelPhase = 'idle';
 
-    // --- FINAL ROUND INIT (LOCAL) ---
-    if (gameState.currentManche === 5) {
+    // --- FINAL ROUND INIT (LOCAL) — skip in solo mode ---
+    if (!gameState.soloMode && gameState.currentManche === 5) {
         gameState.wheelPhase = 'final_spin';
         gameState.finalSpinComplete = false;
         gameState.finalRoundValue = 0;
@@ -657,28 +711,44 @@ export function startGameLocal() {
         document.body.classList.remove('manche-finale');
     }
 
+    // Start timer on first manche of solo, after category popup closes
+    if (gameState.soloMode && gameState.currentManche === 1) {
+        setTimeout(startSoloTimer, 2500);
+    }
+
     gameState.pendingWheelValue = null;
     gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
 
     elements.popupMessage.style.display = 'none';
     elements.modalOverlay.style.display = 'none';
 
+    const totalRounds = gameState.soloMode ? SOLO_ROUNDS : 5;
     elements.mancheNumber.textContent = gameState.currentManche;
+    const mancheTotalEl = document.getElementById('manche-total');
+    if (mancheTotalEl) mancheTotalEl.textContent = totalRounds;
     elements.hintText.textContent = gameState.hint;
     elements.currentWheelValue.textContent = '-';
     elements.currentWheelValue.className = 'wheel-value';
+
+    // Show/hide solo timer bar
+    const soloTimerWrap = document.getElementById('solo-timer-wrap');
+    if (soloTimerWrap) soloTimerWrap.style.display = gameState.soloMode ? 'flex' : 'none';
 
     createBoard();
     drawWheel(0);
     renderPlayersList();
     updateUI();
 
+    const roundLabel = gameState.soloMode
+        ? `${t('solo.round')} ${gameState.currentManche} ${t('solo.of')} ${SOLO_ROUNDS}`
+        : `MANCHE ${gameState.currentManche}`;
+
     showPopup(`<div class="popup-manche-start">
-        <div class="popup-manche-number">MANCHE ${gameState.currentManche}</div>
+        <div class="popup-manche-number">${roundLabel}</div>
         <div class="popup-category-label">Categoria:</div>
         <div class="popup-manche-hint-large">${gameState.hint}</div>
-        <div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
-    </div>`, 4000, 'transparent-wrapper');
+        ${!gameState.soloMode ? `<div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>` : ''}
+    </div>`, 2500, 'manche-start-popup');
 
     if (socketState.isMobileMode) {
         syncGameState();
@@ -763,9 +833,13 @@ export function newGame() {
 }
 
 function _doNewGame() {
+    stopSoloTimer();
+    _onNewGame();
     document.getElementById('modal-overlay').style.display = 'none';
     document.getElementById('popup-message').style.display = 'none';
     document.getElementById('home-btn').style.display = 'none';
+    const soloTimerWrap = document.getElementById('solo-timer-wrap');
+    if (soloTimerWrap) soloTimerWrap.style.display = 'none';
     showScreen('setup-screen');
     elements.modeSelection.style.display = 'block';
 
@@ -777,6 +851,7 @@ function _doNewGame() {
     gameState.players = [];
     gameState.usedPhrases = new Set();
     gameState.totalScores = {};
+    gameState.soloMode = false;
     hideFinalRoundBanner();
     document.body.classList.remove('manche-finale');
 }

@@ -20,8 +20,13 @@ const translations = {
     'home.step4.sub': 'chi ha più soldi vince',
     // Setup
     'setup.howmany': 'Quanti giocatori?',
+    'setup.solo.mode': 'Modalità Solitario',
+    'setup.solo.feat.timer': 'Cronometro',
+    'setup.solo.feat.phrases': '3 Frasi',
+    'setup.solo.feat.record': 'Record',
     'setup.start': 'Inizia Partita',
     'setup.howtoplay': '? Come si gioca',
+    'setup.history': '📋 Storico partite',
     'setup.kofi': '☕ Offrimi un caffè',
     'setup.experimental': '⚗️ SPERIMENTALE',
     'setup.exp.text': 'Gioca con gli smartphone come controller',
@@ -58,6 +63,28 @@ const translations = {
     'game.pass': 'PASSA',
     'game.newgame': 'Nuova Partita',
     'game.passturn': 'PASSA IL TURNO',
+    // Solo mode
+    'setup.solo.btn': '🎯 Sfida da Solo',
+    'setup.solo.desc': '3 frasi · cronometro · batti il tuo record',
+    'setup.solo.nameinput': 'Il tuo nome',
+    'solo.endtitle': 'SFIDA FINITA!',
+    'solo.score': 'Montepremi',
+    'solo.time': 'Tempo Totale',
+    'solo.newgame': 'RIGIOCA',
+    'solo.share.text': 'Ho risolto 3 frasi su Cerchio Magico in {time} con {score}! Riesci a fare meglio? 🎡 magicspingame.com',
+    'solo.share.btn': '📤 Condividi',
+    'solo.share.copied': '✅ Copiato!',
+    'solo.penalty.title': 'Penalità',
+    'solo.penalty.body': 'Sfortuna — gira di nuovo',
+    'solo.penalty.alreadycalled': '"{letter}" già chiamata',
+    'solo.penalty.notfound': '"{letter}" non è nella frase',
+    'solo.crollo.title': 'CROLLO! +60 secondi',
+    'solo.crollo.body': 'Hai perso i guadagni di questa frase — gira di nuovo',
+    'setup.solo.pill': 'Solitario',
+    'solo.playername': 'Solitario',
+    'solo.round': 'FRASE',
+    'solo.of': 'di',
+    'solo.round.popup': 'FRASE {n} di 3',
     // Win screen
     'win.title': 'HAI VINTO!',
     'win.kofi': 'Grazie per aver giocato a Cerchio Magico!<br>Se il gioco ti è piaciuto, offrimi un caffè ☕',
@@ -82,6 +109,7 @@ const translations = {
     'msg.insertvowel': 'Devi inserire una VOCALE!',
     'msg.notenoughmoney': 'Non hai abbastanza soldi! Servono €',
     'msg.vowelalreadycalled.title': 'VOCALE GIÀ CHIAMATA!',
+    'msg.vowelalreadycalled.body': 'Hai già usato questa vocale — turno perso',
     'msg.writesolution': 'Scrivi la soluzione!',
     'msg.correct': '🎉🎉 ESATTO! HAI INDOVINATO! 🎉🎉',
     'msg.wrongsolution': '❌ Soluzione errata!',
@@ -211,8 +239,13 @@ const translations = {
     'home.step4.sub': 'most money wins',
     // Setup
     'setup.howmany': 'How many players?',
+    'setup.solo.mode': 'Solo Mode',
+    'setup.solo.feat.timer': 'Timer',
+    'setup.solo.feat.phrases': '3 Phrases',
+    'setup.solo.feat.record': 'Record',
     'setup.start': 'Start Game',
     'setup.howtoplay': '? How to play',
+    'setup.history': '📋 Game history',
     'setup.kofi': '☕ Buy me a coffee',
     'setup.experimental': '⚗️ EXPERIMENTAL',
     'setup.exp.text': 'Play with smartphones as controllers',
@@ -249,6 +282,28 @@ const translations = {
     'game.pass': 'PASS',
     'game.newgame': 'New Game',
     'game.passturn': 'PASS TURN',
+    // Solo mode
+    'setup.solo.btn': '🎯 Solo Challenge',
+    'setup.solo.desc': '3 phrases · timer · beat your record',
+    'setup.solo.nameinput': 'Your name',
+    'solo.endtitle': 'CHALLENGE DONE!',
+    'solo.score': 'Prize Money',
+    'solo.time': 'Total Time',
+    'solo.newgame': 'PLAY AGAIN',
+    'solo.share.text': 'I solved 3 phrases on MagicSpin in {time} with {score}! Can you beat it? 🎡 magicspingame.com',
+    'solo.share.btn': '📤 Share',
+    'solo.share.copied': '✅ Copied!',
+    'solo.penalty.title': 'Penalty',
+    'solo.penalty.body': 'Bad luck — spin again',
+    'solo.penalty.alreadycalled': '"{letter}" already called',
+    'solo.penalty.notfound': '"{letter}" not in phrase',
+    'solo.crollo.title': 'BANKRUPT! +60 seconds',
+    'solo.crollo.body': 'Lost this round\'s earnings — spin again',
+    'setup.solo.pill': 'Solo',
+    'solo.playername': 'Solo',
+    'solo.round': 'PHRASE',
+    'solo.of': 'of',
+    'solo.round.popup': 'PHRASE {n} of 3',
     // Win screen
     'win.title': 'YOU WON!',
     'win.kofi': 'Thanks for playing MagicSpin!<br>If you enjoyed the game, buy me a coffee ☕',
@@ -273,6 +328,7 @@ const translations = {
     'msg.insertvowel': 'You must enter a VOWEL!',
     'msg.notenoughmoney': 'Not enough money! You need €',
     'msg.vowelalreadycalled.title': 'VOWEL ALREADY CALLED!',
+    'msg.vowelalreadycalled.body': 'You already used this vowel — turn lost',
     'msg.writesolution': 'Type the solution!',
     'msg.correct': '🎉🎉 CORRECT! YOU GOT IT! 🎉🎉',
     'msg.wrongsolution': '❌ Wrong solution!',
@@ -387,10 +443,10 @@ let currentLang = detectLang();
 const listeners = [];
 
 function detectLang() {
-  const saved = localStorage.getItem('magicspin_lang');
+  const saved = localStorage.getItem('magicspin_lang_v2');
   if (saved === 'it' || saved === 'en') return saved;
-  const browser = (navigator.language || '').substring(0, 2).toLowerCase();
-  return browser === 'en' ? 'en' : 'it';
+  const browserLang = navigator.language?.toLowerCase() || '';
+  return browserLang.startsWith('en') ? 'en' : 'it';
 }
 
 export function getCurrentLang() { return currentLang; }
@@ -398,7 +454,7 @@ export function getCurrentLang() { return currentLang; }
 export function setLang(lang) {
   if (lang !== 'it' && lang !== 'en') return;
   currentLang = lang;
-  localStorage.setItem('magicspin_lang', lang);
+  localStorage.setItem('magicspin_lang_v2', lang);
   applyTranslations();
   listeners.forEach(fn => fn(lang));
 }

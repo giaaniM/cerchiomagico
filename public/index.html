@@ -138,10 +138,18 @@
                     <div class="setup-section">
                         <label class="setup-label" data-i18n="setup.howmany">Quanti giocatori?</label>
                         <div class="player-count-pills">
+                            <button class="count-pill count-pill-solo" id="solo-mode-btn" data-count="solo" title="Sfida a tempo da solo" data-i18n="setup.solo.pill">Solitario</button>
                             <button class="count-pill active" data-count="2">2</button>
                             <button class="count-pill" data-count="3">3</button>
                             <button class="count-pill" data-count="4">4</button>
                             <button class="count-pill" data-count="5">5</button>
+                        </div>
+                        <div id="solo-hint" class="solo-mode-card" style="display:none;">
+                            <div class="solo-mode-features">
+                                <div class="solo-mode-feature"><span class="smf-icon">⏱️</span><span class="smf-label" data-i18n="setup.solo.feat.timer">Cronometro</span></div>
+                                <div class="solo-mode-feature"><span class="smf-icon">📋</span><span class="smf-label" data-i18n="setup.solo.feat.phrases">3 Frasi</span></div>
+                                <div class="solo-mode-feature"><span class="smf-icon">🏆</span><span class="smf-label" data-i18n="setup.solo.feat.record">Record</span></div>
+                            </div>
                         </div>
                     </div>
 
@@ -151,13 +159,14 @@
                         Inizia Partita
                     </button>
                     <button id="how-to-play-btn" class="setup-howto-link" data-i18n="setup.howtoplay">? Come si gioca</button>
+                    <button id="history-btn" class="setup-howto-link history-btn" data-i18n="setup.history">📋 Storico partite</button>
 
                     <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-home-btn" data-i18n="setup.kofi">
                         ☕ Offrimi un caffè
                     </a>
                 </div>
 
-                <div class="setup-experimental-banner" id="mode-smartphone-btn">
+<div class="setup-experimental-banner" id="mode-smartphone-btn">
                     <span class="exp-badge" data-i18n="setup.experimental">⚗️ SPERIMENTALE</span>
                     <span class="exp-text" data-i18n="setup.exp.text">Gioca con gli smartphone come controller</span>
                     <span class="exp-cta" data-i18n="setup.exp.cta">📱 Attiva →</span>
@@ -197,6 +206,10 @@
 
         <!-- Game Screen -->
         <div id="game-screen" class="screen">
+            <!-- Game loader — shown while board is initializing -->
+            <div id="game-loader" class="game-loader">
+                <div class="game-loader-spinner"></div>
+            </div>
             <!-- Popup Overlay -->
             <div id="modal-overlay" class="modal-overlay" style="display: none;">
                 <div id="popup-message" class="popup-message" style="display: none;"></div>
@@ -213,9 +226,15 @@
                 <div class="manche-indicator">
                     <span data-i18n="game.manche">MANCHE</span>
                     <span id="manche-number" class="manche-number">1</span>
-                    <span>/ 5</span>
+                    <span>/ <span id="manche-total">5</span></span>
                 </div>
                 <button id="skip-phrase-btn" class="btn-skip-phrase" data-i18n="game.changephrase">↻ Cambia frase</button>
+            </div>
+
+            <!-- Solo Timer Bar (hidden in multiplayer) -->
+            <div id="solo-timer-wrap" class="solo-timer-wrap" style="display:none;">
+                <span class="solo-timer-label">⏱️ TEMPO</span>
+                <span id="solo-timer" class="solo-timer">0:00</span>
             </div>
 
             <!-- Main Game Layout -->

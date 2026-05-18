@@ -2,7 +2,8 @@ import { gameState, TOTAL_MANCHES, VOWEL_COST } from './state.js';
 import { elements } from './elements.js';
 import { showPopup, showMessage } from './utils.js';
 import { renderPlayersList, getCurrentPlayer } from './players.js';
-import { t } from './lang.js';
+import { t, getCurrentLang } from './lang.js';
+import { saveMultiplayerGame } from './history.js';
 
 // ===== UI Updates =====
 export function updateUI() {
@@ -222,6 +223,12 @@ export function showFinalResults(newGame) {
 
     const sortedPlayers = gameState.players
         .sort((a, b) => gameState.totalScores[b.name] - gameState.totalScores[a.name]);
+
+    saveMultiplayerGame(
+        sortedPlayers.map(p => ({ name: p.name, score: gameState.totalScores[p.name] || 0 })),
+        winner?.name,
+        getCurrentLang()
+    );
 
     const fmt = (n) => `€${Number(n).toLocaleString('it-IT')}`;
     const podiumData = [

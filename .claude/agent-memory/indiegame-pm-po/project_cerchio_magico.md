@@ -34,6 +34,15 @@ type: project
 - Soglia economica reale: ~$1/mese a 1.000 DAU con generazione real-time — problema non è costo ma latenza e rate limit
 - Mai generare real-time per ogni partita; usare caching aggressivo
 
+**Analytics GA4 — snapshot 19 apr–16 mag 2026 (28 giorni):**
+- Utenti attivi: 139 (tutti nuovi, 0 di ritorno)
+- Durata media coinvolgimento: 2 min 06 sec
+- Conteggio eventi: 692
+- Sorgenti: direct 80, Facebook referral ~96, Google organic 2, Reddit 2
+- Città top: Milano 31, Bari/Naples/Rome 5 ciascuna
+- Bounce rate pagina principale: 72.5%
+- Conclusione: traffico quasi interamente Facebook (post virale/condiviso), SEO organic praticamente zero
+
 **Marketing — canali prioritari identificati (2026-05-15/aggiornato 2026-05-16):**
 - P0: Reddit (approccio indiretto: commenti + valore prima del link), Facebook groups famiglie/giochi
 - P1: TikTok/Instagram Reels/YouTube Shorts (gameplay clip), Itch.io, community italiane (Discord, forum)
