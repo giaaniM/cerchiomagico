@@ -1,7 +1,7 @@
 // ===== Sound Manager =====
 export const soundManager = {
     audioCtx: null,
-    isMuted: false,
+    isMuted: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
 
     toggleMute() {
         this.isMuted = !this.isMuted;

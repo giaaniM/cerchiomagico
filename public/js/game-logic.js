@@ -123,6 +123,7 @@ export function canFitOnBoard(phrase) {
 export function callConsonant() {
     const letter = elements.consonantInput.value.trim().toUpperCase();
     elements.consonantInput.value = '';
+    elements.consonantInput.blur();
 
     if (!letter || !/^[A-ZÀ-ÿ]$/.test(letter)) {
         showMessage(t('msg.invalidletter'), 'error');
@@ -256,6 +257,7 @@ export function callConsonant() {
 export function buyVowel() {
     const letter = elements.vowelInput.value.trim().toUpperCase();
     elements.vowelInput.value = '';
+    elements.vowelInput.blur();
     const player = getCurrentPlayer();
 
     if (!letter || !/^[AEIOUÀÈÌÒÙàèìòù]$/i.test(letter)) {

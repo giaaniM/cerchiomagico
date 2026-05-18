@@ -40,12 +40,12 @@ export function addTimePenalty(seconds) {
         }, 1400);
     }
 
-    // Pill flash just below the sticky timer bar — always visible, never covers board
+    // Two-line pill flash below sticky timer bar
     const flash = document.createElement('div');
     flash.className = 'penalty-center-flash';
-    flash.textContent = `+${seconds}s`;
+    flash.innerHTML = `<span class="pcf-label">PENALITÀ</span><span class="pcf-time">+${seconds}s</span>`;
     document.body.appendChild(flash);
-    setTimeout(() => flash.remove(), 1200);
+    setTimeout(() => flash.remove(), 1400);
 }
 
 export function recordRoundSplit() {
@@ -145,6 +145,7 @@ export function showSoloResults(newGame) {
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     winScreen?.classList.add('active');
+    window.scrollTo(0, 0);
 
     import('./sound.js').then(({ soundManager }) => soundManager.playFinalWin());
 }

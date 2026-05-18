@@ -271,6 +271,7 @@ export function showFinalResults(newGame) {
     // Show win screen
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('win-screen')?.classList.add('active');
+    window.scrollTo(0, 0);
 
     // Import sound here to avoid circular: soundManager is in sound.js
     import('./sound.js').then(({ soundManager }) => soundManager.playFinalWin());
