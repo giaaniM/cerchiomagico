@@ -157,6 +157,53 @@ app.get('/api/puzzles', async (req, res) => {
     res.json(data ?? []);
 });
 
+// Leaderboard — GET top 20 by mode
+app.get('/api/leaderboard', async (req, res) => {
+    const mode = req.query.mode === 'mp' ? 'mp' : 'solo';
+    const lang = req.query.lang === 'en' ? 'en' : 'it';
+    const orderCol = mode === 'solo' ? 'time_seconds' : 'score';
+    const ascending = mode === 'solo';
+    const { data, error } = await supabase
+        .from('leaderboard')
+        .select('nickname, score, time_seconds, created_at')
+        .eq('mode', mode)
+        .eq('lang', lang)
+        .order(orderCol, { ascending })
+        .limit(20);
+    if (error) return res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    res.json(data ?? []);
+});
+
+// Leaderboard — POST submit score
+app.post('/api/leaderboard', async (req, res) => {
+    const { nickname, mode, score, time_seconds, lang } = req.body;
+    if (!nickname || !mode || score == null) return res.status(400).json({ error: 'Missing fields' });
+    if (!['solo', 'mp'].includes(mode)) return res.status(400).json({ error: 'Invalid mode' });
+    if (typeof score !== 'number' || score < 0) return res.status(400).json({ error: 'Invalid score' });
+    const clean = String(nickname).trim().slice(0, 30);
+    if (!clean) return res.status(400).json({ error: 'Invalid nickname' });
+
+    const { error } = await supabase.from('leaderboard').insert({
+        nickname: clean,
+        mode,
+        score,
+        time_seconds: time_seconds ?? null,
+        lang: lang === 'en' ? 'en' : 'it',
+    });
+    if (error) return res.status(500).json({ error: 'Failed to submit score' });
+
+    // Return rank
+    const orderCol = mode === 'solo' ? 'time_seconds' : 'score';
+    const ascending = mode === 'solo';
+    const { count } = await supabase
+        .from('leaderboard')
+        .select('*', { count: 'exact', head: true })
+        .eq('mode', mode)
+        .eq('lang', lang === 'en' ? 'en' : 'it')
+        .filter(orderCol, ascending ? 'lte' : 'gte', mode === 'solo' ? time_seconds : score);
+    res.json({ success: true, rank: count ?? null });
+});
+
 // Mark puzzle as inactive in Supabase
 app.post('/api/puzzle/remove', async (req, res) => {
     const { phrase } = req.body;

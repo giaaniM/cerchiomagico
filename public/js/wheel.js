@@ -11,8 +11,9 @@ import { addTimePenalty } from './solo.js';
 let wheelCacheCanvas = null;
 let wheelCacheCtx = null;
 let wheelAnimationId = null;
+let wheelMainCtx = null;
 
-export function clearWheelCache() { wheelCacheCanvas = null; }
+export function clearWheelCache() { wheelCacheCanvas = null; wheelMainCtx = null; }
 
 const SPECIAL_LABELS = ['PASSA', 'CROLLO', 'MEGATURNO', 'SCUDO', 'RADDOPPIA'];
 function wLabel(label) {
@@ -360,7 +361,8 @@ export function renderWheelToCache() {
 export function drawWheel(rotation = 0) {
     const canvas = elements.wheelCanvas;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    if (!wheelMainCtx) wheelMainCtx = canvas.getContext('2d');
+    const ctx = wheelMainCtx;
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
@@ -457,8 +459,8 @@ export function spinWheel() {
         const currentSegment = Math.floor(((270 - currentRotation) % 360 + 360) % 360 / segmentAngle);
 
         if (currentSegment !== lastTickSegment && rotationDelta > 0.02) {
-            soundManager.playWheelTick();
             lastTickSegment = currentSegment;
+            setTimeout(() => soundManager.playWheelTick(), 0);
         }
 
         if (progress < 1) {

@@ -2,8 +2,10 @@ import { gameState } from './state.js';
 import { t, getCurrentLang } from './lang.js';
 import { showPopup, popup } from './utils.js';
 import { saveSoloGame } from './history.js';
+import { showSubmitAndLeaderboard } from './leaderboard.js';
 
 export const SOLO_ROUNDS = 3;
+const HISTORY_KEY = 'magicspin_history_v1';
 
 let timerInterval = null;
 
@@ -65,6 +67,20 @@ function updateTimerDisplay() {
     if (el) el.textContent = formatTime(gameState.soloElapsedSeconds || 0);
 }
 
+export function initSoloRecord(playerName) {
+    let entries = [];
+    try { entries = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch {}
+    const lang = getCurrentLang();
+    const personal = entries.filter(e => e.type === 'solo' && e.playerName === playerName && e.lang === lang);
+    const row = document.getElementById('solo-record-row');
+    if (!row) return;
+    if (personal.length === 0) { row.style.display = 'none'; return; }
+    const best = personal.reduce((b, e) => e.time < b.time ? e : b);
+    const val = document.getElementById('solo-record-val');
+    if (val) val.textContent = `${formatTime(best.time)} · €${Number(best.score).toLocaleString('it-IT')}`;
+    row.style.display = 'flex';
+}
+
 export function showSoloResults(newGame) {
     stopSoloTimer();
 
@@ -95,38 +111,40 @@ export function showSoloResults(newGame) {
     winCard.innerHTML = `
         <div class="solo-results">
             <div class="solo-results-header">
-                <div class="solo-results-emoji">🎡</div>
-                <div class="solo-results-title">${t('solo.endtitle')}</div>
+                <div class="solo-results-crown">🏅</div>
                 <div class="solo-results-player">${playerName}</div>
+                <div class="solo-results-title">${t('solo.endtitle')}</div>
             </div>
 
-            <div class="solo-time-hero">
-                <div class="solo-time-hero-label">${t('solo.time')}</div>
-                <div class="solo-time-hero-value">${timeStr}</div>
-            </div>
-
-            <div class="solo-prize-row">
-                <div class="solo-prize-label">${t('solo.score')}</div>
-                <div class="solo-prize-value">${scoreStr}</div>
+            <div class="solo-stats-grid">
+                <div class="solo-stat-card solo-stat-primary">
+                    <div class="solo-stat-label">${t('solo.time')}</div>
+                    <div class="solo-stat-value solo-stat-time">${timeStr}</div>
+                </div>
+                <div class="solo-stat-card">
+                    <div class="solo-stat-label">${t('solo.score')}</div>
+                    <div class="solo-stat-value solo-stat-money">${scoreStr}</div>
+                </div>
             </div>
 
             ${splitsHtml ? `<div class="solo-splits">${splitsHtml}</div>` : ''}
 
-            <div class="solo-actions">
-                <button class="solo-share-btn" id="solo-share-btn">${t('solo.share.btn')}</button>
-                <button class="btn-primary solo-newgame-btn" id="solo-newgame-btn">${t('solo.newgame')}</button>
+            <div class="win-cta-stack">
+                <button class="win-cta-lb" id="solo-lb-btn">🏆 ${isIt ? 'Vai alla Classifica' : 'View Leaderboard'}</button>
+                <button class="win-cta-primary" id="solo-newgame-btn">${t('solo.newgame')}</button>
+                <button class="win-cta-share" id="solo-share-btn">${t('solo.share.btn')}</button>
             </div>
 
-            <div class="kofi-endgame-block">
-                <p class="kofi-endgame-msg">${isIt ? 'Se il gioco ti è piaciuto, offrimi un caffè ☕' : 'If you enjoyed the game, buy me a coffee ☕'}</p>
-                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-endgame">
-                    ☕ ${isIt ? 'Offrimi un caffè' : 'Buy me a coffee'}
-                </a>
-            </div>
+            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="win-kofi-link">
+                ☕ ${isIt ? 'Offrimi un caffè' : 'Buy me a coffee'}
+            </a>
         </div>
     `;
 
     document.getElementById('solo-newgame-btn')?.addEventListener('click', newGame);
+    document.getElementById('solo-lb-btn')?.addEventListener('click', () => {
+        showSubmitAndLeaderboard({ mode: 'solo', score: totalScore, time_seconds: totalTime, suggestedName: playerName });
+    });
 
     const shareBtn = document.getElementById('solo-share-btn');
     if (shareBtn) {

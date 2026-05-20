@@ -3,7 +3,7 @@
  * This is the NEW modular equivalent of the "core" parts of the monolithic game.js
  */
 import { gameState, socketState, VOWEL_COST, TOTAL_MANCHES, API_URL } from './state.js';
-import { startSoloTimer, stopSoloTimer, recordRoundSplit, showSoloResults, SOLO_ROUNDS, addTimePenalty } from './solo.js';
+import { startSoloTimer, stopSoloTimer, recordRoundSplit, showSoloResults, SOLO_ROUNDS, addTimePenalty, initSoloRecord } from './solo.js';
 
 let _onNewGame = () => {};
 export function setOnNewGame(fn) { _onNewGame = fn; }
@@ -424,7 +424,16 @@ export function endManche() {
     setTimeout(() => {
         if (gameState.gameId !== endGameId) return;
 
-        if (gameState.soloMode) {
+        if (gameState.customMode) {
+            if (gameState.soloMode) stopSoloTimer();
+            showPartialRanking();
+            setTimeout(() => {
+                if (gameState.gameId !== endGameId) return;
+                elements.popupMessage.style.display = 'none';
+                elements.modalOverlay.style.display = 'none';
+                showFinalResults(newGame);
+            }, 4000);
+        } else if (gameState.soloMode) {
             elements.popupMessage.style.display = 'none';
             elements.modalOverlay.style.display = 'none';
             if (gameState.currentManche >= SOLO_ROUNDS) {
@@ -497,6 +506,34 @@ export function startNextManche() {
         gameState.excludedPhrases = new Set(list.map(p => normalizePhrase(p)));
     }
 
+    // Custom mode: use user-provided phrase
+    if (gameState.customMode && gameState.customPhrase) {
+        gameState.originalPhrase = gameState.customPhrase;
+        gameState.phrase = sanitizePhrase(gameState.customPhrase);
+        gameState.hint = gameState.customHint || 'Personalizzato';
+        gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+        gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
+        console.log(`🎡 Custom — [${gameState.hint}] ${gameState.originalPhrase}`);
+        elements.popupMessage.style.display = 'none';
+        elements.modalOverlay.style.display = 'none';
+        elements.currentWheelValue.textContent = '-';
+        elements.currentWheelValue.className = 'wheel-value';
+        elements.mancheNumber.textContent = '✏️';
+        elements.hintText.textContent = gameState.hint;
+        createBoard();
+        drawWheel(0);
+        renderPlayersList();
+        updateUI();
+        if (socketState.isMobileMode) syncGameState();
+        showPopup(`<div class="popup-manche-start">
+            <div class="popup-manche-number">✏️ FRASE PERSONALIZZATA</div>
+            <div class="popup-category-label">Indizio:</div>
+            <div class="popup-manche-hint-large">${gameState.hint}</div>
+            <div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
+        </div>`, 4000, 'transparent-wrapper');
+        return;
+    }
+
     // AI phrase selection — disabilitato
     // const aiPool = (gameState.aiPhrases || []).slice();
     // for (let i = aiPool.length - 1; i > 0; i--) {
@@ -565,7 +602,7 @@ export function startNextManche() {
 
     showPopup(`<div class="popup-manche-start">
         <div class="popup-manche-number">MANCHE ${gameState.currentManche} ${gameState.currentManche === 5 ? '- FINALE' : ''}</div>
-        <div class="popup-category-label">Categoria:</div>
+        <div class="popup-category-label">Indizio:</div>
         <div class="popup-manche-hint-large">${gameState.hint}</div>
         <div class="popup-turn-player">
             ${gameState.currentManche === 5 ?
@@ -576,7 +613,7 @@ export function startNextManche() {
     </div>`, 4000, 'transparent-wrapper');
 }
 
-export function startGameDirectly(players, soloMode = false) {
+export function startGameDirectly(players, soloMode = false, customOpts = null) {
     console.log('startGameDirectly called with:', players, 'solo:', soloMode);
     if (!players || players.length === 0) {
         console.error('Cannot start game directly with 0 players');
@@ -586,6 +623,9 @@ export function startGameDirectly(players, soloMode = false) {
     gameState.soloMode = soloMode;
     gameState.soloElapsedSeconds = 0;
     gameState.soloRoundSplits = [];
+    gameState.customMode = !!customOpts;
+    gameState.customPhrase = customOpts?.phrase || '';
+    gameState.customHint = customOpts?.hint || '';
 
     gameState.gameId++;
     gameState.currentManche = null;
@@ -604,6 +644,8 @@ export function startGameDirectly(players, soloMode = false) {
     if (elements.gameScreen) elements.gameScreen.classList.add('active');
     const loader = document.getElementById('game-loader');
     if (loader) loader.classList.add('visible');
+
+    if (soloMode && gameState.players[0]) initSoloRecord(gameState.players[0].name);
 
     startNewManche();
     renderPlayersList();
@@ -654,6 +696,44 @@ export function startGameLocal() {
     showScreen('game-screen');
     applyMobileLayout();
     document.getElementById('home-btn').style.display = 'flex';
+
+    // Custom mode: use user-provided phrase
+    if (gameState.customMode && gameState.customPhrase) {
+        gameState.originalPhrase = gameState.customPhrase;
+        gameState.phrase = sanitizePhrase(gameState.customPhrase);
+        gameState.hint = gameState.customHint || 'Personalizzato';
+        gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
+        gameState.revealedLetters = new Set();
+        gameState.usedLetters = new Set();
+        gameState.wheelPhase = 'idle';
+        gameState.pendingWheelValue = null;
+        gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
+        elements.popupMessage.style.display = 'none';
+        elements.modalOverlay.style.display = 'none';
+        elements.mancheNumber.textContent = '✏️';
+        const mancheTotalEl = document.getElementById('manche-total');
+        if (mancheTotalEl) mancheTotalEl.textContent = '1';
+        elements.hintText.textContent = gameState.hint;
+        elements.currentWheelValue.textContent = '-';
+        elements.currentWheelValue.className = 'wheel-value';
+        const soloTimerWrap = document.getElementById('solo-timer-wrap');
+        if (soloTimerWrap) soloTimerWrap.style.display = gameState.soloMode ? 'flex' : 'none';
+        const gs = document.getElementById('game-screen');
+        if (gs) gs.classList.toggle('has-timer', !!gameState.soloMode);
+        if (gameState.soloMode && gameState.currentManche === 1) setTimeout(startSoloTimer, 2500);
+        createBoard();
+        drawWheel(0);
+        renderPlayersList();
+        updateUI();
+        if (socketState.isMobileMode) syncGameState();
+        showPopup(`<div class="popup-manche-start">
+            <div class="popup-manche-number">✏️ FRASE PERSONALIZZATA</div>
+            <div class="popup-category-label">Indizio:</div>
+            <div class="popup-manche-hint-large">${gameState.hint}</div>
+            ${!gameState.soloMode ? `<div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>` : ''}
+        </div>`, 2500, 'manche-start-popup');
+        return;
+    }
 
     let valid = false;
     let attempts = 0;
@@ -735,6 +815,8 @@ export function startGameLocal() {
     // Show/hide solo timer bar
     const soloTimerWrap = document.getElementById('solo-timer-wrap');
     if (soloTimerWrap) soloTimerWrap.style.display = gameState.soloMode ? 'flex' : 'none';
+    const gs = document.getElementById('game-screen');
+    if (gs) gs.classList.toggle('has-timer', !!gameState.soloMode);
 
     createBoard();
     drawWheel(0);
@@ -747,7 +829,7 @@ export function startGameLocal() {
 
     showPopup(`<div class="popup-manche-start">
         <div class="popup-manche-number">${roundLabel}</div>
-        <div class="popup-category-label">Categoria:</div>
+        <div class="popup-category-label">Indizio:</div>
         <div class="popup-manche-hint-large">${gameState.hint}</div>
         ${!gameState.soloMode ? `<div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>` : ''}
     </div>`, 2500, 'manche-start-popup');
@@ -842,6 +924,8 @@ function _doNewGame() {
     document.getElementById('home-btn').style.display = 'none';
     const soloTimerWrap = document.getElementById('solo-timer-wrap');
     if (soloTimerWrap) soloTimerWrap.style.display = 'none';
+    const gs2 = document.getElementById('game-screen');
+    if (gs2) gs2.classList.remove('has-timer');
     showScreen('setup-screen');
     elements.modeSelection.style.display = 'block';
 
@@ -850,6 +934,9 @@ function _doNewGame() {
     if (elements.setupSmartphoneMode) elements.setupSmartphoneMode.style.display = 'none';
 
     gameState.currentManche = null;
+    gameState.customMode = false;
+    gameState.customPhrase = '';
+    gameState.customHint = '';
     gameState.players = [];
     gameState.usedPhrases = new Set();
     gameState.totalScores = {};

@@ -78,99 +78,132 @@
                     </h1>
                 </div>
                 <p class="home-tagline" data-i18n="home.tagline">Il gioco delle parole da fare in compagnia</p>
-                <div class="home-visual-strip">
-                    <div class="hvs-step">
-                        <div class="hvs-visual">
-                            <div class="hvs-wheel">
-                                <div class="hvs-wheel-inner"></div>
-                                <div class="hvs-wheel-pointer"></div>
-                            </div>
-                        </div>
-                        <span class="hvs-label" data-i18n="home.step1.label">Gira il Cerchio</span>
-                        <span class="hvs-sub" data-i18n="home.step1.sub">ottieni un valore</span>
-                    </div>
-                    <div class="hvs-arrow">→</div>
-                    <div class="hvs-step">
-                        <div class="hvs-visual">
-                            <div class="hvs-board">
-                                <div class="hvs-tile hidden"></div>
-                                <div class="hvs-tile revealed">R</div>
-                                <div class="hvs-tile hidden"></div>
-                                <div class="hvs-tile hidden"></div>
-                                <div class="hvs-tile revealed">A</div>
-                                <div class="hvs-tile hidden"></div>
-                            </div>
-                        </div>
-                        <span class="hvs-label" data-i18n="home.step2.label">Chiama Lettere</span>
-                        <span class="hvs-sub" data-i18n="home.step2.sub">guadagni per occorrenza</span>
-                    </div>
-                    <div class="hvs-arrow">→</div>
-                    <div class="hvs-step">
-                        <div class="hvs-visual">
-                            <div class="hvs-board">
-                                <div class="hvs-tile revealed">F</div>
-                                <div class="hvs-tile revealed">R</div>
-                                <div class="hvs-tile revealed">A</div>
-                                <div class="hvs-tile revealed">S</div>
-                                <div class="hvs-tile revealed">E</div>
-                                <div class="hvs-tile revealed">!</div>
-                            </div>
-                        </div>
-                        <span class="hvs-label" data-i18n="home.step3.label">Risolvi la Frase</span>
-                        <span class="hvs-sub" data-i18n="home.step3.sub">vinci il round</span>
-                    </div>
-                    <div class="hvs-arrow">→</div>
-                    <div class="hvs-step hvs-step-win">
-                        <div class="hvs-visual">
-                            <div class="hvs-prize">
-                                <span class="hvs-trophy">🏆</span>
-                                <span class="hvs-prize-amt">€10.000</span>
-                            </div>
-                        </div>
-                        <span class="hvs-label" data-i18n="home.step4.label">5 Manche</span>
-                        <span class="hvs-sub" data-i18n="home.step4.sub">chi ha più soldi vince</span>
-                    </div>
+                <div class="home-mini-steps">
+                    <span class="hms-item">🎡 Gira</span>
+                    <span class="hms-sep">·</span>
+                    <span class="hms-item">🔤 Chiama</span>
+                    <span class="hms-sep">·</span>
+                    <span class="hms-item">💡 Risolvi</span>
+                    <span class="hms-sep">·</span>
+                    <span class="hms-item hms-win">🏆 Vinci</span>
                 </div>
             </div>
 
             <div class="setup-layout">
+
+                <!-- Mode switcher -->
+                <div class="setup-mode-switcher" id="setup-mode-switcher">
+                    <button class="sms-btn active" data-mode="normal" id="sms-normal">
+                        <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 14a6 6 0 110-12 6 6 0 010 12z" opacity=".4"/><circle cx="10" cy="10" r="3"/></svg>
+                        Gioca
+                    </button>
+                    <button class="sms-btn" data-mode="custom" id="sms-custom">
+                        <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M14.5 2.5a2.12 2.12 0 013 3L6 17H3v-3L14.5 2.5z"/></svg>
+                        Crea Frase
+                    </button>
+                </div>
+
                 <div class="setup-card">
+
+                    <!-- ① MODE SELECTION -->
                     <div class="setup-section">
-                        <label class="setup-label" data-i18n="setup.howmany">Quanti giocatori?</label>
-                        <div class="player-count-pills">
-                            <button class="count-pill count-pill-solo" id="solo-mode-btn" data-count="solo" title="Sfida a tempo da solo" data-i18n="setup.solo.pill">Solitario</button>
-                            <button class="count-pill active" data-count="2">2</button>
-                            <button class="count-pill" data-count="3">3</button>
-                            <button class="count-pill" data-count="4">4</button>
-                            <button class="count-pill" data-count="5">5</button>
-                        </div>
-                        <div id="solo-hint" class="solo-mode-card" style="display:none;">
-                            <div class="solo-mode-features">
-                                <div class="solo-mode-feature"><span class="smf-icon">⏱️</span><span class="smf-label" data-i18n="setup.solo.feat.timer">Cronometro</span></div>
-                                <div class="solo-mode-feature"><span class="smf-icon">📋</span><span class="smf-label" data-i18n="setup.solo.feat.phrases">3 Frasi</span></div>
-                                <div class="solo-mode-feature"><span class="smf-icon">🏆</span><span class="smf-label" data-i18n="setup.solo.feat.record">Record</span></div>
+                        <label class="setup-label" data-i18n="setup.howmany">Modalità</label>
+
+                        <!-- Pills row -->
+                        <div class="setup-mode-row">
+                            <div class="player-count-pills">
+                                <button class="count-pill count-pill-solo" id="solo-mode-btn" data-count="solo" data-i18n="setup.solo.pill">Solitario</button>
+                                <button class="count-pill active" data-count="2">2</button>
+                                <button class="count-pill" data-count="3">3</button>
+                                <button class="count-pill" data-count="4">4</button>
+                                <button class="count-pill" data-count="5">5</button>
                             </div>
+                        </div>
+
+                        <!-- Mode info card — always visible, content set by JS -->
+                        <div id="mode-info-card" class="mode-info-card">
+                            <div class="mic-feature"><span class="mic-icon">📋</span><span class="mic-label">5 Frasi</span></div>
+                            <div class="mic-feature"><span class="mic-icon">⚡</span><span class="mic-label">Megaturno</span></div>
+                            <div class="mic-feature"><span class="mic-icon">🎯</span><span class="mic-label">Finale Speciale</span></div>
                         </div>
                     </div>
 
+                    <!-- ② PLAYER NAMES -->
                     <div id="local-names-container" class="names-grid"></div>
 
+                    <!-- ③ PRIMARY CTA -->
                     <button id="start-local-game-btn" class="btn-primary setup-start-btn" data-i18n="setup.start">
                         Inizia Partita
                     </button>
-                    <button id="how-to-play-btn" class="setup-howto-link" data-i18n="setup.howtoplay">? Come si gioca</button>
-                    <button id="history-btn" class="setup-howto-link history-btn" data-i18n="setup.history">📋 Storico partite</button>
 
-                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-home-btn" data-i18n="setup.kofi">
-                        ☕ Offrimi un caffè
-                    </a>
+                    <!-- ④ TERTIARY ACTIONS -->
+                    <div class="setup-actions-bottom">
+                        <div class="setup-tertiary-row">
+                            <button id="leaderboard-btn" class="setup-lb-standalone" data-i18n="setup.leaderboard">🏆 Classifica</button>
+                            <button id="history-btn" class="setup-secondary-btn setup-history-btn" data-i18n="setup.history">📋 Storico</button>
+                            <button id="how-to-play-btn" class="setup-secondary-btn" data-i18n="setup.howtoplay">? Regole</button>
+                            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="setup-secondary-btn setup-kofi-inline" data-i18n="setup.kofi">☕ Caffè</a>
+                        </div>
+                    </div>
+
                 </div>
 
-<div class="setup-experimental-banner" id="mode-smartphone-btn">
+                <div class="setup-experimental-banner" id="mode-smartphone-btn">
                     <span class="exp-badge" data-i18n="setup.experimental">⚗️ SPERIMENTALE</span>
                     <span class="exp-text" data-i18n="setup.exp.text">Gioca con gli smartphone come controller</span>
                     <span class="exp-cta" data-i18n="setup.exp.cta">📱 Attiva →</span>
                 </div>
+
+                <!-- CREA FRASE CARD -->
+                <div class="setup-card setup-custom-card" style="display:none;">
+                    <div class="scc-header">
+                        <span class="scc-icon">✏️</span>
+                        <div class="scc-header-text">
+                            <span class="scc-title">Crea la tua frase</span>
+                            <span class="scc-sub">Partita locale · nessuna classifica</span>
+                        </div>
+                    </div>
+
+                    <!-- Phrase inputs -->
+                    <div class="cpp-fields">
+                        <div class="cpp-field-wrap">
+                            <div class="cpp-label-row">
+                                <label class="cpp-label">Indizio</label>
+                                <span class="cpp-counter" id="hint-counter">0/30</span>
+                            </div>
+                            <input id="custom-hint-input" class="cpp-input cpp-input-hint" type="text"
+                                placeholder="es. Film, Proverbio, Nome proprio..." maxlength="30" autocomplete="off">
+                            <span class="cpp-rule">min 2 · max 30 caratteri</span>
+                        </div>
+                        <div class="cpp-field-wrap">
+                            <div class="cpp-label-row">
+                                <label class="cpp-label">Frase</label>
+                                <span class="cpp-counter" id="phrase-counter">0/60</span>
+                            </div>
+                            <input id="custom-phrase-input" class="cpp-input cpp-input-phrase" type="text"
+                                placeholder="SCRIVI LA FRASE QUI" maxlength="60" autocomplete="off">
+                            <span class="cpp-rule">min 4 lettere · max 60 caratteri · solo lettere e spazi</span>
+                        </div>
+                    </div>
+
+                    <!-- Player count -->
+                    <div class="player-count-pills">
+                        <button class="count-pill count-pill-solo" data-custom-count="solo">Solitario</button>
+                        <button class="count-pill active" data-custom-count="2">2</button>
+                        <button class="count-pill" data-custom-count="3">3</button>
+                        <button class="count-pill" data-custom-count="4">4</button>
+                        <button class="count-pill" data-custom-count="5">5</button>
+                    </div>
+
+                    <!-- Player names -->
+                    <div id="custom-names-container" class="names-grid"></div>
+
+                    <!-- CTA -->
+                    <button id="start-custom-game-btn" class="btn-primary setup-start-btn setup-custom-start-btn">
+                        Inizia Partita
+                    </button>
+                </div>
+
             </div>
 
             <!-- Smartphone mode — hidden, preserved for future use -->
@@ -235,6 +268,11 @@
             <div id="solo-timer-wrap" class="solo-timer-wrap" style="display:none;">
                 <span class="solo-timer-label">⏱️ TEMPO</span>
                 <span id="solo-timer" class="solo-timer">0:00</span>
+                <div id="solo-record-row" class="solo-record-row" style="display:none;">
+                    <span class="solo-record-sep">|</span>
+                    <span class="solo-record-label">🏆 REC</span>
+                    <span id="solo-record-val" class="solo-record-val"></span>
+                </div>
             </div>
 
             <!-- Main Game Layout -->
@@ -278,7 +316,7 @@
                                 <span id="current-wheel-value" class="value-amount">-</span>
                             </div>
                             <div class="consonant-input-wrapper">
-                                <input type="text" id="consonant-input" maxlength="1" autocomplete="off">
+                                <input type="text" id="consonant-input" maxlength="1" autocomplete="off" placeholder="A-Z">
                                 <button id="consonant-btn" class="btn-action" data-i18n="game.call">CHIAMA</button>
                             </div>
                         </div>
@@ -394,16 +432,14 @@
 
                 <p id="win-message" class="win-message">Livello completato!</p>
 
-                <button id="next-level-btn" class="btn-primary">
-                    Prossimo Livello ➡️
-                </button>
-
-                <div class="kofi-endgame-block">
-                    <p class="kofi-endgame-msg" data-i18n-html="win.kofi">Grazie per aver giocato a Cerchio Magico!<br>Se il gioco ti è piaciuto, offrimi un caffè ☕</p>
-                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-endgame" data-i18n="win.kofi.btn">
-                        ☕ Offrimi un caffè
-                    </a>
+                <div class="win-cta-stack" id="win-cta-stack">
+                    <button id="mp-lb-btn" class="win-cta-lb">🏆 Classifica</button>
+                    <button id="next-level-btn" class="win-cta-primary">Nuova Partita</button>
                 </div>
+
+                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="win-kofi-link" data-i18n="win.kofi.btn">
+                    ☕ Offrimi un caffè
+                </a>
             </div>
         </div>
 
@@ -578,6 +614,15 @@
                 btn.classList.remove('muted');
                 document.getElementById('audio-icon-on').style.display = 'block';
                 document.getElementById('audio-icon-off').style.display = 'none';
+            }
+        });
+        // Sync icon with initial state (mobile defaults to muted)
+        window.addEventListener('load', () => {
+            if (window.soundManager && window.soundManager.isMuted) {
+                const btn = document.getElementById('audio-toggle-btn');
+                if (btn) btn.classList.add('muted');
+                document.getElementById('audio-icon-on').style.display = 'none';
+                document.getElementById('audio-icon-off').style.display = 'block';
             }
         });
 

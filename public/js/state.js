@@ -41,4 +41,7 @@ export const gameState = {
     soloMode: false,
     soloElapsedSeconds: 0,
     soloRoundSplits: [],
+    customMode: false,
+    customPhrase: '',
+    customHint: '',
 };

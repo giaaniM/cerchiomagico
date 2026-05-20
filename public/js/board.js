@@ -154,7 +154,10 @@ export function revealLetter(letter, animate = true, onRevealIndividual = null) 
             elements.finalVowelInput, elements.finalVowelBtn,
         ];
         lockEls.forEach(el => { if (el) el.disabled = true; });
-        setTimeout(() => _updateUI(), (count - 1) * 1500 + 1200);
+        setTimeout(() => {
+            // skip if still in call_consonant — game-logic.js handles the phase transition
+            if (gameState.wheelPhase !== 'call_consonant') _updateUI();
+        }, (count - 1) * 1500 + 1200);
     }
 
     return count;

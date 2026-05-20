@@ -29,6 +29,7 @@ import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndMan
 import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
 import { initSetup, setStartGameDirectly, initSoloButton, resetSoloSelection } from './setup.js';
 import { initMobileLayout } from './mobile-layout.js';
+import { showLeaderboardPopup } from './leaderboard.js';
 
 // ===== Wire cross-module dependencies =====
 
@@ -150,6 +151,9 @@ if (elements.finalVowelInput) {
     });
     elements.finalVowelInput.addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
 }
+
+// Leaderboard home button
+document.getElementById('leaderboard-btn')?.addEventListener('click', () => showLeaderboardPopup('solo'));
 
 // Prevent accidental navigation during an active game
 window.addEventListener('beforeunload', (e) => {

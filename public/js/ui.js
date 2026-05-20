@@ -4,6 +4,7 @@ import { showPopup, showMessage } from './utils.js';
 import { renderPlayersList, getCurrentPlayer } from './players.js';
 import { t, getCurrentLang } from './lang.js';
 import { saveMultiplayerGame } from './history.js';
+import { showSubmitAndLeaderboard, showLeaderboardPopup } from './leaderboard.js';
 
 // ===== UI Updates =====
 export function updateUI() {
@@ -262,11 +263,22 @@ export function showFinalResults(newGame) {
         resultsHtml += '</div>';
     }
 
+    const isIt = getCurrentLang() === 'it';
     elements.winTitle.innerHTML = `<span class="win-title-name">${winner.name}</span><br><span class="win-title-sub">${t('win.winner')}</span>`;
     elements.winPhrase.innerHTML = resultsHtml;
     elements.winMessage.textContent = `${t('win.jackpot')}: ${fmt(maxScore)}`;
+    elements.nextLevelBtn.className = 'win-cta-primary';
     elements.nextLevelBtn.textContent = t('win.newgame');
     elements.nextLevelBtn.onclick = newGame;
+
+    const lbBtn = document.getElementById('mp-lb-btn');
+    if (lbBtn) {
+        lbBtn.textContent = `🏆 ${isIt ? 'Vai alla Classifica' : 'View Leaderboard'}`;
+        lbBtn.onclick = () => showSubmitAndLeaderboard({ mode: 'mp', score: maxScore, suggestedName: winner.name });
+    }
+
+    const ctaStack = document.getElementById('win-cta-stack');
+    if (ctaStack) ctaStack.style.display = 'flex';
 
     // Show win screen
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
