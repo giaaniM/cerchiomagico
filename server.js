@@ -161,17 +161,58 @@ app.get('/api/puzzles', async (req, res) => {
 app.get('/api/leaderboard', async (req, res) => {
     const mode = req.query.mode === 'mp' ? 'mp' : 'solo';
     const lang = req.query.lang === 'en' ? 'en' : 'it';
+    const nickname = req.query.nickname ? String(req.query.nickname).trim().slice(0, 30) : null;
+    const TOP_N = 8;
     const orderCol = mode === 'solo' ? 'time_seconds' : 'score';
     const ascending = mode === 'solo';
-    const { data, error } = await supabase
+
+    const { data: top, error } = await supabase
         .from('leaderboard')
-        .select('nickname, score, time_seconds, created_at')
+        .select('nickname, score, time_seconds')
         .eq('mode', mode)
         .eq('lang', lang)
         .order(orderCol, { ascending })
-        .limit(20);
+        .limit(TOP_N);
     if (error) return res.status(500).json({ error: 'Failed to fetch leaderboard' });
-    res.json(data ?? []);
+
+    let userRank = null;
+    let userWindow = null;
+
+    if (nickname) {
+        const { data: best } = await supabase
+            .from('leaderboard')
+            .select('nickname, score, time_seconds')
+            .eq('mode', mode)
+            .eq('lang', lang)
+            .ilike('nickname', nickname)
+            .order(orderCol, { ascending })
+            .limit(1);
+
+        if (best?.length) {
+            const metric = mode === 'solo' ? best[0].time_seconds : best[0].score;
+            const { count } = await supabase
+                .from('leaderboard')
+                .select('*', { count: 'exact', head: true })
+                .eq('mode', mode)
+                .eq('lang', lang)
+                .filter(orderCol, ascending ? 'lt' : 'gt', metric);
+            userRank = (count ?? 0) + 1;
+
+            if (userRank > TOP_N) {
+                const winStart = Math.max(0, userRank - 3);
+                const { data: win } = await supabase
+                    .from('leaderboard')
+                    .select('nickname, score, time_seconds')
+                    .eq('mode', mode)
+                    .eq('lang', lang)
+                    .order(orderCol, { ascending })
+                    .range(winStart, winStart + 5);
+                userWindow = { startRank: winStart + 1, entries: win ?? [] };
+            }
+        }
+    }
+
+    res.json({ top: top ?? [], userRank, userWindow });
 });
 
 // Leaderboard — POST submit score

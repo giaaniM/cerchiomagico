@@ -1,5 +1,4 @@
 import { t, getCurrentLang } from './lang.js';
-import { showPopup } from './utils.js';
 
 const NICKNAME_KEY = 'leaderboard_nickname';
 
@@ -38,20 +37,46 @@ export async function submitScore({ nickname, mode, score, time_seconds }) {
     }
 }
 
-export async function fetchLeaderboard(mode) {
+export async function fetchLeaderboard(mode, nickname) {
     const lang = getCurrentLang();
+    const nick = nickname ? `&nickname=${encodeURIComponent(nickname)}` : '';
     try {
-        const res = await fetch(`/api/leaderboard?mode=${mode}&lang=${lang}`);
+        const res = await fetch(`/api/leaderboard?mode=${mode}&lang=${lang}${nick}`);
         return await res.json();
     } catch {
-        return [];
+        return { top: [], userRank: null, userWindow: null };
     }
+}
+
+// Creates a standalone overlay (works from any screen, not just game-screen)
+function createStandaloneOverlay() {
+    const existing = document.getElementById('lb-standalone-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'lb-standalone-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);';
+    document.body.appendChild(overlay);
+
+    const popup = document.createElement('div');
+    popup.className = 'popup-message';
+    popup.style.cssText = 'position:relative;top:auto;left:auto;transform:none;width:min(360px,92vw);max-height:88dvh;overflow-y:auto;padding:24px 20px;';
+    overlay.appendChild(popup);
+
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    return { overlay, popup };
 }
 
 export function showLeaderboardPopup(defaultTab = 'solo') {
     const isIt = getCurrentLang() === 'it';
-    const html = `
+    const myNick = getSavedNickname();
+    const { overlay, popup } = createStandaloneOverlay();
+
+    popup.innerHTML = `
         <div class="lb-popup">
+            <button class="lb-close-btn" style="position:absolute;top:10px;right:14px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.4rem;cursor:pointer;line-height:1;">✕</button>
             <div class="lb-header">
                 <div class="lb-trophy">🏆</div>
                 <div class="lb-title">${isIt ? 'Classifica Globale' : 'Global Leaderboard'}</div>
@@ -66,53 +91,74 @@ export function showLeaderboardPopup(defaultTab = 'solo') {
             </div>
         </div>
     `;
-    showPopup(html, 0);
 
-    setTimeout(() => {
-        const body = document.getElementById('lb-body');
-        const tabs = document.querySelectorAll('.lb-tab');
-        let currentMode = defaultTab;
+    popup.querySelector('.lb-close-btn').addEventListener('click', () => overlay.remove());
 
-        async function loadTab(mode) {
-            currentMode = mode;
-            if (body) body.innerHTML = '<div class="lb-loading">⏳</div>';
-            const entries = await fetchLeaderboard(mode);
-            if (body) body.innerHTML = renderTable(entries, mode);
-        }
+    const body = popup.querySelector('#lb-body');
+    const tabs = popup.querySelectorAll('.lb-tab');
 
-        tabs.forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabs.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                loadTab(btn.dataset.mode);
-            });
+    async function loadTab(mode) {
+        if (body) body.innerHTML = '<div class="lb-loading">⏳</div>';
+        const data = await fetchLeaderboard(mode, myNick);
+        if (body) body.innerHTML = renderTable(data, mode, myNick);
+    }
+
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadTab(btn.dataset.mode);
         });
+    });
 
-        loadTab(defaultTab);
-    }, 50);
+    loadTab(defaultTab);
 }
 
-function renderTable(entries, mode) {
-    if (!entries || entries.length === 0) {
-        const isIt = getCurrentLang() === 'it';
+function renderTable(data, mode, myNick) {
+    const isIt = getCurrentLang() === 'it';
+    const top = data?.top ?? [];
+    const userRank = data?.userRank ?? null;
+    const userWindow = data?.userWindow ?? null;
+
+    if (!top.length) {
         return `<div class="lb-empty">${isIt ? 'Nessun punteggio ancora. Sii il primo!' : 'No scores yet. Be the first!'}</div>`;
     }
+
     const isSolo = mode === 'solo';
-    let rows = '';
-    entries.forEach((e, i) => {
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+    const myNickLower = myNick ? myNick.toLowerCase() : '';
+
+    function renderRow(e, rank) {
+        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}`;
         const metric = isSolo ? formatTime(e.time_seconds ?? 0) : fmt(e.score);
-        rows += `<div class="lb-row ${i < 3 ? 'lb-top' : ''}" data-rank="${i + 1}">
+        const isMe = myNickLower && escHtml(e.nickname).toLowerCase() === myNickLower;
+        return `<div class="lb-row ${rank <= 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}" data-rank="${rank}">
             <span class="lb-rank">${medal}</span>
-            <span class="lb-name">${escHtml(e.nickname)}</span>
+            <span class="lb-name">${escHtml(e.nickname)}${isMe ? ' 👈' : ''}</span>
             <span class="lb-score">${metric}</span>
         </div>`;
-    });
-    return `<div class="lb-table">${rows}</div>`;
+    }
+
+    let rows = top.map((e, i) => renderRow(e, i + 1)).join('');
+
+    if (userWindow && userRank > top.length) {
+        rows += `<div class="lb-separator">· · ·</div>`;
+        userWindow.entries.forEach((e, i) => {
+            rows += renderRow(e, userWindow.startRank + i);
+        });
+    } else if (userRank && !myNickLower) {
+        // nothing extra
+    }
+
+    let footer = '';
+    if (userRank) {
+        footer = `<div class="lb-your-rank">${isIt ? `La tua posizione: #${userRank}` : `Your rank: #${userRank}`}</div>`;
+    }
+
+    return `<div class="lb-table">${rows}</div>${footer}`;
 }
 
 function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 export function showSubmitAndLeaderboard({ mode, score, time_seconds, suggestedName }) {
@@ -121,8 +167,11 @@ export function showSubmitAndLeaderboard({ mode, score, time_seconds, suggestedN
     const isSolo = mode === 'solo';
     const metricLabel = isSolo ? formatTime(time_seconds ?? 0) : fmt(score);
 
-    const html = `
+    const { overlay, popup } = createStandaloneOverlay();
+
+    popup.innerHTML = `
         <div class="lb-submit-popup">
+            <button class="lb-close-btn" style="position:absolute;top:10px;right:14px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.4rem;cursor:pointer;line-height:1;">✕</button>
             <div class="lb-header">
                 <div class="lb-trophy">🏆</div>
                 <div class="lb-title">${isIt ? 'Classifica Globale' : 'Global Leaderboard'}</div>
@@ -146,31 +195,30 @@ export function showSubmitAndLeaderboard({ mode, score, time_seconds, suggestedN
             </button>
         </div>
     `;
-    showPopup(html, 0);
 
-    setTimeout(() => {
-        const input = document.getElementById('lb-nick-input');
-        const submitBtn = document.getElementById('lb-submit-btn');
-        const skipBtn = document.getElementById('lb-skip-btn');
+    popup.querySelector('.lb-close-btn').addEventListener('click', () => overlay.remove());
 
-        async function doSubmit() {
-            const nick = input?.value.trim();
-            if (!nick) { input?.focus(); return; }
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳';
-            const rank = await submitScore({ nickname: nick, mode, score, time_seconds });
-            const rankMsg = rank ? (isIt ? `Sei #${rank} nel ranking!` : `You're #${rank} worldwide!`) : '';
-            if (rankMsg && submitBtn) {
-                submitBtn.textContent = rankMsg;
-                submitBtn.classList.add('lb-rank-shown');
-            }
-            setTimeout(() => showLeaderboardPopup(mode), 900);
+    const input = popup.querySelector('#lb-nick-input');
+    const submitBtn = popup.querySelector('#lb-submit-btn');
+    const skipBtn = popup.querySelector('#lb-skip-btn');
+
+    async function doSubmit() {
+        const nick = input?.value.trim();
+        if (!nick) { input?.focus(); return; }
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳';
+        const rank = await submitScore({ nickname: nick, mode, score, time_seconds });
+        const rankMsg = rank ? (isIt ? `Sei #${rank} nel ranking!` : `You're #${rank} worldwide!`) : '';
+        if (rankMsg && submitBtn) {
+            submitBtn.textContent = rankMsg;
+            submitBtn.classList.add('lb-rank-shown');
         }
+        setTimeout(() => { overlay.remove(); showLeaderboardPopup(mode); }, 900);
+    }
 
-        submitBtn?.addEventListener('click', doSubmit);
-        input?.addEventListener('keypress', e => { if (e.key === 'Enter') doSubmit(); });
-        skipBtn?.addEventListener('click', () => showLeaderboardPopup(mode));
+    submitBtn?.addEventListener('click', doSubmit);
+    input?.addEventListener('keypress', e => { if (e.key === 'Enter') doSubmit(); });
+    skipBtn?.addEventListener('click', () => { overlay.remove(); showLeaderboardPopup(mode); });
 
-        input?.select();
-    }, 50);
+    input?.select();
 }

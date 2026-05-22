@@ -22,14 +22,21 @@ export function resetSoloSelection() {
 }
 
 let playerCount = 2;
-let soloSelected = false;
+let soloSelected = true;
 
 let customCardPlayerCount = 2;
 let customCardSoloSelected = false;
 
 export function initSetup() {
-    renderNameInputs();
-    updateModeInfoCard('multi');
+    // Default: solo mode pre-selected
+    soloSelected = true;
+    const setupCard = document.querySelector('.setup-card:not(.setup-custom-card)');
+    document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
+    document.querySelector('.count-pill[data-count="solo"]')?.classList.add('active');
+    setupCard?.classList.add('solo-active');
+    document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'none');
+    renderNameInputs(true);
+    updateModeInfoCard('solo');
 
     // Mode switcher (normal ↔ custom)
     document.querySelectorAll('.sms-btn').forEach(btn => {

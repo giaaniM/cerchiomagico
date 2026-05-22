@@ -34,14 +34,19 @@ type: project
 - Soglia economica reale: ~$1/mese a 1.000 DAU con generazione real-time — problema non è costo ma latenza e rate limit
 - Mai generare real-time per ogni partita; usare caching aggressivo
 
-**Analytics GA4 — snapshot 19 apr–16 mag 2026 (28 giorni):**
-- Utenti attivi: 139 (tutti nuovi, 0 di ritorno)
-- Durata media coinvolgimento: 2 min 06 sec
-- Conteggio eventi: 692
-- Sorgenti: direct 80, Facebook referral ~96, Google organic 2, Reddit 2
-- Città top: Milano 31, Bari/Naples/Rome 5 ciascuna
-- Bounce rate pagina principale: 72.5%
+**Analytics GA4 — snapshot 21 apr–18 mag 2026 (28 giorni) — DATI AGGIORNATI:**
+- Utenti attivi: 209, Nuovi utenti: 206 (retention quasi zero — <2% ritorno)
+- Sessione media: ~10 minuti (chi gioca, gioca davvero — segnale di qualità del prodotto)
+- Canali: Direct ~120, Organic Social ~80 (quasi tutto Facebook), Organic Search quasi zero
+- Picco traffico 17 maggio: condivisione su pochi gruppi Facebook
+- Fidelizzazione: cade a 0% dopo il picco — traffico a ondate, non sostenuto
+- 100% web, nessuna app
 - Conclusione: traffico quasi interamente Facebook (post virale/condiviso), SEO organic praticamente zero
+
+**Dominio aggiornato (2026-05-19):**
+- Produzione: magicspingame.com (custom domain su Render)
+- Redirect 301 da cerchiomagico.onrender.com a magicspingame.com (in server.js)
+- Stack: Node.js + Express + Socket.io (non Next.js — correzione rispetto a memoria precedente)
 
 **Marketing — canali prioritari identificati (2026-05-15/aggiornato 2026-05-16):**
 - P0: Reddit (approccio indiretto: commenti + valore prima del link), Facebook groups famiglie/giochi

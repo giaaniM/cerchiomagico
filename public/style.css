@@ -111,6 +111,8 @@ body {
     color: var(--text-primary);
     margin: 0;
     padding: 40px 10px 80px 10px;
+    padding-left: max(10px, env(safe-area-inset-left, 0px));
+    padding-right: max(10px, env(safe-area-inset-right, 0px));
     min-height: 100vh;
     display: flex;
     justify-content: flex-start;
@@ -3035,9 +3037,16 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 @media (max-width: 1024px) and (orientation: portrait) {
+    :root {
+        /* Fit 14 tiles in available width without overflow */
+        --tile-size: clamp(18px, calc((100vw - 80px) / 14), 65px);
+        --tile-gap: clamp(1px, 0.4vw, 4px);
+    }
+
     .game-main-layout {
         flex-wrap: wrap;
         justify-content: center;
+        padding: 0 8px;
     }
 
     .players-sidebar,
@@ -4871,8 +4880,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 /* ===== QUICK ACTIONS (Help, Audio) ===== */
 .quick-actions-container {
     position: fixed;
-    top: 16px;
-    right: 16px;
+    top: max(16px, calc(env(safe-area-inset-top, 0px) + 8px));
+    right: max(16px, calc(env(safe-area-inset-right, 0px) + 8px));
     z-index: 9998;
     display: flex;
     gap: 10px;
@@ -6860,6 +6869,25 @@ body.manche-finale .board-frame {
 .lb-rank { width: 28px; text-align: center; flex-shrink: 0; }
 .lb-name { flex: 1; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-score { font-weight: 700; color: var(--accent-gold); flex-shrink: 0; }
+.lb-row.lb-me {
+    background: rgba(56,189,248,0.12);
+    border: 1px solid rgba(56,189,248,0.35);
+}
+.lb-row.lb-me .lb-name { color: #38bdf8; }
+.lb-separator {
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 0.8rem;
+    padding: 4px 0;
+    letter-spacing: 4px;
+}
+.lb-your-rank {
+    text-align: center;
+    font-size: 0.8rem;
+    color: rgba(251,191,36,0.7);
+    margin-top: 6px;
+    font-weight: 600;
+}
 
 /* Submit form */
 .lb-metric-row {
@@ -7204,7 +7232,7 @@ body.manche-finale .board-frame {
     display: flex;
     gap: 8px;
     justify-content: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     width: 100%;
 }
 .setup-kofi-inline {

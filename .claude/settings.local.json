@@ -48,7 +48,11 @@
       "Bash(sed -n '390,410p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/index.html)",
       "Bash(sed -n '3737,3810p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)",
       "Bash(sed -n '5987,6005p' /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/style.css)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(npx playwright *)",
+      "Bash(lsof -ti:3000)",
+      "Bash(gh api *)",
+      "Skill(caveman:caveman)"
     ]
   }
 }
