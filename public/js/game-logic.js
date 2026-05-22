@@ -62,7 +62,7 @@ export async function loadPuzzles() {
     const lang = getCurrentLang();
     const offlineFallback = lang === 'en' ? OFFLINE_PHRASES_EN : OFFLINE_PHRASES_IT;
     try {
-        const res = await fetch(`/api/puzzles?lang=${lang}`);
+        const res = await fetch(`${API_URL}/api/puzzles?lang=${lang}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (gen !== _loadGen) return; // stale — a newer request already won
@@ -661,7 +661,7 @@ export function startGameDirectly(players, soloMode = false, customOpts = null) 
 
 async function fetchAIPhrases() {
     try {
-        const res = await fetch('/api/generate-phrases');
+        const res = await fetch(`${API_URL}/api/generate-phrases`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         gameState.aiPhrases = data.phrases || [];

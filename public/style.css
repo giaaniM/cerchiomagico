@@ -7247,3 +7247,13 @@ body.manche-finale .board-frame {
     color: rgba(251,191,36,0.8) !important;
     background: rgba(251,191,36,0.06) !important;
 }
+
+/* ===== NATIVE APP (Capacitor) ===== */
+.is-native body {
+    padding-top: max(20px, env(safe-area-inset-top, 20px));
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+}
+/* Hide smartphone-controller mode in native (not supported v1) */
+.is-native #mode-smartphone-btn {
+    display: none !important;
+}

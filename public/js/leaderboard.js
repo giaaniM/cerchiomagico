@@ -1,4 +1,5 @@
 import { t, getCurrentLang } from './lang.js';
+import { API_URL } from './state.js';
 
 const NICKNAME_KEY = 'leaderboard_nickname';
 
@@ -25,7 +26,7 @@ export async function submitScore({ nickname, mode, score, time_seconds }) {
     const clean = String(nickname).trim().slice(0, 30);
     saveNickname(clean);
     try {
-        const res = await fetch('/api/leaderboard', {
+        const res = await fetch(`${API_URL}/api/leaderboard`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nickname: clean, mode, score, time_seconds, lang }),
@@ -41,7 +42,7 @@ export async function fetchLeaderboard(mode, nickname) {
     const lang = getCurrentLang();
     const nick = nickname ? `&nickname=${encodeURIComponent(nickname)}` : '';
     try {
-        const res = await fetch(`/api/leaderboard?mode=${mode}&lang=${lang}${nick}`);
+        const res = await fetch(`${API_URL}/api/leaderboard?mode=${mode}&lang=${lang}${nick}`);
         return await res.json();
     } catch {
         return { top: [], userRank: null, userWindow: null };

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MagicSpin</string>
+    <string name="title_activity_main">MagicSpin</string>
+    <string name="package_name">com.magicspingame.app</string>
+    <string name="custom_url_scheme">com.magicspingame.app</string>
+</resources>

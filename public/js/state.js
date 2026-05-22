@@ -2,7 +2,9 @@
 export const VOWELS = ['A', 'E', 'I', 'O', 'U'];
 export const VOWEL_COST = 1000;
 export const TOTAL_MANCHES = 5;
-export const API_URL = window.location.origin;
+export const API_URL = window.Capacitor?.isNativePlatform?.()
+    ? 'https://magicspingame.com'
+    : window.location.origin;
 
 // ===== Socket State =====
 export const socketState = {

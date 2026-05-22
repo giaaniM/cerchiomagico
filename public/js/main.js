@@ -166,6 +166,24 @@ window.addEventListener('beforeunload', (e) => {
 // Expose soundManager globally so the inline tutorial/audio script can use it
 window.soundManager = soundManager;
 
+// Native app integrations (Capacitor)
+if (window.Capacitor?.isNativePlatform?.()) {
+    // Android back button: exit only from setup screen, else go back to setup
+    document.addEventListener('backbutton', () => {
+        const gameScreen = document.getElementById('game-screen');
+        if (gameScreen && gameScreen.classList.contains('active')) {
+            if (gameState.currentManche) {
+                // Mid-game: ignore (prevent accidental exit)
+            } else {
+                showScreen('setup-screen');
+            }
+        }
+    });
+
+    // Apply safe area padding for notched devices handled via CSS env()
+    document.documentElement.classList.add('is-native');
+}
+
 // TEST HELPER — skip to manche 5 from console: _skipToManche5()
 window._skipToManche5 = () => {
     gameState.currentManche = 4;
