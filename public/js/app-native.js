@@ -1,0 +1,123 @@
+import { isNative } from './native.js';
+import { initAuth, signInWithGoogle, currentUser, currentProfile, createProfile, checkUsernameAvailable } from './auth.js';
+import { showScreen } from './utils.js';
+import { App as CapApp } from './capacitor-app-bridge.js';
+
+let _onReady = () => {};
+export function onNativeReady(fn) { _onReady = fn; }
+
+export async function bootNative() {
+    if (!isNative) return;
+
+    // Handle deep link OAuth callback
+    CapApp.addListener('appUrlOpen', ({ url }) => {
+        if (url?.includes('magicspin://auth/callback')) {
+            handleAuthCallback(url);
+        }
+    });
+
+    showScreen('login-screen');
+    const { user, profile } = await initAuth();
+
+    if (user && profile) {
+        showScreen('setup-screen');
+        _onReady();
+        return;
+    }
+    if (user && !profile) {
+        showScreen('profile-setup-screen');
+        initProfileSetup(user);
+        return;
+    }
+
+    // Wiring login screen
+    document.getElementById('google-signin-btn')?.addEventListener('click', async () => {
+        await signInWithGoogle();
+        // OAuth redirect will reload/return via deep link
+    });
+
+    document.getElementById('guest-signin-btn')?.addEventListener('click', () => {
+        showScreen('setup-screen');
+        _onReady();
+    });
+}
+
+async function handleAuthCallback(url) {
+    // Supabase picks up the session from the URL automatically
+    // Force a re-check after a short delay
+    setTimeout(async () => {
+        const { user, profile } = await initAuth();
+        if (user && profile) {
+            showScreen('setup-screen');
+            _onReady();
+        } else if (user && !profile) {
+            showScreen('profile-setup-screen');
+            initProfileSetup(user);
+        }
+    }, 500);
+}
+
+function initProfileSetup(user) {
+    const input = document.getElementById('ps-username-input');
+    const confirmBtn = document.getElementById('ps-confirm-btn');
+    const status = document.getElementById('ps-input-status');
+    const avatar = document.getElementById('ps-avatar');
+
+    // Show Google avatar if available
+    const avatarUrl = user.user_metadata?.avatar_url;
+    if (avatarUrl && avatar) {
+        avatar.innerHTML = `<img src="${avatarUrl}" alt="avatar">`;
+    }
+
+    let checkTimer = null;
+    let isAvailable = false;
+
+    input?.addEventListener('input', () => {
+        const val = input.value.trim();
+        const valid = /^[a-zA-Z0-9_]{3,20}$/.test(val);
+        confirmBtn.disabled = true;
+        isAvailable = false;
+
+        if (!valid) {
+            input.className = 'ps-input' + (val.length > 0 ? ' invalid' : '');
+            status.textContent = '';
+            return;
+        }
+
+        status.textContent = '⏳';
+        clearTimeout(checkTimer);
+        checkTimer = setTimeout(async () => {
+            const available = await checkUsernameAvailable(val);
+            isAvailable = available;
+            if (available) {
+                input.className = 'ps-input valid';
+                status.textContent = '✅';
+                confirmBtn.disabled = false;
+            } else {
+                input.className = 'ps-input invalid';
+                status.textContent = '❌';
+                confirmBtn.disabled = true;
+            }
+        }, 500);
+    });
+
+    confirmBtn?.addEventListener('click', async () => {
+        if (!isAvailable) return;
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = '⏳';
+        try {
+            await createProfile({
+                userId: user.id,
+                username: input.value.trim(),
+                displayName: user.user_metadata?.full_name || input.value.trim(),
+                avatarUrl: user.user_metadata?.avatar_url || null,
+            });
+            showScreen('setup-screen');
+            _onReady();
+        } catch (e) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Conferma';
+            status.textContent = '⚠️';
+        }
+    });
+}

@@ -14,6 +14,8 @@ import { elements } from './elements.js';
 import { gameState, socketState } from './state.js';
 import { showScreen, showPopup } from './utils.js';
 import { t, applyTranslations, setLang, getCurrentLang } from './lang.js';
+import { isNative } from './native.js';
+import { bootNative, onNativeReady } from './app-native.js';
 
 window.t = t;
 applyTranslations();
@@ -178,22 +180,18 @@ window.addEventListener('beforeunload', (e) => {
 window.soundManager = soundManager;
 
 // Native app integrations (Capacitor)
-if (window.Capacitor?.isNativePlatform?.()) {
-    // Android back button: exit only from setup screen, else go back to setup
+if (isNative) {
+    document.documentElement.classList.add('is-native');
+
+    // Android back button
     document.addEventListener('backbutton', () => {
         const gameScreen = document.getElementById('game-screen');
-        if (gameScreen && gameScreen.classList.contains('active')) {
-            if (gameState.currentManche) {
-                // Mid-game: ignore (prevent accidental exit)
-            } else {
-                showScreen('setup-screen');
-            }
+        if (gameScreen?.classList.contains('active') && !gameState.currentManche) {
+            showScreen('setup-screen');
         }
     });
-
-    // Apply safe area padding for notched devices handled via CSS env()
-    document.documentElement.classList.add('is-native');
 }
+
 
 // TEST HELPER — skip to manche 5 from console: _skipToManche5()
 window._skipToManche5 = () => {
@@ -201,16 +199,18 @@ window._skipToManche5 = () => {
     endManche();
 };
 
-// ===== Load puzzles from Supabase =====
-loadPuzzles();
+// Boot: native shows login first, web boots directly
+function bootApp() {
+    initSetup();
+    initSoloButton();
+    initMobileLayout();
+    loadPuzzles();
+    renderWheelToCache();
+    drawWheel(0);
+}
 
-// ===== Initialize Setup Screen =====
-initSetup();
-initSoloButton();
-initMobileLayout();
+onNativeReady(bootApp);
 
-// ===== Initial Render =====
-// The setup screen is shown by default via CSS (first .screen is active or setup-screen is active)
-// Draw an initial wheel so the canvas isn't blank
-renderWheelToCache();
-drawWheel(0);
+bootNative().then(() => {
+    if (!isNative) bootApp();
+});

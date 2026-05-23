@@ -41,7 +41,15 @@ app.use((req, res, next) => {
 
 // Handle favicon request to avoid 404 errors
 app.get('/favicon.ico', (req, res) => {
-    res.status(204).end(); // No Content
+    res.status(204).end();
+});
+
+// Public config endpoint — exposes only the anon key (safe to expose)
+app.get('/api/config', (req, res) => {
+    res.json({
+        url: process.env.SUPABASE_URL,
+        anonKey: process.env.SUPABASE_ANON_KEY,
+    });
 });
 
 const os = require('os');
