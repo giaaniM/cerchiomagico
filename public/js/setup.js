@@ -10,15 +10,9 @@ export function setStartGameDirectly(fn) { _startGameDirectly = fn; }
 export function initSoloButton() {}
 
 export function resetSoloSelection() {
-    soloSelected = false;
+    soloSelected = true;
     playerCount = 2;
-    document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
-    document.querySelector('.count-pill[data-count="2"]')?.classList.add('active');
-    document.querySelector('.setup-card:not(.setup-custom-card)')?.classList.remove('solo-active');
-    updateModeInfoCard('multi');
-    const smartphoneBannerReset = document.getElementById('mode-smartphone-btn');
-    if (smartphoneBannerReset) smartphoneBannerReset.style.display = 'flex';
-    renderNameInputs();
+    _activateSolo();
 }
 
 let playerCount = 2;
@@ -27,55 +21,54 @@ let soloSelected = true;
 let customCardPlayerCount = 2;
 let customCardSoloSelected = false;
 
-export function initSetup() {
-    // Default: solo mode pre-selected
+function _activateSolo() {
     soloSelected = true;
-    const setupCard = document.querySelector('.setup-card:not(.setup-custom-card)');
-    document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
-    document.querySelector('.count-pill[data-count="solo"]')?.classList.add('active');
-    setupCard?.classList.add('solo-active');
+    document.getElementById('mode-card-solo')?.classList.add('active');
+    document.getElementById('mode-card-multi')?.classList.remove('active');
+    const row = document.getElementById('player-count-row');
+    if (row) row.style.display = 'none';
     document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'none');
     renderNameInputs(true);
-    updateModeInfoCard('solo');
+}
 
-    // Mode switcher (normal ↔ custom)
-    document.querySelectorAll('.sms-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            soundManager.playClick();
-            document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            switchSetupMode(btn.dataset.mode);
-        });
+function _activateMulti(count) {
+    soloSelected = false;
+    playerCount = count || playerCount || 2;
+    document.getElementById('mode-card-solo')?.classList.remove('active');
+    document.getElementById('mode-card-multi')?.classList.add('active');
+    const row = document.getElementById('player-count-row');
+    if (row) row.style.display = 'flex';
+    document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.count-pill[data-count="${playerCount}"]`)?.classList.add('active');
+    const smartphoneBanner = document.getElementById('mode-smartphone-btn');
+    if (smartphoneBanner && !window.Capacitor?.isNativePlatform?.()) smartphoneBanner.style.display = 'flex';
+    renderNameInputs();
+}
+
+export function initSetup() {
+    // Default: solo mode pre-selected
+    _activateSolo();
+
+    // Mode cards
+    document.getElementById('mode-card-solo')?.addEventListener('click', () => {
+        soundManager.playClick(); _activateSolo();
+    });
+    document.getElementById('mode-card-multi')?.addEventListener('click', () => {
+        soundManager.playClick(); _activateMulti();
     });
 
-    // Main card: player count pills
-    document.querySelectorAll('.count-pill[data-count]').forEach(btn => {
+    // Player count pills (2/3/4/5)
+    document.querySelectorAll('.count-pill[data-count]:not([data-count="solo"])').forEach(btn => {
         btn.addEventListener('click', () => {
             soundManager.playClick();
             document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            const isSolo = btn.dataset.count === 'solo';
-            soloSelected = isSolo;
-            const setupCard = document.querySelector('.setup-card:not(.setup-custom-card)');
-            const smartphoneBanner = document.getElementById('mode-smartphone-btn');
-
-            if (isSolo) {
-                setupCard?.classList.add('solo-active');
-                if (smartphoneBanner) smartphoneBanner.style.display = 'none';
-                updateModeInfoCard('solo');
-                renderNameInputs(true);
-            } else {
-                setupCard?.classList.remove('solo-active');
-                playerCount = parseInt(btn.dataset.count);
-                if (smartphoneBanner) smartphoneBanner.style.display = 'flex';
-                updateModeInfoCard('multi');
-                renderNameInputs();
-            }
+            playerCount = parseInt(btn.dataset.count);
+            renderNameInputs();
         });
     });
 
-    // Main card: start button
+    // Start button
     const startBtn = document.getElementById('start-local-game-btn');
     if (startBtn) {
         startBtn.addEventListener('click', () => {
@@ -108,6 +101,45 @@ export function initSetup() {
         } else {
             histBtn.addEventListener('click', () => { soundManager.playClick(); showHistoryPopup(); });
         }
+    }
+
+    // Pencil icon → toggle custom card
+    document.getElementById('sms-custom-icon')?.addEventListener('click', () => {
+        soundManager.playClick();
+        const switcher = document.getElementById('setup-mode-switcher');
+        const isCustom = document.querySelector('.sms-btn[data-mode="custom"]')?.classList.contains('active');
+        if (switcher) switcher.style.display = 'flex';
+        document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('active'));
+        const targetMode = isCustom ? 'normal' : 'custom';
+        document.querySelector(`.sms-btn[data-mode="${targetMode}"]`)?.classList.add('active');
+        switchSetupMode(targetMode);
+    });
+
+    // Mode switcher buttons (Gioca/Crea Frase)
+    document.querySelectorAll('.sms-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            soundManager.playClick();
+            document.querySelectorAll('.sms-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            switchSetupMode(btn.dataset.mode);
+        });
+    });
+
+    // Setup footer: lang proxy
+    const langProxy = document.getElementById('setup-lang-proxy');
+    if (langProxy) {
+        langProxy.addEventListener('click', () => document.getElementById('lang-toggle-btn')?.click());
+    }
+
+    // Setup footer: audio proxy
+    const audioProxy = document.getElementById('setup-audio-proxy');
+    if (audioProxy) {
+        audioProxy.addEventListener('click', () => {
+            document.getElementById('audio-toggle-btn')?.click();
+            // Sync icon
+            const muted = window.soundManager?.isMuted;
+            audioProxy.textContent = muted ? '🔇' : '🔊';
+        });
     }
 
     // Back button smartphone lobby

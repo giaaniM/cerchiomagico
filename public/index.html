@@ -54,7 +54,7 @@
       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}
     }
     </script>
-    <link rel="stylesheet" href="style.css?v=3.4">
+    <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 
 <body>
@@ -91,61 +91,64 @@
 
             <div class="setup-layout">
 
-                <!-- Mode switcher -->
-                <div class="setup-mode-switcher" id="setup-mode-switcher">
-                    <button class="sms-btn active" data-mode="normal" id="sms-normal">
-                        <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 14a6 6 0 110-12 6 6 0 010 12z" opacity=".4"/><circle cx="10" cy="10" r="3"/></svg>
-                        Gioca
-                    </button>
-                    <button class="sms-btn" data-mode="custom" id="sms-custom">
-                        <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M14.5 2.5a2.12 2.12 0 013 3L6 17H3v-3L14.5 2.5z"/></svg>
-                        Crea Frase
-                    </button>
-                </div>
-
                 <div class="setup-card">
 
-                    <!-- ① MODE SELECTION -->
-                    <div class="setup-section">
-                        <label class="setup-label" data-i18n="setup.howmany">Modalità</label>
+                    <!-- ① MODE — two big tap cards -->
+                    <div class="mode-selector-grid">
+                        <button class="mode-big-card active" id="mode-card-solo">
+                            <span class="mode-big-icon">🎮</span>
+                            <span class="mode-big-title" data-i18n="setup.solo.pill">Solitario</span>
+                            <span class="mode-big-sub" data-i18n="setup.solo.sub">A tempo · Classifica</span>
+                        </button>
+                        <button class="mode-big-card" id="mode-card-multi">
+                            <span class="mode-big-icon">👥</span>
+                            <span class="mode-big-title" data-i18n="setup.multi.title">Multiplayer</span>
+                            <span class="mode-big-sub" data-i18n="setup.multi.sub">2–5 giocatori</span>
+                        </button>
+                    </div>
 
-                        <!-- Pills row -->
-                        <div class="setup-mode-row">
-                            <div class="player-count-pills">
-                                <button class="count-pill count-pill-solo" id="solo-mode-btn" data-count="solo" data-i18n="setup.solo.pill">Solitario</button>
-                                <button class="count-pill active" data-count="2">2</button>
-                                <button class="count-pill" data-count="3">3</button>
-                                <button class="count-pill" data-count="4">4</button>
-                                <button class="count-pill" data-count="5">5</button>
-                            </div>
-                        </div>
-
-                        <!-- Mode info card — always visible, content set by JS -->
-                        <div id="mode-info-card" class="mode-info-card">
-                            <div class="mic-feature"><span class="mic-icon">📋</span><span class="mic-label">5 Frasi</span></div>
-                            <div class="mic-feature"><span class="mic-icon">⚡</span><span class="mic-label">Megaturno</span></div>
-                            <div class="mic-feature"><span class="mic-icon">🎯</span><span class="mic-label">Finale Speciale</span></div>
+                    <!-- ② PLAYER COUNT (multi only) -->
+                    <div id="player-count-row" class="player-count-row" style="display:none;">
+                        <span class="count-row-label" data-i18n="setup.howmany">Quanti giocatori?</span>
+                        <div class="player-count-pills">
+                            <!-- hidden pill kept for JS compat -->
+                            <button class="count-pill" style="display:none;" data-count="solo" id="solo-mode-btn"></button>
+                            <button class="count-pill active" data-count="2">2</button>
+                            <button class="count-pill" data-count="3">3</button>
+                            <button class="count-pill" data-count="4">4</button>
+                            <button class="count-pill" data-count="5">5</button>
                         </div>
                     </div>
 
-                    <!-- ② PLAYER NAMES -->
+                    <!-- ③ PLAYER NAMES -->
                     <div id="local-names-container" class="names-grid"></div>
 
-                    <!-- ③ PRIMARY CTA -->
+                    <!-- ④ PRIMARY CTA -->
                     <button id="start-local-game-btn" class="btn-primary setup-start-btn" data-i18n="setup.start">
                         Inizia Partita
                     </button>
 
-                    <!-- ④ TERTIARY ACTIONS -->
+                    <!-- ⑤ FOOTER ACTIONS -->
                     <div class="setup-actions-bottom">
                         <div class="setup-tertiary-row">
                             <button id="leaderboard-btn" class="setup-lb-standalone" data-i18n="setup.leaderboard">🏆 Classifica</button>
                             <button id="history-btn" class="setup-secondary-btn setup-history-btn" data-i18n="setup.history">📋 Storico</button>
                             <button id="how-to-play-btn" class="setup-secondary-btn" data-i18n="setup.howtoplay">? Regole</button>
-                            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="setup-secondary-btn setup-kofi-inline" data-i18n="setup.kofi">☕ Caffè</a>
+                        </div>
+                        <div class="setup-icon-row">
+                            <button class="setup-icon-btn" id="setup-lang-proxy" title="Lingua"></button>
+                            <button class="setup-icon-btn" id="setup-audio-proxy" title="Audio">🔊</button>
+                            <button class="setup-icon-btn" id="sms-custom-icon" title="Crea frase personalizzata">✏️</button>
+                            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="setup-icon-btn" data-i18n="setup.kofi" title="Offri un caffè">☕</a>
                         </div>
                     </div>
 
+                </div>
+
+                <!-- CREA FRASE switcher (hidden, toggled by pencil icon) -->
+                <div class="setup-mode-switcher" id="setup-mode-switcher" style="display:none;">
+                    <button class="sms-btn active" data-mode="normal" id="sms-normal">Gioca</button>
+                    <button class="sms-btn" data-mode="custom" id="sms-custom">Crea Frase</button>
                 </div>
 
                 <div class="setup-experimental-banner" id="mode-smartphone-btn">

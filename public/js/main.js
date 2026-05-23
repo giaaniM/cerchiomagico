@@ -94,14 +94,25 @@ document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
     };
 });
 
-document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
+function toggleLanguage() {
     const newLang = getCurrentLang() === 'it' ? 'en' : 'it';
     setLang(newLang);
     clearWheelCache();
     renderWheelToCache();
     drawWheel(gameState.wheelRotation);
     loadPuzzles();
-});
+    // Sync setup proxy button label
+    const proxy = document.getElementById('setup-lang-proxy');
+    if (proxy) proxy.textContent = newLang === 'it' ? '🇮🇹' : '🇬🇧';
+}
+
+document.getElementById('lang-toggle-btn')?.addEventListener('click', toggleLanguage);
+
+// Init setup lang proxy label
+;(() => {
+    const proxy = document.getElementById('setup-lang-proxy');
+    if (proxy) proxy.textContent = getCurrentLang() === 'it' ? '🇮🇹' : '🇬🇧';
+})();
 
 // Consonant input
 elements.consonantInput?.addEventListener('keypress', (e) => {
