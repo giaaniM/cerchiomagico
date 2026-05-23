@@ -23,7 +23,7 @@ import { updateUI } from './ui.js';
 import { passTurn, setUpdateUI as playersSetUpdateUI, setSyncGameState as playersSetSyncGameState } from './players.js';
 import { setUpdateUI as boardSetUpdateUI } from './board.js';
 import { spinWheel, drawWheel, renderWheelToCache, clearWheelCache } from './wheel.js';
-import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche, skipPhrase, loadPuzzles, setOnNewGame } from './game-logic.js';
+import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGame, startNextManche, skipPhrase, loadPuzzles, puzzlesReady, setOnNewGame } from './game-logic.js';
 import { callExpressConsonant, buyExpressVowel, setEndManche as expressSetEndManche } from './express.js';
 import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndManche, setSyncGameState as finalRoundSetSyncGameState } from './finalRound.js';
 import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
@@ -63,8 +63,14 @@ socketSetHandlers({
     resolveMysteryChoice: window.resolveMysteryChoice, // assigned in wheel.js
 });
 
-// setup.js needs startGameDirectly
-setStartGameDirectly(startGameDirectly);
+// setup.js needs startGameDirectly (wrapped to wait for puzzles first)
+setStartGameDirectly(async (...args) => {
+    const btn = document.getElementById('start-local-game-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+    await puzzlesReady;
+    if (btn) { btn.disabled = false; btn.textContent = t('setup.start') || 'Inizia Partita'; }
+    startGameDirectly(...args);
+});
 setOnNewGame(resetSoloSelection);
 
 // ===== Attach Event Listeners =====

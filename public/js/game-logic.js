@@ -56,6 +56,9 @@ const OFFLINE_PHRASES_EN = [
 
 let puzzleDatabase = [...OFFLINE_PHRASES_IT];
 let _loadGen = 0;
+let _puzzlesReady = false;
+let _puzzlesResolve = null;
+export const puzzlesReady = new Promise(res => { _puzzlesResolve = res; });
 
 export async function loadPuzzles() {
     const gen = ++_loadGen;
@@ -65,7 +68,7 @@ export async function loadPuzzles() {
         const res = await fetch(`/api/puzzles?lang=${lang}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        if (gen !== _loadGen) return; // stale — a newer request already won
+        if (gen !== _loadGen) return;
         if (Array.isArray(data) && data.length > 0) {
             puzzleDatabase = data;
             console.log(`[PUZZLES] Loaded ${data.length} phrases (lang=${lang}) from Supabase`);
@@ -77,6 +80,8 @@ export async function loadPuzzles() {
         if (gen !== _loadGen) return;
         puzzleDatabase = offlineFallback;
         console.warn('[PUZZLES] Failed to load from server, using offline fallback:', err);
+    } finally {
+        if (!_puzzlesReady) { _puzzlesReady = true; _puzzlesResolve?.(); }
     }
 }
 
