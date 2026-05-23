@@ -18,33 +18,33 @@ export async function bootNative() {
     });
 
     showScreen('login-screen');
-    const { user, profile } = await initAuth();
 
-    if (user && profile) {
-        showProfileBar(profile);
-        showScreen('setup-screen');
-        _onReady();
-        return;
-    }
-    if (user && !profile) {
-        showScreen('profile-setup-screen');
-        initProfileSetup(user);
-        return;
-    }
-
-    // Wiring login screen
+    // Wire buttons FIRST — before any async, so they always work even if auth fails
     document.getElementById('google-signin-btn')?.addEventListener('click', async () => {
         await signInWithGoogle();
-        // OAuth redirect will reload/return via deep link
     });
-
     document.getElementById('guest-signin-btn')?.addEventListener('click', () => {
         showScreen('setup-screen');
         _onReady();
     });
 
-    // Also re-check session after OAuth callback updates auth state
-    // (handled via handleAuthCallback for deep links)
+    let user = null, profile = null;
+    try {
+        ({ user, profile } = await initAuth());
+    } catch (e) {
+        console.warn('initAuth failed, staying on login screen', e);
+        return;
+    }
+
+    if (user && profile) {
+        showProfileBar(profile);
+        showScreen('setup-screen');
+        _onReady();
+    } else if (user && !profile) {
+        showScreen('profile-setup-screen');
+        initProfileSetup(user);
+    }
+    // else: stay on login screen (buttons already wired above)
 }
 
 async function handleAuthCallback(url) {
