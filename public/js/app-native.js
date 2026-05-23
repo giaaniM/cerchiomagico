@@ -1,6 +1,7 @@
 import { isNative } from './native.js';
-import { initAuth, signInWithGoogle, currentUser, currentProfile, createProfile, checkUsernameAvailable } from './auth.js';
+import { initAuth, signInWithGoogle, signOut, currentUser, currentProfile, createProfile, checkUsernameAvailable } from './auth.js';
 import { showScreen } from './utils.js';
+import { formatTime } from './solo.js';
 import { App as CapApp } from './capacitor-app-bridge.js';
 
 let _onReady = () => {};
@@ -20,6 +21,7 @@ export async function bootNative() {
     const { user, profile } = await initAuth();
 
     if (user && profile) {
+        showProfileBar(profile);
         showScreen('setup-screen');
         _onReady();
         return;
@@ -40,6 +42,9 @@ export async function bootNative() {
         showScreen('setup-screen');
         _onReady();
     });
+
+    // Also re-check session after OAuth callback updates auth state
+    // (handled via handleAuthCallback for deep links)
 }
 
 async function handleAuthCallback(url) {
@@ -48,6 +53,7 @@ async function handleAuthCallback(url) {
     setTimeout(async () => {
         const { user, profile } = await initAuth();
         if (user && profile) {
+            showProfileBar(profile);
             showScreen('setup-screen');
             _onReady();
         } else if (user && !profile) {
@@ -55,6 +61,42 @@ async function handleAuthCallback(url) {
             initProfileSetup(user);
         }
     }, 500);
+}
+
+function showProfileBar(profile) {
+    const bar = document.getElementById('setup-profile-bar');
+    if (!bar || !profile) return;
+
+    const nameEl = document.getElementById('spb-name');
+    const avatarEl = document.getElementById('spb-avatar');
+    const recordEl = document.getElementById('spb-record');
+
+    if (nameEl) nameEl.textContent = profile.display_name || profile.username || 'Ospite';
+
+    if (avatarEl) {
+        if (profile.avatar_url) {
+            avatarEl.innerHTML = `<img src="${profile.avatar_url}" alt="avatar" class="spb-avatar-img">`;
+        } else {
+            const initials = (profile.display_name || profile.username || '?')[0].toUpperCase();
+            avatarEl.textContent = initials;
+        }
+    }
+
+    if (recordEl) {
+        if (profile.solo_best_time) {
+            recordEl.textContent = `⏱ ${formatTime(profile.solo_best_time)}`;
+        } else {
+            recordEl.textContent = '';
+        }
+    }
+
+    bar.style.display = 'flex';
+
+    document.getElementById('spb-signout-btn')?.addEventListener('click', async () => {
+        await signOut();
+        bar.style.display = 'none';
+        showScreen('login-screen');
+    }, { once: true });
 }
 
 function initProfileSetup(user) {
@@ -106,12 +148,13 @@ function initProfileSetup(user) {
         confirmBtn.disabled = true;
         confirmBtn.textContent = '⏳';
         try {
-            await createProfile({
+            const profile = await createProfile({
                 userId: user.id,
                 username: input.value.trim(),
                 displayName: user.user_metadata?.full_name || input.value.trim(),
                 avatarUrl: user.user_metadata?.avatar_url || null,
             });
+            showProfileBar(profile || { display_name: input.value.trim() });
             showScreen('setup-screen');
             _onReady();
         } catch (e) {

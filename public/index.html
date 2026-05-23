@@ -72,10 +72,7 @@
         <div id="login-screen" class="screen native-screen">
             <div class="login-container">
                 <div class="login-logo">
-                    <span class="login-logo-icon">🎡</span>
-                    <h1 class="login-logo-text">
-                        <span>MAGIC</span><span class="login-logo-accent">SPIN</span>
-                    </h1>
+                    <img src="/assets/og-image.png" alt="MagicSpin" class="login-hero-img">
                 </div>
                 <p class="login-tagline">Sfida gli amici. Vinci il montepremi.</p>
 
@@ -127,6 +124,16 @@
                     <span class="hms-sep">·</span>
                     <span class="hms-item hms-win">🏆 Vinci</span>
                 </div>
+            </div>
+
+            <!-- Native user profile bar (hidden on web) -->
+            <div id="setup-profile-bar" class="setup-profile-bar" style="display:none;">
+                <div class="spb-avatar" id="spb-avatar"></div>
+                <div class="spb-info">
+                    <span class="spb-name" id="spb-name"></span>
+                    <span class="spb-record" id="spb-record"></span>
+                </div>
+                <button class="spb-signout" id="spb-signout-btn" title="Esci">↩</button>
             </div>
 
             <div class="setup-layout">

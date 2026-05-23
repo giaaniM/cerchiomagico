@@ -178,9 +178,9 @@ function showMatchmakingScreen(mode) {
     el.innerHTML = `
         <div class="mm-container">
             <div class="mm-spinner">🔄</div>
-            <div class="mm-title">${mode === 'searching' ? 'Cerco avversario...' : 'Attendo...'}</div>
-            <div class="mm-status" id="mm-status">Timeout in 10 secondi → Bot</div>
-            <button class="mm-cancel-btn" id="mm-cancel-btn">Annulla</button>
+            <div class="mm-title">${mode === 'searching' ? t('online.searching') : t('online.waiting') || 'Attendo...'}</div>
+            <div class="mm-status" id="mm-status">${t('online.timeout')}</div>
+            <button class="mm-cancel-btn" id="mm-cancel-btn">${t('cancel') || 'Annulla'}</button>
         </div>
     `;
     document.getElementById('mm-cancel-btn')?.addEventListener('click', cancelMatchmaking);
@@ -353,7 +353,9 @@ function renderOnlineGame(state) {
     const banner = document.getElementById('og-turn-banner');
     if (banner) {
         const isMyTurn = state.currentTurn === myIndex;
-        banner.textContent = isMyTurn ? '🎯 È il tuo turno' : `⏳ Turno di ${state.players[state.currentTurn]?.displayName}`;
+        banner.textContent = isMyTurn
+            ? `🎯 ${t('online.myturn')}`
+            : `⏳ ${t('online.theirturn').replace('{name}', state.players[state.currentTurn]?.displayName || '…')}`;
         banner.className = 'og-turn-banner' + (isMyTurn ? ' og-my-turn' : '');
     }
 
@@ -407,7 +409,7 @@ function showGameOver(state) {
     overlay.innerHTML = `
         <div class="og-gameover-card">
             <div class="og-gameover-icon">${iWon ? '🏆' : '😔'}</div>
-            <div class="og-gameover-title">${iWon ? 'Hai vinto!' : 'Hai perso'}</div>
+            <div class="og-gameover-title">${iWon ? t('online.won') : t('online.lost')}</div>
             <div class="og-gameover-scores">
                 ${state.players.map((p, i) => `
                     <div class="og-gameover-row ${i === winnerIdx ? 'og-gameover-winner' : ''}">
@@ -416,8 +418,8 @@ function showGameOver(state) {
                     </div>
                 `).join('')}
             </div>
-            <button class="btn-primary og-rematch-btn" id="og-rematch-btn">🔄 Rivincita</button>
-            <button class="og-btn-secondary og-home-btn" id="og-home-btn">🏠 Home</button>
+            <button class="btn-primary og-rematch-btn" id="og-rematch-btn">🔄 ${t('online.rematch')}</button>
+            <button class="og-btn-secondary og-home-btn" id="og-home-btn">🏠 ${t('online.home')}</button>
         </div>
     `;
     document.getElementById('online-game-screen')?.appendChild(overlay);
