@@ -25,9 +25,12 @@ function _activateSolo() {
     soloSelected = true;
     document.getElementById('mode-card-solo')?.classList.add('active');
     document.getElementById('mode-card-multi')?.classList.remove('active');
-    const row = document.getElementById('player-count-row');
-    if (row) row.style.display = 'none';
+    document.getElementById('player-count-row')?.style.setProperty('display', 'none');
+    document.getElementById('online-multi-row')?.style.setProperty('display', 'none');
+    document.getElementById('multi-locale-divider')?.style.setProperty('display', 'none');
     document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'none');
+    const startBtn = document.getElementById('start-local-game-btn');
+    if (startBtn) startBtn.style.display = '';
     renderNameInputs(true);
 }
 
@@ -36,13 +39,36 @@ function _activateMulti(count) {
     playerCount = count || playerCount || 2;
     document.getElementById('mode-card-solo')?.classList.remove('active');
     document.getElementById('mode-card-multi')?.classList.add('active');
-    const row = document.getElementById('player-count-row');
-    if (row) row.style.display = 'flex';
-    document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.count-pill[data-count="${playerCount}"]`)?.classList.add('active');
-    const smartphoneBanner = document.getElementById('mode-smartphone-btn');
-    if (smartphoneBanner && !window.Capacitor?.isNativePlatform?.()) smartphoneBanner.style.display = 'flex';
-    renderNameInputs();
+
+    const isNative = !!window.Capacitor?.isNativePlatform?.();
+
+    if (isNative) {
+        // Native: show online sub-row (Casuale / VS Amico), hide local stuff
+        const onlineRow = document.getElementById('online-multi-row');
+        if (onlineRow) onlineRow.style.display = 'flex';
+        const divider = document.getElementById('multi-locale-divider');
+        if (divider) divider.style.display = 'flex';
+        const countRow = document.getElementById('player-count-row');
+        if (countRow) countRow.style.display = 'none';
+        const startBtn = document.getElementById('start-local-game-btn');
+        if (startBtn) startBtn.style.display = 'none';
+        renderNameInputs();
+    } else {
+        // Web: keep local multi flow + show player count
+        const onlineRow = document.getElementById('online-multi-row');
+        if (onlineRow) onlineRow.style.display = 'flex';
+        const divider = document.getElementById('multi-locale-divider');
+        if (divider) divider.style.display = 'flex';
+        const row = document.getElementById('player-count-row');
+        if (row) row.style.display = 'flex';
+        const startBtn = document.getElementById('start-local-game-btn');
+        if (startBtn) startBtn.style.display = '';
+        document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.count-pill[data-count="${playerCount}"]`)?.classList.add('active');
+        const smartphoneBanner = document.getElementById('mode-smartphone-btn');
+        if (smartphoneBanner) smartphoneBanner.style.display = 'flex';
+        renderNameInputs();
+    }
 }
 
 export function initSetup() {

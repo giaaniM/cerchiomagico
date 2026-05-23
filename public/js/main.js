@@ -32,6 +32,7 @@ import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
 import { initSetup, setStartGameDirectly, initSoloButton, resetSoloSelection } from './setup.js';
 import { initMobileLayout } from './mobile-layout.js';
 import { showLeaderboardPopup } from './leaderboard.js';
+import { joinMatchmaking, showPrivateRoomChoice } from './online-game.js';
 
 // ===== Wire cross-module dependencies =====
 
@@ -167,6 +168,16 @@ if (elements.finalVowelInput) {
 
 // Leaderboard home button
 document.getElementById('leaderboard-btn')?.addEventListener('click', () => showLeaderboardPopup('solo'));
+
+// Online multiplayer buttons
+document.getElementById('online-casuale-btn')?.addEventListener('click', () => {
+    soundManager.playClick();
+    joinMatchmaking();
+});
+document.getElementById('online-amico-btn')?.addEventListener('click', () => {
+    soundManager.playClick();
+    showPrivateRoomChoice();
+});
 
 // Prevent accidental navigation during an active game
 window.addEventListener('beforeunload', (e) => {

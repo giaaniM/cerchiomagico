@@ -537,6 +537,463 @@ io.on('connection', (socket) => {
     });
 });
 
+// ===== ONLINE MULTIPLAYER =====
+
+const VOWELS_SET = new Set(['A','E','I','O','U']);
+const VOWEL_COST = 1000;
+const TURN_SECONDS = 10;
+const MATCHMAKING_WAIT_MS = 10000;
+
+// Italian consonant frequency (most → least common)
+const IT_CONSONANT_ORDER = ['R','S','T','N','L','C','D','P','M','V','G','F','B','Z','H','Q','X','W','Y','J','K'];
+
+const ONLINE_WHEEL = [
+    { value: 500 }, { value: 300 }, { value: 700 }, { value: 200 },
+    { value: 'CROLLO' }, { value: 350 }, { value: 900 }, { value: 400 },
+    { value: 'PASSA' }, { value: 600 }, { value: 300 }, { value: 800 },
+    { value: 'RADDOPPIA' }, { value: 500 }, { value: 200 }, { value: 400 },
+    { value: 'PASSA' }, { value: 700 }, { value: 350 }, { value: 'CROLLO' },
+];
+
+function normalizeLetter(l) {
+    return l.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+}
+function normalizePhrase(p) {
+    return p.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z ]/g, ' ');
+}
+function countOccurrences(normalized, letter) {
+    let n = 0;
+    for (const c of normalized) if (c === letter) n++;
+    return n;
+}
+function spinOnlineWheel() {
+    return ONLINE_WHEEL[Math.floor(Math.random() * ONLINE_WHEEL.length)];
+}
+function unrevealedConsonants(normalized, revealed) {
+    const letters = new Set(normalized.split('').filter(c => c !== ' ' && !VOWELS_SET.has(c)));
+    return [...letters].filter(l => !revealed.has(l));
+}
+function unrevealedCount(normalized, revealed) {
+    return normalized.split('').filter(c => c !== ' ' && !revealed.has(c)).length;
+}
+
+// matchmaking queue: [{ socketId, userId, displayName, lang, joinedAt }]
+const matchmakingQueue = [];
+const onlineRooms = new Map(); // roomCode → room
+
+function genRoomCode() {
+    return Math.random().toString(36).slice(2, 7).toUpperCase();
+}
+
+async function fetchRandomPhrase(lang = 'it') {
+    const { data } = await supabase
+        .from('puzzles')
+        .select('id, phrase, hint')
+        .eq('active', true)
+        .eq('lang', lang)
+        .limit(50);
+    if (!data?.length) return null;
+    return data[Math.floor(Math.random() * data.length)];
+}
+
+function createRoom(p1, p2, isBot = false, privateCode = null) {
+    const code = privateCode || genRoomCode();
+    const normalized = normalizePhrase(p2.phrase || '');
+    const room = {
+        code,
+        players: [p1, p2],
+        isBot,
+        phrase: p2.phrase,
+        hint: p2.hint,
+        normalized,
+        revealed: new Set(),
+        used: new Set(),
+        scores: [0, 0],         // turn scores (reset on CROLLO/pass)
+        total: [0, 0],
+        currentTurn: 0,
+        pendingValue: null,
+        phase: 'spin',           // 'spin' | 'letter' | 'action'
+        shielded: [false, false],
+        timer: null,
+        timerLeft: TURN_SECONDS,
+        status: 'playing',
+    };
+    onlineRooms.set(code, room);
+    return room;
+}
+
+function roomPublicState(room) {
+    return {
+        code: room.code,
+        phrase: room.phrase,
+        hint: room.hint,
+        normalized: room.normalized,
+        revealed: [...room.revealed],
+        used: [...room.used],
+        scores: room.scores,
+        total: room.total,
+        currentTurn: room.currentTurn,
+        pendingValue: room.pendingValue,
+        phase: room.phase,
+        shielded: room.shielded,
+        timerLeft: room.timerLeft,
+        status: room.status,
+        players: room.players.map((p, i) => ({
+            displayName: p.displayName,
+            userId: p.userId,
+            isBot: p.isBot || false,
+            score: room.total[i],
+        })),
+    };
+}
+
+function emitRoomState(room) {
+    const state = roomPublicState(room);
+    room.players.forEach((p, i) => {
+        if (p.socketId) io.to(p.socketId).emit('online:state', { ...state, myIndex: i });
+    });
+}
+
+function startTurnTimer(room) {
+    clearInterval(room.timer);
+    room.timerLeft = TURN_SECONDS;
+    room.timer = setInterval(() => {
+        room.timerLeft--;
+        room.players.forEach(p => {
+            if (p.socketId) io.to(p.socketId).emit('online:timer', room.timerLeft);
+        });
+        if (room.timerLeft <= 0) {
+            clearInterval(room.timer);
+            passTurnOnline(room, 'timeout');
+        }
+    }, 1000);
+}
+
+function passTurnOnline(room, reason = 'manual') {
+    clearInterval(room.timer);
+    room.scores[room.currentTurn] = 0;
+    room.pendingValue = null;
+    room.phase = 'spin';
+    room.currentTurn = 1 - room.currentTurn;
+    emitRoomState(room);
+    if (room.isBot && room.currentTurn === 1) {
+        scheduleBotTurn(room);
+    } else {
+        startTurnTimer(room);
+    }
+}
+
+function applyWheelValue(room, segment) {
+    const turn = room.currentTurn;
+    const v = segment.value;
+    if (v === 'CROLLO') {
+        if (room.shielded[turn]) {
+            room.shielded[turn] = false;
+            room.phase = 'spin';
+            emitRoomState(room);
+            if (!(room.isBot && turn === 1)) startTurnTimer(room);
+        } else {
+            room.scores[turn] = 0;
+            room.phase = 'spin';
+            room.currentTurn = 1 - turn;
+            emitRoomState(room);
+            if (room.isBot && room.currentTurn === 1) scheduleBotTurn(room);
+            else startTurnTimer(room);
+        }
+        return;
+    }
+    if (v === 'PASSA') {
+        passTurnOnline(room, 'passa');
+        return;
+    }
+    if (v === 'RADDOPPIA') {
+        room.scores[turn] *= 2;
+        room.pendingValue = null;
+        room.phase = 'spin';
+        emitRoomState(room);
+        if (!(room.isBot && turn === 1)) startTurnTimer(room);
+        return;
+    }
+    room.pendingValue = v;
+    room.phase = 'letter';
+    emitRoomState(room);
+    if (!(room.isBot && turn === 1)) startTurnTimer(room);
+}
+
+function callLetterOnline(room, letter, isVowel) {
+    clearInterval(room.timer);
+    const L = normalizeLetter(letter);
+    if (room.used.has(L)) {
+        if (!(room.isBot && room.currentTurn === 1)) startTurnTimer(room);
+        return;
+    }
+    room.used.add(L);
+
+    if (isVowel) {
+        if (room.total[room.currentTurn] < VOWEL_COST) {
+            if (!(room.isBot && room.currentTurn === 1)) startTurnTimer(room);
+            return;
+        }
+        room.total[room.currentTurn] -= VOWEL_COST;
+        const count = countOccurrences(room.normalized, L);
+        if (count > 0) {
+            room.revealed.add(L);
+            room.phase = 'action';
+            emitRoomState(room);
+            if (!(room.isBot && room.currentTurn === 1)) startTurnTimer(room);
+        } else {
+            passTurnOnline(room, 'no-letter');
+        }
+        return;
+    }
+
+    // Consonant
+    const count = countOccurrences(room.normalized, L);
+    if (count > 0) {
+        room.revealed.add(L);
+        const earned = (room.pendingValue || 0) * count;
+        room.scores[room.currentTurn] += earned;
+        room.total[room.currentTurn] += earned;
+        room.pendingValue = null;
+        room.phase = 'action';
+        emitRoomState(room);
+        if (!(room.isBot && room.currentTurn === 1)) startTurnTimer(room);
+    } else {
+        room.scores[room.currentTurn] = 0;
+        room.pendingValue = null;
+        room.phase = 'spin';
+        passTurnOnline(room, 'no-letter');
+    }
+}
+
+function trySolveOnline(room, attempt) {
+    clearInterval(room.timer);
+    const normalized = normalizePhrase(attempt);
+    if (normalized === room.normalized) {
+        room.total[room.currentTurn] += room.scores[room.currentTurn];
+        finishGame(room, room.currentTurn);
+    } else {
+        room.scores[room.currentTurn] = 0;
+        passTurnOnline(room, 'wrong-solve');
+    }
+}
+
+async function finishGame(room, winnerIdx) {
+    clearInterval(room.timer);
+    room.status = 'finished';
+    emitRoomState(room);
+    // Persist stats (fire and forget)
+    const winner = room.players[winnerIdx];
+    if (winner?.userId) {
+        supabase.from('profiles')
+            .update({ games_won: supabase.rpc('increment', { x: 1 }) })
+            .eq('id', winner.userId)
+            .then(() => {});
+    }
+    room.players.forEach(p => {
+        if (p?.userId) {
+            supabase.from('profiles')
+                .update({ games_played: supabase.rpc('increment', { x: 1 }) })
+                .eq('id', p.userId)
+                .then(() => {});
+        }
+    });
+    // Clean up after 30s
+    setTimeout(() => onlineRooms.delete(room.code), 30000);
+}
+
+// ── Bot logic ──
+function scheduleBotTurn(room) {
+    const delay = 800 + Math.random() * 1200;
+    setTimeout(() => executeBotTurn(room), delay);
+}
+
+function executeBotTurn(room) {
+    if (room.status !== 'playing' || room.currentTurn !== 1) return;
+
+    if (room.phase === 'spin') {
+        const seg = spinOnlineWheel();
+        applyWheelValue(room, seg);
+        // If bot still active after spin (got a value), schedule letter choice
+        if (room.phase === 'letter' && room.currentTurn === 1) {
+            setTimeout(() => executeBotTurn(room), 800 + Math.random() * 600);
+        }
+        return;
+    }
+
+    if (room.phase === 'letter') {
+        // Smart endgame: if ≤2 unrevealed letters total → solve
+        if (unrevealedCount(room.normalized, room.revealed) <= 2) {
+            trySolveOnline(room, room.phrase);
+            return;
+        }
+        // Pick least-used consonant from frequency list
+        const remaining = unrevealedConsonants(room.normalized, room.used);
+        let pick = null;
+        for (const l of IT_CONSONANT_ORDER) {
+            if (remaining.includes(l)) { pick = l; break; }
+        }
+        if (!pick) pick = remaining[0];
+        if (!pick) { passTurnOnline(room, 'no-consonants'); return; }
+        callLetterOnline(room, pick, false);
+        // After consonant, if still bot's turn → spin again after delay
+        if (room.phase === 'action' && room.currentTurn === 1) {
+            setTimeout(() => {
+                room.phase = 'spin';
+                emitRoomState(room);
+                scheduleBotTurn(room);
+            }, 600);
+        }
+        return;
+    }
+
+    if (room.phase === 'action') {
+        // Bot always spins again
+        room.phase = 'spin';
+        emitRoomState(room);
+        scheduleBotTurn(room);
+    }
+}
+
+// ── Private rooms (vs friend) ──
+const privateRooms = new Map(); // code → { hostPlayer, lang, phrase }
+
+// ── Socket handlers for online multiplayer ──
+// (existing smartphone-controller handler above runs in parallel via Socket.io's stacked listeners)
+io.on('connection', (socket) => {
+
+    // ── Matchmaking ──
+    socket.on('online:join_matchmaking', async ({ userId, displayName, lang }) => {
+        // Remove any stale entry for this user
+        const idx = matchmakingQueue.findIndex(e => e.userId === userId);
+        if (idx !== -1) matchmakingQueue.splice(idx, 1);
+
+        matchmakingQueue.push({ socketId: socket.id, userId, displayName, lang: lang || 'it', joinedAt: Date.now() });
+
+        // Try to match with waiting player of same lang
+        const others = matchmakingQueue.filter(e => e.socketId !== socket.id && e.lang === (lang || 'it'));
+        if (others.length > 0) {
+            const opponent = others[0];
+            // Remove both from queue
+            [socket.id, opponent.socketId].forEach(id => {
+                const i = matchmakingQueue.findIndex(e => e.socketId === id);
+                if (i !== -1) matchmakingQueue.splice(i, 1);
+            });
+            const phraseRow = await fetchRandomPhrase(lang || 'it');
+            if (!phraseRow) return;
+            const p1 = { socketId: socket.id, userId, displayName };
+            const p2 = { socketId: opponent.socketId, userId: opponent.userId, displayName: opponent.displayName };
+            const room = createRoom(p1, { ...p2, phrase: phraseRow.phrase, hint: phraseRow.hint }, false);
+            room.players[0] = p1;
+            room.players[1] = p2;
+            room.phrase = phraseRow.phrase;
+            room.hint = phraseRow.hint;
+            room.normalized = normalizePhrase(phraseRow.phrase);
+            [socket.id, opponent.socketId].forEach(id => io.to(id).emit('online:match_found', { code: room.code }));
+            emitRoomState(room);
+            startTurnTimer(room);
+        } else {
+            socket.emit('online:waiting', { position: matchmakingQueue.length });
+            // Auto-bot after MATCHMAKING_WAIT_MS
+            setTimeout(async () => {
+                const stillWaiting = matchmakingQueue.find(e => e.socketId === socket.id);
+                if (!stillWaiting) return;
+                matchmakingQueue.splice(matchmakingQueue.indexOf(stillWaiting), 1);
+                const phraseRow = await fetchRandomPhrase(lang || 'it');
+                if (!phraseRow) return;
+                const p1 = { socketId: socket.id, userId, displayName };
+                const bot = { socketId: null, userId: null, displayName: '🤖 Bot', isBot: true };
+                const room = createRoom(p1, bot, true);
+                room.phrase = phraseRow.phrase;
+                room.hint = phraseRow.hint;
+                room.normalized = normalizePhrase(phraseRow.phrase);
+                socket.emit('online:match_found', { code: room.code, vsBot: true });
+                emitRoomState(room);
+                startTurnTimer(room);
+            }, MATCHMAKING_WAIT_MS);
+        }
+    });
+
+    socket.on('online:cancel_matchmaking', ({ userId }) => {
+        const idx = matchmakingQueue.findIndex(e => e.userId === userId);
+        if (idx !== -1) matchmakingQueue.splice(idx, 1);
+    });
+
+    // ── Private room (vs friend) ──
+    socket.on('online:create_private', async ({ userId, displayName, lang }) => {
+        const code = genRoomCode();
+        privateRooms.set(code, { hostSocket: socket.id, userId, displayName, lang: lang || 'it' });
+        socket.emit('online:private_created', { code });
+        // Clean up if no one joins in 5 min
+        setTimeout(() => privateRooms.delete(code), 300000);
+    });
+
+    socket.on('online:join_private', async ({ code, userId, displayName }) => {
+        const pending = privateRooms.get(code);
+        if (!pending) { socket.emit('online:error', { msg: 'Codice non valido' }); return; }
+        if (pending.userId === userId) { socket.emit('online:error', { msg: 'Non puoi sfidare te stesso' }); return; }
+        privateRooms.delete(code);
+        const phraseRow = await fetchRandomPhrase(pending.lang);
+        if (!phraseRow) { socket.emit('online:error', { msg: 'Errore frasi' }); return; }
+        const p1 = { socketId: pending.hostSocket, userId: pending.userId, displayName: pending.displayName };
+        const p2 = { socketId: socket.id, userId, displayName };
+        const room = createRoom(p1, p2, false, code);
+        room.phrase = phraseRow.phrase;
+        room.hint = phraseRow.hint;
+        room.normalized = normalizePhrase(phraseRow.phrase);
+        [pending.hostSocket, socket.id].forEach(id => io.to(id).emit('online:match_found', { code: room.code }));
+        emitRoomState(room);
+        startTurnTimer(room);
+    });
+
+    // ── In-game actions ──
+    socket.on('online:spin', ({ code }) => {
+        const room = onlineRooms.get(code);
+        if (!room || room.status !== 'playing') return;
+        const idx = room.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== room.currentTurn || room.phase !== 'spin') return;
+        clearInterval(room.timer);
+        const seg = spinOnlineWheel();
+        applyWheelValue(room, seg);
+        // Send the segment that was spun so client can animate
+        room.players.forEach(p => {
+            if (p.socketId) io.to(p.socketId).emit('online:spin_result', { segment: seg });
+        });
+    });
+
+    socket.on('online:call_consonant', ({ code, letter }) => {
+        const room = onlineRooms.get(code);
+        if (!room || room.status !== 'playing') return;
+        const idx = room.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== room.currentTurn || room.phase !== 'letter') return;
+        callLetterOnline(room, letter, false);
+    });
+
+    socket.on('online:buy_vowel', ({ code, letter }) => {
+        const room = onlineRooms.get(code);
+        if (!room || room.status !== 'playing') return;
+        const idx = room.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== room.currentTurn || room.phase !== 'action') return;
+        callLetterOnline(room, letter, true);
+    });
+
+    socket.on('online:solve', ({ code, attempt }) => {
+        const room = onlineRooms.get(code);
+        if (!room || room.status !== 'playing') return;
+        const idx = room.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== room.currentTurn) return;
+        trySolveOnline(room, attempt);
+    });
+
+    socket.on('online:pass', ({ code }) => {
+        const room = onlineRooms.get(code);
+        if (!room || room.status !== 'playing') return;
+        const idx = room.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== room.currentTurn) return;
+        passTurnOnline(room, 'manual');
+    });
+});
+
 // ===== AI PHRASE GENERATION =====
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';

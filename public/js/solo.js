@@ -4,7 +4,7 @@ import { showPopup, popup } from './utils.js';
 import { saveSoloGame } from './history.js';
 import { showSubmitAndLeaderboard } from './leaderboard.js';
 
-export const SOLO_ROUNDS = 3;
+export const SOLO_ROUNDS = 1;
 const HISTORY_KEY = 'magicspin_history_v1';
 
 let timerInterval = null;

@@ -147,7 +147,25 @@
                         </button>
                     </div>
 
-                    <!-- ② PLAYER COUNT (multi only) -->
+                    <!-- ② ONLINE MULTI (native: Casuale / VS Amico) -->
+                    <div id="online-multi-row" class="online-multi-row" style="display:none;">
+                        <button class="online-mode-btn" id="online-casuale-btn">
+                            <span class="omr-icon">🎲</span>
+                            <span class="omr-label">Casuale</span>
+                            <span class="omr-sub">Trova avversario</span>
+                        </button>
+                        <button class="online-mode-btn" id="online-amico-btn">
+                            <span class="omr-icon">👥</span>
+                            <span class="omr-label">VS Amico</span>
+                            <span class="omr-sub">Codice privato</span>
+                        </button>
+                    </div>
+                    <!-- Locale divider (shows under online buttons) -->
+                    <div id="multi-locale-divider" class="multi-locale-divider" style="display:none;">
+                        <span>oppure</span>
+                    </div>
+
+                    <!-- ③ PLAYER COUNT (local multi only) -->
                     <div id="player-count-row" class="player-count-row" style="display:none;">
                         <span class="count-row-label" data-i18n="setup.howmany">Quanti giocatori?</span>
                         <div class="player-count-pills">
