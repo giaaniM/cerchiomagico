@@ -556,7 +556,16 @@ export function startNextManche() {
     //     }
     // }
 
-    while (!valid && attempts < 200) {
+    // If excluded phrases cover the entire database, reset to avoid permanent deadlock
+    const fitsCount = puzzleDatabase.filter(p => !!splitPhraseIntoRows(p.phrase.split(' '), [12, 14, 14, 12])).length;
+    if (fitsCount > 0 && gameState.excludedPhrases.size >= fitsCount) {
+        gameState.excludedPhrases.clear();
+    }
+    if (fitsCount > 0 && gameState.usedPhrases.size >= fitsCount) {
+        gameState.usedPhrases.clear();
+    }
+
+    while (!valid && attempts < 500) {
         attempts++;
         const randomPuzzle = puzzleDatabase[Math.floor(Math.random() * puzzleDatabase.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
@@ -576,11 +585,17 @@ export function startNextManche() {
     }
 
     if (!valid) {
-        const fallbackDb = gameState.soloMode ? OFFLINE_PHRASES_EN : OFFLINE_PHRASES_IT;
-        const fallback = fallbackDb[0];
-        gameState.originalPhrase = fallback.phrase;
-        gameState.phrase = sanitizePhrase(fallback.phrase);
-        gameState.hint = fallback.hint;
+        // Last resort: pick any fitting phrase not equal to the current one
+        const currentNorm = normalizePhrase(gameState.phrase || '');
+        const candidate = puzzleDatabase.find(p => {
+            const fits = !!splitPhraseIntoRows(p.phrase.split(' '), [12, 14, 14, 12]);
+            return fits && normalizePhrase(p.phrase) !== currentNorm;
+        }) || puzzleDatabase.find(p => !!splitPhraseIntoRows(p.phrase.split(' '), [12, 14, 14, 12]));
+        if (candidate) {
+            gameState.originalPhrase = candidate.phrase;
+            gameState.phrase = sanitizePhrase(candidate.phrase);
+            gameState.hint = candidate.hint;
+        }
     }
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
@@ -878,9 +893,21 @@ export function skipPhrase() {
     }
 
     if (!valid) {
+        // Pool exhausted: reset session used set and pick any fitting phrase != current
         gameState.usedPhrases.clear();
-        skipPhrase();
-        return;
+        gameState.excludedPhrases.clear();
+        const currentNorm = normalizePhrase(gameState.phrase || '');
+        for (const p of puzzleDatabase) {
+            const fits = !!splitPhraseIntoRows(p.phrase.split(' '), [12, 14, 14, 12]);
+            if (fits && normalizePhrase(p.phrase) !== currentNorm) {
+                gameState.originalPhrase = p.phrase;
+                gameState.phrase = sanitizePhrase(p.phrase);
+                gameState.hint = p.hint;
+                gameState.usedPhrases.add(normalizePhrase(p.phrase));
+                valid = true;
+                break;
+            }
+        }
     }
 
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
