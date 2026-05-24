@@ -19,7 +19,7 @@ window.t = t;
 applyTranslations();
 
 // ===== Module imports =====
-import { updateUI } from './ui.js';
+import { updateUI, checkExpressBanner } from './ui.js';
 import { passTurn, setUpdateUI as playersSetUpdateUI, setSyncGameState as playersSetSyncGameState } from './players.js';
 import { setUpdateUI as boardSetUpdateUI } from './board.js';
 import { spinWheel, drawWheel, renderWheelToCache, clearWheelCache } from './wheel.js';
@@ -176,6 +176,16 @@ window.soundManager = soundManager;
 window._skipToManche5 = () => {
     gameState.currentManche = 4;
     endManche();
+};
+
+// TEST HELPER — force MEGATURNO mode: _testMegaturno()
+window._testMegaturno = () => {
+    gameState.wheelPhase = 'express';
+    gameState.expressAccumulated = 0;
+    const boardInner = document.getElementById('board-inner');
+    if (boardInner) boardInner.classList.add('express-active');
+    checkExpressBanner();
+    updateUI();
 };
 
 // ===== Load puzzles from Supabase =====
