@@ -6218,9 +6218,12 @@ body.manche-finale .board-frame {
 }
 
 .home-logo-icon {
-    font-size: 3.8rem;
-    filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.6));
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.35);
     display: block;
+    flex-shrink: 0;
 }
 
 .home-logo-text {
