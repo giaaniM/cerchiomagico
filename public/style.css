@@ -7359,12 +7359,19 @@ body:has(#setup-screen.active) .quick-actions-container {
 
 /* ===== NATIVE SCREENS (login, profile setup) ===== */
 .native-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: var(--bg, #0d0d1a);
     min-height: 100dvh;
-    display: flex;
     align-items: center;
     justify-content: center;
     padding: max(24px, env(safe-area-inset-top, 24px)) 24px
              max(32px, env(safe-area-inset-bottom, 32px));
+    overflow-y: auto;
+}
+.native-screen.active {
+    display: flex;
 }
 
 /* LOGIN */
@@ -7376,26 +7383,27 @@ body:has(#setup-screen.active) .quick-actions-container {
     width: 100%;
     max-width: 340px;
     text-align: center;
+    padding-top: 12px;
 }
 .login-logo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
     width: 100%;
 }
 .login-hero-img {
-    width: 92%;
-    max-width: 420px;
-    aspect-ratio: 1200 / 630;
+    width: 70%;
+    max-width: 220px;
+    aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: 20px;
+    border-radius: 24px;
     display: block;
 }
 .login-tagline {
-    font-size: 0.9rem;
-    color: rgba(255,255,255,0.5);
-    margin: 0 0 40px;
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.45);
+    margin: 0 0 20px;
 }
 .login-actions {
     display: flex;
