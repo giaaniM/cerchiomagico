@@ -87,7 +87,7 @@ export async function loadPuzzles() {
         const data = await res.json();
         if (gen !== _loadGen) return;
         if (Array.isArray(data) && data.length > 0) {
-            puzzleDatabase = data;
+            puzzleDatabase = data.filter(p => canFitOnBoard(p.phrase));
             shuffleArray(puzzleDatabase);
             phraseIndex = 0;
             console.log(`[PUZZLES] Loaded ${data.length} phrases (lang=${lang}) from Supabase`);
@@ -140,7 +140,7 @@ function triggerConfettiRain() {
 // ===== Board fit check =====
 export function canFitOnBoard(phrase) {
     const words = phrase.split(' ');
-    return !!splitPhraseIntoRows(words, [14, 16, 16, 16, 14]);
+    return !!splitPhraseIntoRows(words, [12, 14, 14, 12]);
 }
 
 // ===== Letter Actions =====

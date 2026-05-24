@@ -53,9 +53,9 @@ export function splitPhraseIntoRows(words, rowLimits) {
 export function createBoard() {
     elements.gameBoard.innerHTML = '';
     const words = gameState.phrase.split(' ');
-    const BOARD_ROWS = 5;
-    const ROW_CAPACITIES = [14, 16, 16, 16, 14];
-    const FIXED_CAPACITY = 16;
+    const BOARD_ROWS = 4;
+    const ROW_CAPACITIES = [12, 14, 14, 12];
+    const FIXED_CAPACITY = 14;
 
     let contentRows = splitPhraseIntoRows(words, ROW_CAPACITIES);
 
@@ -64,7 +64,7 @@ export function createBoard() {
         return;
     }
 
-    // Centramento verticale se le righe usate sono meno di 5
+    // Centramento verticale se le righe usate sono meno di 4
     const verticalOffset = Math.floor((BOARD_ROWS - contentRows.length) / 2);
 
     for (let row = 0; row < BOARD_ROWS; row++) {
@@ -74,14 +74,14 @@ export function createBoard() {
         const contentRowIndex = row - verticalOffset;
         const contentRow = (contentRowIndex >= 0 && contentRowIndex < contentRows.length) ? contentRows[contentRowIndex] : null;
 
-        // Outer rows (0 and 4) have invisible corner tiles → content starts at col 1
-        const startCol = (row === 0 || row === 4) ? 1 : 0;
+        // Outer rows (0 and 3) have invisible corner tiles → content starts at col 1
+        const startCol = (row === 0 || row === 3) ? 1 : 0;
 
         for (let col = 0; col < FIXED_CAPACITY; col++) {
             const tileElement = document.createElement('div');
             tileElement.className = 'tile';
 
-            const isRowEdge = (row === 0 || row === 4) && (col === 0 || col === 15);
+            const isRowEdge = (row === 0 || row === 3) && (col === 0 || col === 13);
 
             if (isRowEdge) {
                 tileElement.classList.add('invisible');
