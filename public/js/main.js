@@ -196,10 +196,15 @@ if (isNative) {
 
     // Android back button
     document.addEventListener('backbutton', () => {
-        const gameScreen = document.getElementById('game-screen');
-        if (gameScreen?.classList.contains('active') && !gameState.currentManche) {
-            showScreen('setup-screen');
+        const active = document.querySelector('.screen.active');
+        if (!active) return;
+        const id = active.id;
+        if (id === 'game-screen' || id === 'win-screen') {
+            newGame(); // handles cleanup (timer, overlays, manche reset)
+        } else if (id === 'setup-screen') {
+            // do nothing — already on home
         }
+        // login-screen / friends-panel: Android default back is fine
     });
 }
 
