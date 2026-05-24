@@ -16,10 +16,13 @@ let currentTab = 'login';
 function showAuthError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
 function hideAuthError()    { errorEl.style.display = 'none'; }
 
+const emailField = document.getElementById('auth-email-field');
+
 tabs.forEach(t => t.addEventListener('click', () => {
     currentTab = t.dataset.tab;
     tabs.forEach(x => x.classList.toggle('active', x.dataset.tab === currentTab));
     submitBtn.textContent = currentTab === 'login' ? 'Accedi' : 'Registrati';
+    if (emailField) emailField.style.display = currentTab === 'register' ? 'flex' : 'none';
     hideAuthError();
 }));
 
@@ -33,7 +36,10 @@ authForm.addEventListener('submit', async e => {
     submitBtn.textContent = '...';
     try {
         if (currentTab === 'login') await login(username, password);
-        else await register(username, password);
+        else {
+            const email = document.getElementById('auth-email')?.value?.trim() || '';
+            await register(username, password, email);
+        }
         authScreen.style.display = 'none';
         renderBadge();
         connectChallengeSocket();
@@ -236,8 +242,10 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+const _API_BASE = window.Capacitor?.isNativePlatform?.() ? 'https://magicspingame.com' : '';
+
 async function authFetch(url, opts = {}) {
-    const res = await fetch(url, {
+    const res = await fetch(`${_API_BASE}${url}`, {
         ...opts,
         headers: {
             'Content-Type': 'application/json',

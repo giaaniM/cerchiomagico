@@ -1,5 +1,10 @@
 // Auth module — login, register, session management
 
+// In Capacitor native, relative URLs resolve to local assets — use absolute server URL
+const API_BASE = window.Capacitor?.isNativePlatform?.()
+    ? 'https://magicspingame.com'
+    : '';
+
 const AUTH_KEY = 'ms_auth';
 
 export function getSession() {
@@ -27,7 +32,7 @@ export function isLoggedIn() {
 }
 
 async function apiAuth(endpoint, body) {
-    const res = await fetch(endpoint, {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -37,8 +42,8 @@ async function apiAuth(endpoint, body) {
     return data;
 }
 
-export async function register(username, password) {
-    const data = await apiAuth('/api/auth/register', { username, password });
+export async function register(username, password, email = '') {
+    const data = await apiAuth('/api/auth/register', { username, password, email });
     saveSession(data.token, data.user);
     return data.user;
 }
@@ -58,7 +63,7 @@ export async function verifySession() {
     const token = getToken();
     if (!token) return null;
     try {
-        const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(`${API_BASE}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) { clearSession(); return null; }
         const { user } = await res.json();
         return user;

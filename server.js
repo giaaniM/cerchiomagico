@@ -117,7 +117,7 @@ function authMiddleware(req, res, next) {
 
 // ─── Auth routes ─────────────────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username e password richiesti' });
     if (username.length < 3) return res.status(400).json({ error: 'Username minimo 3 caratteri' });
     if (password.length < 6) return res.status(400).json({ error: 'Password minimo 6 caratteri' });
@@ -126,8 +126,10 @@ app.post('/api/auth/register', async (req, res) => {
     if (existing) return res.status(409).json({ error: 'Username già in uso' });
 
     const password_hash = await bcrypt.hash(password, 10);
+    const insertData = { username, password_hash };
+    if (email && email.trim()) insertData.email = email.trim().toLowerCase();
     const { data: user, error } = await supabase
-        .from('users').insert({ username, password_hash }).select('id, username, avatar_color').single();
+        .from('users').insert(insertData).select('id, username, avatar_color').single();
     if (error) return res.status(500).json({ error: 'Errore registrazione' });
 
     await supabase.from('leaderboard_online').insert({ user_id: user.id });
