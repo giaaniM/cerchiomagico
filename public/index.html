@@ -105,31 +105,26 @@
 
                 <div class="setup-card">
 
-                    <!-- ① MODE SELECTION -->
-                    <div class="setup-section">
-                        <label class="setup-label" data-i18n="setup.howmany">Modalità</label>
-
-                        <!-- Pills row -->
-                        <div class="setup-mode-row">
-                            <div class="player-count-pills">
-                                <button class="count-pill count-pill-solo" id="solo-mode-btn" data-count="solo" data-i18n="setup.solo.pill">Solitario</button>
-                                <button class="count-pill active" data-count="2">2</button>
-                                <button class="count-pill" data-count="3">3</button>
-                                <button class="count-pill" data-count="4">4</button>
-                                <button class="count-pill" data-count="5">5</button>
-                            </div>
-                        </div>
-
-                        <!-- Mode info card — always visible, content set by JS -->
-                        <div id="mode-info-card" class="mode-info-card">
-                            <div class="mic-feature"><span class="mic-icon">📋</span><span class="mic-label">5 Frasi</span></div>
-                            <div class="mic-feature"><span class="mic-icon">⚡</span><span class="mic-label">Megaturno</span></div>
-                            <div class="mic-feature"><span class="mic-icon">🎯</span><span class="mic-label">Finale Speciale</span></div>
-                        </div>
+                    <!-- ① MACRO CHOICE: Solo / Multi -->
+                    <div class="setup-macro-row">
+                        <button class="macro-mode-btn macro-solo active" id="macro-solo-btn">
+                            <span class="macro-icon">🎯</span>
+                            <span class="macro-label" data-i18n="setup.solo.pill">Solitario</span>
+                        </button>
+                        <button class="macro-mode-btn macro-multi" id="macro-multi-btn">
+                            <span class="macro-icon">👥</span>
+                            <span class="macro-label">Multiplayer</span>
+                        </button>
                     </div>
 
-                    <!-- ② PLAYER NAMES -->
-                    <div id="local-names-container" class="names-grid"></div>
+                    <!-- Mode info badges -->
+                    <div id="mode-info-card" class="mode-info-card"></div>
+
+                    <!-- ② PLAYER NAMES (dynamic) -->
+                    <div id="local-names-container" class="names-list"></div>
+
+                    <!-- Add player (multi only) -->
+                    <button id="add-player-btn" class="btn-add-player" type="button" style="display:none">+ Aggiungi giocatore</button>
 
                     <!-- ③ PRIMARY CTA -->
                     <button id="start-local-game-btn" class="btn-primary setup-start-btn" data-i18n="setup.start">

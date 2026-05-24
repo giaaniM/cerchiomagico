@@ -10,15 +10,16 @@ export function setStartGameDirectly(fn) { _startGameDirectly = fn; }
 export function initSoloButton() {}
 
 export function resetSoloSelection() {
-    soloSelected = false;
+    soloSelected = true;
     playerCount = 2;
-    document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
-    document.querySelector('.count-pill[data-count="2"]')?.classList.add('active');
-    document.querySelector('.setup-card:not(.setup-custom-card)')?.classList.remove('solo-active');
-    updateModeInfoCard('multi');
-    const smartphoneBannerReset = document.getElementById('mode-smartphone-btn');
-    if (smartphoneBannerReset) smartphoneBannerReset.style.display = 'flex';
-    renderNameInputs();
+    const setupCard = document.querySelector('.setup-card:not(.setup-custom-card)');
+    document.getElementById('macro-solo-btn')?.classList.add('active');
+    document.getElementById('macro-multi-btn')?.classList.remove('active');
+    setupCard?.classList.add('solo-active');
+    document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'none');
+    document.getElementById('add-player-btn')?.style.setProperty('display', 'none');
+    updateModeInfoCard('solo');
+    renderNameInputs(true);
 }
 
 let playerCount = 2;
@@ -28,17 +29,14 @@ let customCardPlayerCount = 2;
 let customCardSoloSelected = false;
 
 export function initSetup() {
-    // Default: solo mode pre-selected
     soloSelected = true;
     const setupCard = document.querySelector('.setup-card:not(.setup-custom-card)');
-    document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
-    document.querySelector('.count-pill[data-count="solo"]')?.classList.add('active');
     setupCard?.classList.add('solo-active');
     document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'none');
     renderNameInputs(true);
     updateModeInfoCard('solo');
 
-    // Mode switcher (normal ↔ custom)
+    // Mode switcher (Gioca ↔ Crea Frase)
     document.querySelectorAll('.sms-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             soundManager.playClick();
@@ -48,31 +46,44 @@ export function initSetup() {
         });
     });
 
-    // Main card: player count pills
-    document.querySelectorAll('.count-pill[data-count]').forEach(btn => {
-        btn.addEventListener('click', () => {
+    // Macro: Solo
+    const macroSoloBtn = document.getElementById('macro-solo-btn');
+    if (macroSoloBtn) {
+        macroSoloBtn.addEventListener('click', () => {
             soundManager.playClick();
-            document.querySelectorAll('.count-pill[data-count]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            const isSolo = btn.dataset.count === 'solo';
-            soloSelected = isSolo;
-            const setupCard = document.querySelector('.setup-card:not(.setup-custom-card)');
-            const smartphoneBanner = document.getElementById('mode-smartphone-btn');
-
-            if (isSolo) {
-                setupCard?.classList.add('solo-active');
-                if (smartphoneBanner) smartphoneBanner.style.display = 'none';
-                updateModeInfoCard('solo');
-                renderNameInputs(true);
-            } else {
-                setupCard?.classList.remove('solo-active');
-                playerCount = parseInt(btn.dataset.count);
-                if (smartphoneBanner) smartphoneBanner.style.display = 'flex';
-                updateModeInfoCard('multi');
-                renderNameInputs();
-            }
+            soloSelected = true;
+            macroSoloBtn.classList.add('active');
+            document.getElementById('macro-multi-btn')?.classList.remove('active');
+            setupCard?.classList.add('solo-active');
+            document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'none');
+            document.getElementById('add-player-btn').style.display = 'none';
+            updateModeInfoCard('solo');
+            renderNameInputs(true);
         });
+    }
+
+    // Macro: Multiplayer
+    const macroMultiBtn = document.getElementById('macro-multi-btn');
+    if (macroMultiBtn) {
+        macroMultiBtn.addEventListener('click', () => {
+            soundManager.playClick();
+            soloSelected = false;
+            macroMultiBtn.classList.add('active');
+            document.getElementById('macro-solo-btn')?.classList.remove('active');
+            setupCard?.classList.remove('solo-active');
+            document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'flex');
+            updateModeInfoCard('multi');
+            renderNameInputs(false);
+        });
+    }
+
+    // Add player button
+    document.getElementById('add-player-btn')?.addEventListener('click', () => {
+        soundManager.playClick();
+        if (playerCount >= 5) return;
+        playerCount++;
+        renderNameInputs(false);
+        document.getElementById(`player-name-${playerCount}`)?.focus();
     });
 
     // Main card: start button
@@ -137,7 +148,6 @@ const HINT_MAX = 30;
 function initCustomCard() {
     renderCustomNameInputs();
 
-    // Live counter + validation state for hint
     const hintInput = document.getElementById('custom-hint-input');
     const hintCounter = document.getElementById('hint-counter');
     if (hintInput && hintCounter) {
@@ -149,12 +159,10 @@ function initCustomCard() {
         });
     }
 
-    // Auto-uppercase + live counter + only letters/spaces/accents for phrase
     const customPhraseInput = document.getElementById('custom-phrase-input');
     const phraseCounter = document.getElementById('phrase-counter');
     if (customPhraseInput) {
         customPhraseInput.addEventListener('input', () => {
-            // Strip invalid chars (keep letters, accented, spaces, apostrophes)
             let val = customPhraseInput.value.toUpperCase().replace(/[^A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖÙÚÛÜÝÞSSÀ-ÖØ-öø-ÿ ']/g, '');
             const s = customPhraseInput.selectionStart;
             customPhraseInput.value = val;
@@ -168,7 +176,7 @@ function initCustomCard() {
         });
     }
 
-    // Custom card: player count pills
+    // Custom card: player count pills (kept for Crea Frase card)
     document.querySelectorAll('.count-pill[data-custom-count]').forEach(btn => {
         btn.addEventListener('click', () => {
             soundManager.playClick();
@@ -278,7 +286,6 @@ function switchSetupMode(mode) {
     } else {
         if (mainCard) mainCard.style.display = 'flex';
         if (customCard) customCard.style.display = 'none';
-        // restore banner unless solo is selected
         if (banner && !soloSelected) banner.style.display = 'flex';
     }
 }
@@ -299,17 +306,54 @@ function showSmartphoneMode(show) {
 function renderNameInputs(solo = false) {
     const container = document.getElementById('local-names-container');
     if (!container) return;
+
+    // Preserve existing values before re-render
+    const existing = [];
+    for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`player-name-${i}`);
+        existing[i] = el ? el.value : '';
+    }
+
     container.innerHTML = '';
     const count = solo ? 1 : playerCount;
+
     for (let i = 1; i <= count; i++) {
         const div = document.createElement('div');
-        div.className = 'name-input-wrap';
+        div.className = 'name-input-row';
         const placeholder = solo ? (t('setup.solo.nameinput') || 'Il tuo nome') : `${t('setup.player')} ${i}`;
-        div.innerHTML = `<input type="text" id="player-name-${i}" class="player-name-input" placeholder="${placeholder}" maxlength="20" autocomplete="off">`;
+        const canRemove = !solo && playerCount > 2;
+        div.innerHTML = `<input type="text" id="player-name-${i}" class="player-name-input" placeholder="${placeholder}" maxlength="20" autocomplete="off">${canRemove ? `<button class="btn-remove-player" type="button" data-idx="${i}">×</button>` : ''}`;
+        if (existing[i]) div.querySelector('input').value = existing[i];
         container.appendChild(div);
     }
-    const first = document.getElementById('player-name-1');
-    if (first) setTimeout(() => first.focus(), 50);
+
+    // Remove player handlers
+    container.querySelectorAll('.btn-remove-player').forEach(btn => {
+        btn.addEventListener('click', () => {
+            soundManager.playClick();
+            const idx = parseInt(btn.dataset.idx);
+            // Shift names down
+            const names = [];
+            for (let i = 1; i <= playerCount; i++) {
+                const v = document.getElementById(`player-name-${i}`)?.value || '';
+                if (i !== idx) names.push(v);
+            }
+            playerCount--;
+            renderNameInputs(false);
+            names.forEach((v, i) => {
+                const el = document.getElementById(`player-name-${i + 1}`);
+                if (el) el.value = v;
+            });
+        });
+    });
+
+    const addBtn = document.getElementById('add-player-btn');
+    if (addBtn) addBtn.style.display = (!solo && playerCount < 5) ? 'flex' : 'none';
+
+    if (!existing[1]) {
+        const first = document.getElementById('player-name-1');
+        if (first) setTimeout(() => first.focus(), 50);
+    }
 }
 
 function renderCustomNameInputs(solo = false) {

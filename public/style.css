@@ -5572,6 +5572,134 @@ body.manche-finale .board-frame {
     gap: 8px;
 }
 
+/* ===== MACRO MODE BUTTONS (Solo / Multi) ===== */
+.setup-macro-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.macro-mode-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 12px;
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    color: rgba(255,255,255,0.45);
+    cursor: pointer;
+    font-family: var(--font-family);
+    transition: all 0.2s ease;
+}
+.macro-mode-btn:hover {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.7);
+}
+.macro-mode-btn.active {
+    background: rgba(139,92,246,0.12);
+    border-color: rgba(139,92,246,0.5);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(139,92,246,0.15);
+}
+.macro-mode-btn.macro-multi.active {
+    background: rgba(251,191,36,0.08);
+    border-color: rgba(251,191,36,0.4);
+    box-shadow: 0 0 20px rgba(251,191,36,0.1);
+}
+.macro-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+.macro-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* ===== DYNAMIC NAME LIST ===== */
+.names-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.name-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.name-input-row input {
+    flex: 1;
+    padding: 10px 12px 10px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid rgba(255,255,255,0.15);
+    border-radius: 0;
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: var(--font-family);
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+.name-input-row input:focus {
+    outline: none;
+    border-bottom-color: #fbbf24;
+}
+.name-input-row input::placeholder { color: rgba(255,255,255,0.2); }
+
+.btn-remove-player {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.35);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    font-family: var(--font-family);
+}
+.btn-remove-player:hover {
+    background: rgba(239,68,68,0.15);
+    border-color: rgba(239,68,68,0.4);
+    color: #f87171;
+}
+
+.btn-add-player {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px dashed rgba(255,255,255,0.18);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.35);
+    font-size: 0.8rem;
+    font-family: var(--font-family);
+    padding: 8px 14px;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.btn-add-player:hover {
+    border-color: rgba(251,191,36,0.4);
+    color: #fbbf24;
+    background: rgba(251,191,36,0.04);
+}
+
 /* Mode info — inline badge row, NOT cards */
 .mode-info-card {
     display: flex;
