@@ -177,7 +177,8 @@ export function showSoloResults(newGame) {
             </div>`;
         }).join('');
 
-        const rankBadge = userRank ? `<div class="solo-lb-rank-badge">${isIt ? `La tua posizione: #${userRank}` : `Your rank: #${userRank}`}</div>` : '';
+        const alreadyVisible = userRank && userRank <= top.length;
+        const rankBadge = userRank && !alreadyVisible ? `<div class="solo-lb-rank-badge">${isIt ? `La tua posizione: #${userRank}` : `Your rank: #${userRank}`}</div>` : '';
         lbEl.innerHTML = `<div class="lb-table">${rows}</div>${rankBadge}`;
     })();
 

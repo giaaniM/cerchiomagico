@@ -4568,20 +4568,22 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 /* ===== PREMIUM EXPRESS WINNINGS BANNER ===== */
 .express-banner {
-    position: fixed;
-    top: 12px;
-    right: 16px;
+    position: relative;
+    top: auto;
+    right: auto;
     left: auto;
     transform: none;
     background: linear-gradient(135deg, #7e22ce 0%, #4c1d95 100%);
     border: 2px solid #facc15;
     border-radius: 40px;
-    padding: 6px 14px;
+    padding: 10px 20px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 14px rgba(126, 34, 206, 0.4);
-    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(126, 34, 206, 0.5);
+    z-index: 1;
+    margin: 6px 16px 0;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     animation: bannerEntrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }

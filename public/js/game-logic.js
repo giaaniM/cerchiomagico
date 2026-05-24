@@ -607,6 +607,7 @@ export function startGameDirectly(players, soloMode = false, customOpts = null) 
     gameState.currentPlayerIndex = 0;
     gameState.totalScores = {};
     gameState.partialScores = {};
+    gameState.hasShield = {};
     gameState.aiPhrases = [];
 
     gameState.players.forEach(p => {

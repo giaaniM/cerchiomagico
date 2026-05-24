@@ -290,13 +290,8 @@ export function showFinalResults(newGame) {
 }
 
 export function checkExpressBanner() {
-    let banner = document.getElementById('express-banner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'express-banner';
-        banner.className = 'express-banner';
-        document.body.appendChild(banner);
-    }
+    const banner = document.getElementById('express-banner');
+    if (!banner) return;
     const player = getCurrentPlayer();
     const totalExpress = gameState.expressAccumulated;
 
