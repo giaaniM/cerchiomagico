@@ -76,20 +76,41 @@
                 </div>
                 <p class="login-tagline">Sfida gli amici. Vinci il montepremi.</p>
 
-                <div class="login-actions">
-                    <button id="google-signin-btn" class="google-btn">
-                        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.4 30.2 0 24 0 14.7 0 6.8 5.4 2.9 13.3l7.8 6C12.4 13.1 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/><path fill="#FBBC05" d="M10.7 28.7A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.7-4.7l-7.8-6A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.2-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.2 0-11.5-4.2-13.4-9.9l-8.2 6.1C6.7 42.5 14.8 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
-                        Continua con Google
-                    </button>
-                    <button id="guest-signin-btn" class="guest-btn">Gioca come ospite →</button>
+                <!-- Tab switcher -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="auth-tab-login">Accedi</button>
+                    <button class="auth-tab" id="auth-tab-register">Registrati</button>
                 </div>
 
-                <p class="login-note">L'account ti serve per il multiplayer e per salvare il tuo record.</p>
+                <!-- Login form -->
+                <div id="auth-form-login" class="auth-form">
+                    <input id="auth-login-user" class="auth-input" type="text" placeholder="Username"
+                        autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="20">
+                    <input id="auth-login-pass" class="auth-input" type="password" placeholder="Password"
+                        autocomplete="current-password" maxlength="64">
+                    <div id="auth-login-status" class="auth-status"></div>
+                    <button id="auth-login-btn" class="auth-submit-btn">Accedi</button>
+                </div>
+
+                <!-- Register form -->
+                <div id="auth-form-register" class="auth-form hidden">
+                    <input id="auth-reg-user" class="auth-input" type="text" placeholder="Username (3-20 caratteri)"
+                        autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="20">
+                    <input id="auth-reg-pass" class="auth-input" type="password" placeholder="Password"
+                        autocomplete="new-password" maxlength="64">
+                    <input id="auth-reg-email" class="auth-input" type="email" placeholder="Email (facoltativa)"
+                        autocomplete="email" maxlength="100">
+                    <div id="auth-register-status" class="auth-status"></div>
+                    <button id="auth-register-btn" class="auth-submit-btn">Crea account</button>
+                </div>
+
+                <button id="guest-signin-btn" class="guest-btn">Gioca come ospite →</button>
+                <p class="login-note">L'account ti serve per sfidare gli amici e salvare il tuo record.</p>
             </div>
         </div>
 
-        <!-- ===== PROFILE SETUP SCREEN (first login) ===== -->
-        <div id="profile-setup-screen" class="screen native-screen">
+        <!-- ===== PROFILE SETUP SCREEN (unused, kept for compat) ===== -->
+        <div id="profile-setup-screen" class="screen native-screen" style="display:none;">
             <div class="profile-setup-container">
                 <div class="ps-avatar" id="ps-avatar">👤</div>
                 <h2 class="ps-title">Scegli il tuo username</h2>

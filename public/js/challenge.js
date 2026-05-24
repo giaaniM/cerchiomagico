@@ -39,7 +39,7 @@ function authSocket() {
     if (!currentProfile || !socket) return;
     socket.emit('challenge:auth', {
         profileId: currentProfile.id,
-        username: currentProfile.display_name || currentProfile.username
+        username: currentProfile.username
     });
 }
 
@@ -64,7 +64,7 @@ function getOrCreateOverlay() {
 function buildUI(players) {
     const ov = getOrCreateOverlay();
     ov.style.display = 'flex';
-    const myIdx = players.findIndex(p => p.username === (currentProfile?.display_name || currentProfile?.username));
+    const myIdx = players.findIndex(p => p.username === (currentProfile?.username));
 
     ov.innerHTML = `
         <div class="ch-modal">
@@ -90,7 +90,7 @@ function renderState(state) {
     const ov = document.getElementById('ch-overlay');
     if (!ov || ov.style.display === 'none') buildUI(state.players);
 
-    const myUsername = currentProfile?.display_name || currentProfile?.username;
+    const myUsername = currentProfile?.username;
     const myIdx = state.players.findIndex(p => p.username === myUsername);
     const isMyTurn = myIdx === state.currentPlayerIdx;
 
@@ -242,7 +242,7 @@ function showInvite(challengeId, from, lang) {
 }
 
 function showGameOver({ winnerIdx, winner, totalScore, players }) {
-    const myUsername = currentProfile?.display_name || currentProfile?.username;
+    const myUsername = currentProfile?.username;
     const iWon = players[winnerIdx]?.username === myUsername;
 
     const modal = document.querySelector('#ch-overlay .ch-modal');

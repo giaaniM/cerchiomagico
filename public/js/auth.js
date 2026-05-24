@@ -1,155 +1,112 @@
-import { getSupabase } from './supabase-client.js';
-import { API_URL, isNative } from './native.js';
+import { API_BASE } from './native.js';
 
-export let currentUser = null;
-export let currentProfile = null;
+const TOKEN_KEY = 'magicspin_token';
+const USER_KEY  = 'magicspin_user';
 
-const REDIRECT_URL = isNative
-    ? 'magicspin://auth/callback'
-    : `${window.location.origin}/auth/callback`;
+export let currentUser = null;   // { id, username }
+export let currentProfile = null; // alias for compat — same object
 
-export async function initAuth() {
-    const sb = await getSupabase();
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-        currentUser = session.user;
-        currentProfile = await fetchOrCreateProfile(session.user);
-    }
-    sb.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-            currentUser = session.user;
-            currentProfile = await fetchOrCreateProfile(session.user);
-        } else if (event === 'SIGNED_OUT') {
-            currentUser = null;
-            currentProfile = null;
-        }
-    });
-    return { user: currentUser, profile: currentProfile };
-}
-
-export async function signInWithGoogle() {
-    const sb = await getSupabase();
-    const { error } = await sb.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-            redirectTo: REDIRECT_URL,
-            queryParams: { access_type: 'offline', prompt: 'consent' },
+function authFetch(url, options = {}) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return fetch(`${API_BASE}${url}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...options.headers,
         },
     });
-    if (error) throw error;
 }
 
-export async function signOut() {
-    const sb = await getSupabase();
-    await sb.auth.signOut();
+export async function register(username, password, email = '') {
+    const res = await authFetch('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ username, password, email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Errore registrazione');
+    _saveSession(data.token, data.user);
+    return data.user;
+}
+
+export async function login(username, password) {
+    const res = await authFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Credenziali errate');
+    _saveSession(data.token, data.user);
+    return data.user;
+}
+
+export async function verifySession() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return null;
+    try {
+        const res = await authFetch('/api/auth/me');
+        if (!res.ok) { _clearSession(); return null; }
+        const user = await res.json();
+        _setUser(user);
+        return user;
+    } catch {
+        return null;
+    }
+}
+
+export function logout() {
+    _clearSession();
+}
+
+export function getSavedUser() {
+    try { return JSON.parse(localStorage.getItem(USER_KEY)) || null; } catch { return null; }
+}
+
+function _saveSession(token, user) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    _setUser(user);
+}
+
+function _setUser(user) {
+    currentUser = user;
+    currentProfile = user; // compat alias used by challenge.js
+}
+
+function _clearSession() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
     currentUser = null;
     currentProfile = null;
 }
 
-export async function fetchOrCreateProfile(user) {
-    const sb = await getSupabase();
-    const { data, error } = await sb
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-    if (data) return data;
-    // New user — profile will be created after username choice
-    return null;
-}
-
-export async function createProfile({ userId, username, displayName, avatarUrl }) {
-    const sb = await getSupabase();
-    const { data, error } = await sb
-        .from('profiles')
-        .insert({
-            id: userId,
-            username: username.trim().toLowerCase(),
-            display_name: displayName,
-            avatar_url: avatarUrl,
-        })
-        .select()
-        .single();
-    if (error) throw error;
-    currentProfile = data;
-    return data;
-}
-
-export async function checkUsernameAvailable(username) {
-    const sb = await getSupabase();
-    const { data } = await sb
-        .from('profiles')
-        .select('id')
-        .eq('username', username.trim().toLowerCase())
-        .single();
-    return !data;
-}
-
-export async function updateSoloRecord(timeSeconds, score) {
-    if (!currentProfile) return;
-    const isBetter = !currentProfile.solo_best_time || timeSeconds < currentProfile.solo_best_time;
-    if (!isBetter) return;
-    const sb = await getSupabase();
-    const { data } = await sb
-        .from('profiles')
-        .update({ solo_best_time: timeSeconds, solo_best_score: score })
-        .eq('id', currentProfile.id)
-        .select()
-        .single();
-    if (data) currentProfile = data;
-}
-
-// Friends
+// Friends (via REST, not Supabase client)
 export async function getFriends() {
-    if (!currentProfile) return [];
-    const sb = await getSupabase();
-    const { data } = await sb
-        .from('friendships')
-        .select('*, friend:profiles!friendships_friend_id_fkey(id, username, display_name, avatar_url)')
-        .eq('user_id', currentProfile.id)
-        .eq('status', 'accepted');
-    return data ?? [];
+    try {
+        const res = await authFetch('/api/friends');
+        return res.ok ? await res.json() : [];
+    } catch { return []; }
 }
 
 export async function sendFriendRequest(friendUsername) {
-    if (!currentProfile) throw new Error('Not logged in');
-    const sb = await getSupabase();
-    const { data: friend } = await sb
-        .from('profiles')
-        .select('id')
-        .eq('username', friendUsername.trim().toLowerCase())
-        .single();
-    if (!friend) throw new Error('Utente non trovato');
-    if (friend.id === currentProfile.id) throw new Error('Non puoi aggiungere te stesso');
-    const { error } = await sb.from('friendships').insert({
-        user_id: currentProfile.id,
-        friend_id: friend.id,
-        status: 'pending',
+    const res = await authFetch('/api/friends/request', {
+        method: 'POST',
+        body: JSON.stringify({ friendUsername }),
     });
-    if (error) throw error;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Errore');
 }
 
 export async function acceptFriendRequest(requesterId) {
-    const sb = await getSupabase();
-    await sb.from('friendships')
-        .update({ status: 'accepted' })
-        .eq('user_id', requesterId)
-        .eq('friend_id', currentProfile.id);
-    // Create reverse entry so both can query
-    await sb.from('friendships').insert({
-        user_id: currentProfile.id,
-        friend_id: requesterId,
-        status: 'accepted',
+    await authFetch('/api/friends/accept', {
+        method: 'POST',
+        body: JSON.stringify({ requesterId }),
     });
 }
 
 export async function getPendingRequests() {
-    if (!currentProfile) return [];
-    const sb = await getSupabase();
-    const { data } = await sb
-        .from('friendships')
-        .select('*, requester:profiles!friendships_user_id_fkey(id, username, display_name, avatar_url)')
-        .eq('friend_id', currentProfile.id)
-        .eq('status', 'pending');
-    return data ?? [];
+    try {
+        const res = await authFetch('/api/friends/requests');
+        return res.ok ? await res.json() : [];
+    } catch { return []; }
 }

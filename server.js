@@ -4,7 +4,22 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'magicspin-secret-change-in-prod';
+
+function authMiddleware(req, res, next) {
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token' });
+    try {
+        req.user = jwt.verify(token, JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).json({ error: 'Invalid token' });
+    }
+}
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
@@ -275,6 +290,74 @@ app.post('/api/puzzle/remove', async (req, res) => {
         console.warn(`[SUPABASE] Phrase not found: "${phrase}"`);
         res.json({ success: false, message: 'Phrase not found' });
     }
+});
+
+// ===== AUTH =====
+app.post('/api/auth/register', async (req, res) => {
+    const { username, password, email } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username e password richiesti' });
+    const clean = username.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(clean)) return res.status(400).json({ error: 'Username non valido (3-20 caratteri: lettere, numeri, _)' });
+    const { data: existing } = await supabase.from('users').select('id').eq('username', clean).single();
+    if (existing) return res.status(409).json({ error: 'Username già in uso' });
+    const hash = await bcrypt.hash(password, 10);
+    const { data: user, error } = await supabase.from('users').insert({
+        username: clean,
+        password_hash: hash,
+        email: email?.trim() || null,
+    }).select().single();
+    if (error) return res.status(500).json({ error: 'Errore registrazione' });
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user.id, username: user.username } });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Campi mancanti' });
+    const { data: user } = await supabase.from('users').select('*').eq('username', username.trim().toLowerCase()).single();
+    if (!user) return res.status(401).json({ error: 'Credenziali errate' });
+    const ok = await bcrypt.compare(password, user.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Credenziali errate' });
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user.id, username: user.username } });
+});
+
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+    res.json({ id: req.user.id, username: req.user.username });
+});
+
+// ===== FRIENDS =====
+app.post('/api/friends/request', authMiddleware, async (req, res) => {
+    const { friendUsername } = req.body;
+    const { data: friend } = await supabase.from('users').select('id').eq('username', friendUsername?.toLowerCase()).single();
+    if (!friend) return res.status(404).json({ error: 'Utente non trovato' });
+    if (friend.id === req.user.id) return res.status(400).json({ error: 'Non puoi aggiungere te stesso' });
+    const { error } = await supabase.from('friendships').insert({ user_id: req.user.id, friend_id: friend.id, status: 'pending' });
+    if (error) return res.status(409).json({ error: 'Richiesta già inviata' });
+    res.json({ success: true });
+});
+
+app.post('/api/friends/accept', authMiddleware, async (req, res) => {
+    const { requesterId } = req.body;
+    await supabase.from('friendships').update({ status: 'accepted' }).eq('user_id', requesterId).eq('friend_id', req.user.id);
+    await supabase.from('friendships').insert({ user_id: req.user.id, friend_id: requesterId, status: 'accepted' });
+    res.json({ success: true });
+});
+
+app.get('/api/friends', authMiddleware, async (req, res) => {
+    const { data } = await supabase.from('friendships').select('friend_id').eq('user_id', req.user.id).eq('status', 'accepted');
+    if (!data?.length) return res.json([]);
+    const ids = data.map(r => r.friend_id);
+    const { data: users } = await supabase.from('users').select('id, username').in('id', ids);
+    res.json(users ?? []);
+});
+
+app.get('/api/friends/requests', authMiddleware, async (req, res) => {
+    const { data } = await supabase.from('friendships').select('user_id').eq('friend_id', req.user.id).eq('status', 'pending');
+    if (!data?.length) return res.json([]);
+    const ids = data.map(r => r.user_id);
+    const { data: users } = await supabase.from('users').select('id, username').in('id', ids);
+    res.json(users ?? []);
 });
 
 // Socket.io connection handling
@@ -1130,10 +1213,10 @@ io.on('connection', (socket) => {
         const { data: ch } = await supabase.from('challenges').select('*').eq('id', challengeId).single();
         if (!ch || ch.status !== 'pending') return;
         await supabase.from('challenges').update({ status: 'active' }).eq('id', challengeId);
-        const { data: profiles } = await supabase.from('profiles').select('id, username, display_name').in('id', [ch.challenger_id, ch.opponent_id]);
+        const { data: profiles } = await supabase.from('users').select('id, username').in('id', [ch.challenger_id, ch.opponent_id]);
         const getName = (id) => {
             const p = profiles?.find(p => p.id === id);
-            return p?.display_name || p?.username || 'Giocatore';
+            return p?.username || 'Giocatore';
         };
         const challengerSocketId = userSockets.get(ch.challenger_id);
         const game = {
