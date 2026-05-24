@@ -1,6 +1,7 @@
 import { currentProfile } from './auth.js';
 import { SOCKET_URL } from './native.js';
 import { getCurrentLang, t } from './lang.js';
+import { ic } from './icons.js';
 
 let socket = null;
 
@@ -150,7 +151,7 @@ function renderState(state) {
     if (state.phase === 'spin') {
         const btn = document.createElement('button');
         btn.className = 'ch-btn ch-btn-spin';
-        btn.textContent = '🎡 Gira la ruota';
+        btn.innerHTML = `${ic('rotate', 18)} Gira la ruota`;
         btn.onclick = () => socket?.emit('challenge:spin', { challengeId });
         actionsEl.appendChild(btn);
     } else if (state.phase === 'consonant') {
@@ -173,7 +174,7 @@ function renderState(state) {
     } else if (state.phase === 'action') {
         const spinBtn = document.createElement('button');
         spinBtn.className = 'ch-btn ch-btn-spin';
-        spinBtn.textContent = '🎡 Gira ancora';
+        spinBtn.innerHTML = `${ic('rotate', 18)} Gira ancora`;
         spinBtn.onclick = () => socket?.emit('challenge:action-spin', { challengeId });
         actionsEl.appendChild(spinBtn);
 
@@ -201,7 +202,7 @@ function renderState(state) {
         solveInput.maxLength = 60;
         const solveBtn = document.createElement('button');
         solveBtn.className = 'ch-btn ch-btn-solve';
-        solveBtn.textContent = '✓ Risolvi';
+        solveBtn.innerHTML = `${ic('check', 16)} Risolvi`;
         solveBtn.onclick = () => {
             const attempt = solveInput.value.trim();
             if (attempt) socket?.emit('challenge:solve', { challengeId, attempt });
@@ -221,10 +222,10 @@ function showInvite(challengeId, from, lang) {
     const toast = document.createElement('div');
     toast.className = 'ch-invite-toast';
     toast.innerHTML = `
-        <div class="ch-invite-msg">⚔️ <strong>${escHtml(from)}</strong> ti sfida!</div>
+        <div class="ch-invite-msg">${ic('swords', 16)} <strong>${escHtml(from)}</strong> ti sfida!</div>
         <div class="ch-invite-btns">
-            <button class="ch-btn ch-btn-accept" id="ch-accept-${challengeId}">Accetta</button>
-            <button class="ch-btn ch-btn-decline" id="ch-decline-${challengeId}">Rifiuta</button>
+            <button class="ch-btn ch-btn-accept" id="ch-accept-${challengeId}">${ic('check', 16)} Accetta</button>
+            <button class="ch-btn ch-btn-decline" id="ch-decline-${challengeId}">${ic('x', 16)} Rifiuta</button>
         </div>
     `;
     document.body.appendChild(toast);
@@ -249,7 +250,7 @@ function showGameOver({ winnerIdx, winner, totalScore, players }) {
     if (!modal) return;
     modal.innerHTML = `
         <div class="ch-gameover">
-            <div class="ch-gameover-icon">${iWon ? '🏆' : '😔'}</div>
+            <div class="ch-gameover-icon">${ic(iWon ? 'trophy' : 'frown', 48)}</div>
             <div class="ch-gameover-title">${iWon ? 'Hai vinto!' : 'Hai perso!'}</div>
             <div class="ch-gameover-winner">${escHtml(winner)}</div>
             <div class="ch-gameover-scores">

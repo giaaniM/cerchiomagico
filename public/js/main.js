@@ -194,17 +194,16 @@ window.soundManager = soundManager;
 if (isNative) {
     document.documentElement.classList.add('is-native');
 
-    // Android back button
+    // Android back button — no confirmation, always go home directly
     document.addEventListener('backbutton', () => {
         const active = document.querySelector('.screen.active');
         if (!active) return;
         const id = active.id;
         if (id === 'game-screen' || id === 'win-screen') {
-            newGame(); // handles cleanup (timer, overlays, manche reset)
-        } else if (id === 'setup-screen') {
-            // do nothing — already on home
+            gameState.currentManche = 0; // bypass confirmation popup
+            newGame();
         }
-        // login-screen / friends-panel: Android default back is fine
+        // setup-screen / login-screen: do nothing (let Android minimize app)
     });
 }
 

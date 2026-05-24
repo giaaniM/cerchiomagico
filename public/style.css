@@ -7624,9 +7624,11 @@ body:has(#setup-screen.active) .quick-actions-container {
     background: none;
     border: none;
     color: rgba(255,255,255,0.3);
-    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    padding: 4px 6px;
+    padding: 6px;
     border-radius: 6px;
     -webkit-tap-highlight-color: transparent;
 }
@@ -8089,13 +8091,16 @@ body:has(#setup-screen.active) .quick-actions-container {
     background: none;
     border: none;
     color: rgba(255,255,255,0.5);
-    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    padding: 4px 6px;
+    padding: 6px;
     border-radius: 6px;
     -webkit-tap-highlight-color: transparent;
 }
 .spb-friends-btn:hover { color: rgba(255,255,255,0.8); }
+.spb-friends-btn svg, .spb-signout svg { display: block; }
 
 /* ══════════════════════════════════════════════
    FRIENDS PANEL
@@ -8171,6 +8176,9 @@ body:has(#setup-screen.active) .quick-actions-container {
 }
 .fp-name { font-size: 0.95rem; font-weight: 600; color: #fff; }
 .fp-accept-btn, .fp-challenge-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     padding: 6px 12px;
     border-radius: 8px;
     border: none;
@@ -8278,6 +8286,10 @@ body:has(#setup-screen.active) .quick-actions-container {
 .ch-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .ch-waiting { font-size: 0.9rem; color: rgba(255,255,255,0.4); text-align: center; padding: 12px; }
 .ch-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
     padding: 12px 24px;
     border-radius: 12px;
     border: none;

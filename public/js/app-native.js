@@ -3,6 +3,7 @@ import { login, register, verifySession, logout, getSavedUser, getFriends, sendF
 import { showScreen } from './utils.js';
 import { formatTime } from './solo.js';
 import { initChallengeSocket, sendChallenge } from './challenge.js';
+import { ic } from './icons.js';
 
 let _onReady = () => {};
 export function onNativeReady(fn) { _onReady = fn; }
@@ -106,13 +107,19 @@ function showProfileBar(user) {
 
     bar.style.display = 'flex';
 
-    document.getElementById('spb-signout-btn')?.addEventListener('click', () => {
+    const friendsBtn = document.getElementById('spb-friends-btn');
+    if (friendsBtn) friendsBtn.innerHTML = ic('users', 18);
+
+    const signoutBtn = document.getElementById('spb-signout-btn');
+    if (signoutBtn) signoutBtn.innerHTML = ic('logout', 18);
+
+    signoutBtn?.addEventListener('click', () => {
         logout();
         bar.style.display = 'none';
         showScreen('login-screen');
     }, { once: true });
 
-    document.getElementById('spb-friends-btn')?.addEventListener('click', openFriendsPanel, { once: true });
+    friendsBtn?.addEventListener('click', openFriendsPanel, { once: true });
 }
 
 function openFriendsPanel() {
@@ -158,7 +165,7 @@ async function refreshFriendsPanel() {
         : requests.map(u => `
             <div class="fp-row">
                 <span class="fp-name">${escHtml(u.username)}</span>
-                <button class="fp-accept-btn" data-id="${u.id}">✓ Accetta</button>
+                <button class="fp-accept-btn" data-id="${u.id}">${ic("check",16)} Accetta</button>
             </div>`).join('');
 
     requestsList.querySelectorAll('.fp-accept-btn').forEach(btn => {
@@ -173,7 +180,7 @@ async function refreshFriendsPanel() {
         : friends.map(u => `
             <div class="fp-row">
                 <span class="fp-name">${escHtml(u.username)}</span>
-                <button class="fp-challenge-btn" data-id="${u.id}">⚔️ Sfida</button>
+                <button class="fp-challenge-btn" data-id="${u.id}">${ic("swords",16)} Sfida</button>
             </div>`).join('');
 
     friendsList.querySelectorAll('.fp-challenge-btn').forEach(btn => {
