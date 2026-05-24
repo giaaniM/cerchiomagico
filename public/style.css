@@ -6433,8 +6433,8 @@ body.manche-finale .board-frame {
 }
 
 /* Board: tiles grandi, usa dvh */
-#mp-column .board-container { padding: 0; width: 100%; box-sizing: border-box; flex-shrink: 0; }
-#mp-column .board-frame { padding: 4px; }
+#mp-column .board-container { padding: 0; width: 100%; box-sizing: border-box; flex-shrink: 0; overflow: hidden; }
+#mp-column .board-frame { padding: 4px; overflow: hidden; }
 #mp-column .game-board-inner { padding: 4px; overflow: hidden; }
 #mp-column .tile.invisible { display: none; }
 
@@ -6501,6 +6501,40 @@ body.manche-finale .board-frame {
     width: 100%;
     box-sizing: border-box;
     justify-content: center;
+}
+
+/* Express (MEGATURNO) input on mobile */
+#mp-column .express-call-container {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 6px;
+}
+#mp-column .express-input-capsule {
+    flex-direction: column;
+    width: 100%;
+    border-radius: 16px;
+    padding: 10px 12px;
+    gap: 8px;
+    box-sizing: border-box;
+}
+#mp-column .express-input-group {
+    width: 100%;
+    justify-content: center;
+    gap: 8px;
+}
+#mp-column .express-input-divider {
+    width: 80%;
+    height: 1px;
+}
+#mp-column .express-field {
+    width: 42px;
+    height: 38px;
+    font-size: 1.2rem;
+}
+#mp-column .express-field-btn {
+    height: 38px;
+    font-size: 0.82rem;
+    padding: 0 12px;
 }
 
 /* Vocale + Risolvi in colonna */
