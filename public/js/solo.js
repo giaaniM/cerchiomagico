@@ -161,6 +161,7 @@ export function showSoloResults(newGame) {
         });
     }
 
+    gameState.currentManche = 0;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     winScreen?.classList.add('active');
     window.scrollTo(0, 0);

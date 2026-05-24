@@ -280,7 +280,8 @@ export function showFinalResults(newGame) {
     const ctaStack = document.getElementById('win-cta-stack');
     if (ctaStack) ctaStack.style.display = 'flex';
 
-    // Show win screen
+    // Reset manche so newGame() skips the abandon confirmation
+    gameState.currentManche = 0;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('win-screen')?.classList.add('active');
     window.scrollTo(0, 0);

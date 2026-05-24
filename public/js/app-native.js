@@ -1,8 +1,9 @@
 import { isNative } from './native.js';
-import { initAuth, signInWithGoogle, signOut, currentUser, currentProfile, createProfile, checkUsernameAvailable } from './auth.js';
+import { initAuth, signInWithGoogle, signOut, currentUser, currentProfile, createProfile, checkUsernameAvailable, getFriends, sendFriendRequest, getPendingRequests, acceptFriendRequest } from './auth.js';
 import { showScreen } from './utils.js';
 import { formatTime } from './solo.js';
 import { App as CapApp } from './capacitor-app-bridge.js';
+import { initChallengeSocket, sendChallenge } from './challenge.js';
 
 let _onReady = () => {};
 export function onNativeReady(fn) { _onReady = fn; }
@@ -38,6 +39,7 @@ export async function bootNative() {
 
     if (user && profile) {
         showProfileBar(profile);
+        initChallengeSocket(null);
         showScreen('setup-screen');
         _onReady();
     } else if (user && !profile) {
@@ -48,12 +50,11 @@ export async function bootNative() {
 }
 
 async function handleAuthCallback(url) {
-    // Supabase picks up the session from the URL automatically
-    // Force a re-check after a short delay
     setTimeout(async () => {
         const { user, profile } = await initAuth();
         if (user && profile) {
             showProfileBar(profile);
+            initChallengeSocket(null);
             showScreen('setup-screen');
             _onReady();
         } else if (user && !profile) {
@@ -97,6 +98,81 @@ function showProfileBar(profile) {
         bar.style.display = 'none';
         showScreen('login-screen');
     }, { once: true });
+
+    document.getElementById('spb-friends-btn')?.addEventListener('click', () => openFriendsPanel(), { once: true });
+}
+
+function openFriendsPanel() {
+    const panel = document.getElementById('friends-panel');
+    if (!panel) return;
+    panel.style.display = 'flex';
+    refreshFriendsPanel();
+
+    document.getElementById('fp-close-btn')?.addEventListener('click', () => { panel.style.display = 'none'; }, { once: true });
+
+    document.getElementById('fp-add-btn')?.addEventListener('click', async () => {
+        const input = document.getElementById('fp-username-input');
+        const status = document.getElementById('fp-add-status');
+        const username = input?.value?.trim();
+        if (!username) return;
+        try {
+            await sendFriendRequest(username);
+            if (status) status.textContent = '✅ Richiesta inviata!';
+            if (input) input.value = '';
+        } catch (e) {
+            if (status) status.textContent = `❌ ${e.message}`;
+        }
+        setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+    });
+}
+
+async function refreshFriendsPanel() {
+    const friendsList = document.getElementById('fp-friends-list');
+    const requestsList = document.getElementById('fp-requests-list');
+    if (!friendsList || !requestsList) return;
+
+    friendsList.innerHTML = '<div class="fp-loading">⏳</div>';
+    requestsList.innerHTML = '<div class="fp-loading">⏳</div>';
+
+    const [friends, requests] = await Promise.all([getFriends(), getPendingRequests()]);
+
+    requestsList.innerHTML = requests.length === 0
+        ? '<div class="fp-empty">Nessuna richiesta</div>'
+        : requests.map(r => {
+            const p = r.requester;
+            return `<div class="fp-row">
+                <span class="fp-name">${escHtml(p?.display_name || p?.username || '?')}</span>
+                <button class="fp-accept-btn" data-id="${p?.id}">✓ Accetta</button>
+            </div>`;
+        }).join('');
+
+    requestsList.querySelectorAll('.fp-accept-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            await acceptFriendRequest(btn.dataset.id);
+            refreshFriendsPanel();
+        });
+    });
+
+    friendsList.innerHTML = friends.length === 0
+        ? '<div class="fp-empty">Nessun amico ancora</div>'
+        : friends.map(f => {
+            const p = f.friend;
+            return `<div class="fp-row">
+                <span class="fp-name">${escHtml(p?.display_name || p?.username || '?')}</span>
+                <button class="fp-challenge-btn" data-id="${p?.id}">⚔️ Sfida</button>
+            </div>`;
+        }).join('');
+
+    friendsList.querySelectorAll('.fp-challenge-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            sendChallenge(btn.dataset.id);
+            document.getElementById('friends-panel').style.display = 'none';
+        });
+    });
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function initProfileSetup(user) {

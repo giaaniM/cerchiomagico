@@ -133,7 +133,25 @@
                     <span class="spb-name" id="spb-name"></span>
                     <span class="spb-record" id="spb-record"></span>
                 </div>
+                <button class="spb-friends-btn" id="spb-friends-btn" title="Amici">👥</button>
                 <button class="spb-signout" id="spb-signout-btn" title="Esci">↩</button>
+            </div>
+
+            <!-- Friends panel (native only) -->
+            <div id="friends-panel" class="friends-panel" style="display:none;">
+                <div class="fp-header">
+                    <span class="fp-title">Amici</span>
+                    <button class="fp-close" id="fp-close-btn">✕</button>
+                </div>
+                <div class="fp-add-row">
+                    <input id="fp-username-input" class="fp-input" type="text" placeholder="Username amico" maxlength="20" autocomplete="off">
+                    <button class="fp-add-btn" id="fp-add-btn">Aggiungi</button>
+                </div>
+                <div id="fp-add-status" class="fp-add-status"></div>
+                <div class="fp-section-title">Richieste in arrivo</div>
+                <div id="fp-requests-list" class="fp-list"></div>
+                <div class="fp-section-title">I tuoi amici</div>
+                <div id="fp-friends-list" class="fp-list"></div>
             </div>
 
             <div class="setup-layout">

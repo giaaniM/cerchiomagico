@@ -577,6 +577,114 @@ function unrevealedCount(normalized, revealed) {
     return normalized.split('').filter(c => c !== ' ' && !revealed.has(c)).length;
 }
 
+// ─── 1v1 Challenge engine ──────────────────────────────────────────────────────
+const CHALLENGE_SEGMENTS = [
+    300, 200, 700, 500, 'PASSA', 1000,
+    'CROLLO', 350, 300, 450, 700, 'PASSA',
+    'RADDOPPIA', 'PASSA', 800, 300, 600, 500,
+    'SCUDO', 300, 500, 200, 'PASSA', 200
+];
+const challengeGames = new Map();
+const userSockets = new Map(); // profileId → socketId
+
+function challengeSpinWheel() {
+    return CHALLENGE_SEGMENTS[Math.floor(Math.random() * CHALLENGE_SEGMENTS.length)];
+}
+
+function chBuildCells(phrase, revealed) {
+    return phrase.split('').map((ch, i) => {
+        if (ch === ' ') return { type: 'space' };
+        if (revealed.has(i)) return { type: 'letter', ch };
+        return { type: 'hidden' };
+    });
+}
+
+function chIsComplete(phrase, revealed) {
+    return phrase.split('').every((ch, i) => ch === ' ' || revealed.has(i));
+}
+
+function chBroadcast(game) {
+    io.to(`ch:${game.id}`).emit('challenge:state', {
+        cells: chBuildCells(game.puzzle.phrase, game.revealed),
+        hint: game.puzzle.hint,
+        usedLetters: [...game.usedLetters],
+        mancheScore: game.mancheScore,
+        totalScore: game.totalScore,
+        currentPlayerIdx: game.currentPlayerIdx,
+        phase: game.phase,
+        spinValue: game.currentSpinValue,
+        players: game.players.map(p => ({ username: p.username, shield: p.shield })),
+        timerValue: game.timerValue
+    });
+}
+
+function chStartTimer(game) {
+    chClearTimer(game);
+    game.timerValue = 10;
+    game.timer = setInterval(() => {
+        game.timerValue--;
+        io.to(`ch:${game.id}`).emit('challenge:timer', { seconds: game.timerValue });
+        if (game.timerValue <= 0) { chClearTimer(game); chPassTurn(game); }
+    }, 1000);
+}
+
+function chClearTimer(game) {
+    if (game.timer) { clearInterval(game.timer); game.timer = null; }
+}
+
+function chPassTurn(game) {
+    game.mancheScore[game.currentPlayerIdx] = 0;
+    game.currentPlayerIdx = 1 - game.currentPlayerIdx;
+    game.phase = 'spin';
+    game.currentSpinValue = null;
+    chBroadcast(game);
+    chStartTimer(game);
+}
+
+async function chStartGame(game) {
+    const { data: puzzles } = await supabase.from('puzzles').select('id, phrase, hint').eq('lang', game.lang).eq('active', true);
+    if (!puzzles?.length) return;
+    game.puzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+    game.revealed = new Set();
+    game.usedLetters = new Set();
+    game.phase = 'spin';
+    game.currentSpinValue = null;
+    game.mancheScore = [0, 0];
+    game.totalScore = [0, 0];
+    io.to(`ch:${game.id}`).emit('challenge:started', { players: game.players.map(p => ({ username: p.username })) });
+    chBroadcast(game);
+    chStartTimer(game);
+}
+
+async function chEnd(game, winnerIdx) {
+    chClearTimer(game);
+    const winner = game.players[winnerIdx];
+    const loser  = game.players[1 - winnerIdx];
+    await supabase.from('challenges').update({
+        status: 'completed', winner_id: winner.profileId,
+        challenger_score: game.totalScore[0], opponent_score: game.totalScore[1],
+        completed_at: new Date().toISOString()
+    }).eq('id', game.id);
+
+    for (let i = 0; i < 2; i++) {
+        const p = game.players[i];
+        const isWinner = i === winnerIdx;
+        const { data: row } = await supabase.from('leaderboard_online').select('wins,losses,total_score').eq('user_id', p.profileId).single();
+        if (row) {
+            await supabase.from('leaderboard_online').update({
+                wins: (row.wins || 0) + (isWinner ? 1 : 0),
+                losses: (row.losses || 0) + (isWinner ? 0 : 1),
+                total_score: (row.total_score || 0) + game.totalScore[i]
+            }).eq('user_id', p.profileId);
+        }
+    }
+    io.to(`ch:${game.id}`).emit('challenge:game-over', {
+        winnerIdx, winner: winner.username, totalScore: game.totalScore,
+        players: game.players.map(p => ({ username: p.username }))
+    });
+    setTimeout(() => challengeGames.delete(game.id), 60000);
+}
+
 // matchmaking queue: [{ socketId, userId, displayName, lang, joinedAt }]
 const matchmakingQueue = [];
 const onlineRooms = new Map(); // roomCode → room
@@ -991,6 +1099,183 @@ io.on('connection', (socket) => {
         const idx = room.players.findIndex(p => p.socketId === socket.id);
         if (idx !== room.currentTurn) return;
         passTurnOnline(room, 'manual');
+    });
+
+    // ── 1v1 Challenge handlers ──
+    socket.on('challenge:auth', ({ profileId, username }) => {
+        userSockets.set(profileId, socket.id);
+        socket.data.profileId = profileId;
+        socket.data.username = username;
+    });
+
+    socket.on('challenge:send', async ({ toProfileId, lang }) => {
+        const fromProfileId = socket.data.profileId;
+        const fromUsername = socket.data.username;
+        if (!fromProfileId) return;
+        const { data: ch } = await supabase.from('challenges').insert({
+            challenger_id: fromProfileId,
+            opponent_id: toProfileId,
+            status: 'pending',
+            lang: lang || 'it'
+        }).select().single();
+        if (!ch) return;
+        const toSocketId = userSockets.get(toProfileId);
+        if (toSocketId) {
+            io.to(toSocketId).emit('challenge:invite', { challengeId: ch.id, from: fromUsername, lang: ch.lang });
+        }
+        socket.emit('challenge:sent', { challengeId: ch.id });
+    });
+
+    socket.on('challenge:accept', async ({ challengeId }) => {
+        const { data: ch } = await supabase.from('challenges').select('*').eq('id', challengeId).single();
+        if (!ch || ch.status !== 'pending') return;
+        await supabase.from('challenges').update({ status: 'active' }).eq('id', challengeId);
+        const { data: profiles } = await supabase.from('profiles').select('id, username, display_name').in('id', [ch.challenger_id, ch.opponent_id]);
+        const getName = (id) => {
+            const p = profiles?.find(p => p.id === id);
+            return p?.display_name || p?.username || 'Giocatore';
+        };
+        const challengerSocketId = userSockets.get(ch.challenger_id);
+        const game = {
+            id: challengeId,
+            players: [
+                { profileId: ch.challenger_id, username: getName(ch.challenger_id), socketId: challengerSocketId, shield: false },
+                { profileId: ch.opponent_id,   username: getName(ch.opponent_id),   socketId: socket.id, shield: false }
+            ],
+            lang: ch.lang || 'it',
+            currentPlayerIdx: 0,
+            mancheScore: [0, 0],
+            totalScore: [0, 0],
+            revealed: new Set(),
+            usedLetters: new Set(),
+            phase: 'spin',
+            currentSpinValue: null,
+            timer: null,
+            timerValue: 10
+        };
+        challengeGames.set(challengeId, game);
+        socket.join(`ch:${challengeId}`);
+        if (challengerSocketId) io.in(challengerSocketId).socketsJoin(`ch:${challengeId}`);
+        await chStartGame(game);
+    });
+
+    socket.on('challenge:decline', async ({ challengeId }) => {
+        const { data: ch } = await supabase.from('challenges').select('challenger_id').eq('id', challengeId).single();
+        await supabase.from('challenges').update({ status: 'declined' }).eq('id', challengeId);
+        if (ch?.challenger_id) {
+            const toSocketId = userSockets.get(ch.challenger_id);
+            if (toSocketId) io.to(toSocketId).emit('challenge:declined', { challengeId });
+        }
+    });
+
+    socket.on('challenge:spin', ({ challengeId }) => {
+        const game = challengeGames.get(challengeId);
+        if (!game) return;
+        const idx = game.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== game.currentPlayerIdx || game.phase !== 'spin') return;
+        chClearTimer(game);
+        const seg = challengeSpinWheel();
+        if (seg === 'CROLLO') {
+            const p = game.players[idx];
+            if (p.shield) { p.shield = false; }
+            else { game.mancheScore[idx] = 0; }
+            game.currentSpinValue = 'CROLLO';
+            chPassTurn(game);
+        } else if (seg === 'PASSA') {
+            game.currentSpinValue = 'PASSA';
+            chPassTurn(game);
+        } else if (seg === 'SCUDO') {
+            game.players[idx].shield = true;
+            game.currentSpinValue = 'SCUDO';
+            game.phase = 'spin';
+            chBroadcast(game);
+            chStartTimer(game);
+        } else if (seg === 'RADDOPPIA') {
+            game.mancheScore[idx] *= 2;
+            game.currentSpinValue = 'RADDOPPIA';
+            game.phase = 'action';
+            chBroadcast(game);
+            chStartTimer(game);
+        } else {
+            game.currentSpinValue = seg;
+            game.phase = 'consonant';
+            chBroadcast(game);
+            chStartTimer(game);
+        }
+    });
+
+    socket.on('challenge:consonant', ({ challengeId, letter }) => {
+        const game = challengeGames.get(challengeId);
+        if (!game) return;
+        const idx = game.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== game.currentPlayerIdx || game.phase !== 'consonant') return;
+        const l = normalizeLetter(letter);
+        if (VOWELS_SET.has(l) || game.usedLetters.has(l)) return;
+        chClearTimer(game);
+        game.usedLetters.add(l);
+        const normalized = normalizePhrase(game.puzzle.phrase);
+        let count = 0;
+        normalized.split('').forEach((ch, i) => { if (ch === l) { game.revealed.add(i); count++; } });
+        if (count > 0) {
+            game.mancheScore[idx] += count * game.currentSpinValue;
+            if (chIsComplete(normalized, game.revealed)) {
+                game.totalScore[idx] += game.mancheScore[idx];
+                chEnd(game, idx);
+                return;
+            }
+            game.phase = 'action';
+            chBroadcast(game);
+            chStartTimer(game);
+        } else {
+            chPassTurn(game);
+        }
+    });
+
+    socket.on('challenge:vowel', ({ challengeId, letter }) => {
+        const game = challengeGames.get(challengeId);
+        if (!game) return;
+        const idx = game.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== game.currentPlayerIdx || game.phase !== 'action') return;
+        if (game.mancheScore[idx] < VOWEL_COST) return;
+        const l = normalizeLetter(letter);
+        if (!VOWELS_SET.has(l) || game.usedLetters.has(l)) return;
+        chClearTimer(game);
+        game.usedLetters.add(l);
+        game.mancheScore[idx] -= VOWEL_COST;
+        const normalized = normalizePhrase(game.puzzle.phrase);
+        normalized.split('').forEach((ch, i) => { if (ch === l) game.revealed.add(i); });
+        if (chIsComplete(normalized, game.revealed)) {
+            game.totalScore[idx] += game.mancheScore[idx];
+            chEnd(game, idx);
+            return;
+        }
+        chBroadcast(game);
+        chStartTimer(game);
+    });
+
+    socket.on('challenge:solve', ({ challengeId, attempt }) => {
+        const game = challengeGames.get(challengeId);
+        if (!game) return;
+        const idx = game.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== game.currentPlayerIdx) return;
+        chClearTimer(game);
+        const normalized = normalizePhrase(game.puzzle.phrase);
+        if (normalizePhrase(attempt) === normalized) {
+            game.totalScore[idx] += game.mancheScore[idx];
+            chEnd(game, idx);
+        } else {
+            chPassTurn(game);
+        }
+    });
+
+    socket.on('challenge:action-spin', ({ challengeId }) => {
+        const game = challengeGames.get(challengeId);
+        if (!game) return;
+        const idx = game.players.findIndex(p => p.socketId === socket.id);
+        if (idx !== game.currentPlayerIdx || game.phase !== 'action') return;
+        game.phase = 'spin';
+        chBroadcast(game);
+        chStartTimer(game);
     });
 });
 

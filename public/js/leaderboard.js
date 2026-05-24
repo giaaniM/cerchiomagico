@@ -130,30 +130,29 @@ function renderTable(data, mode, myNick) {
 
     function renderRow(e, rank) {
         const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}`;
-        const metric = isSolo ? formatTime(e.time_seconds ?? 0) : fmt(e.score);
         const isMe = myNickLower && escHtml(e.nickname).toLowerCase() === myNickLower;
+        const timeStr = isSolo ? `<span class="lb-time">${formatTime(e.time_seconds ?? 0)}</span>` : '';
+        const scoreStr = `<span class="lb-score">${fmt(e.score)}</span>`;
         return `<div class="lb-row ${rank <= 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}" data-rank="${rank}">
             <span class="lb-rank">${medal}</span>
             <span class="lb-name">${escHtml(e.nickname)}${isMe ? ' 👈' : ''}</span>
-            <span class="lb-score">${metric}</span>
+            <span class="lb-metrics">${timeStr}${scoreStr}</span>
         </div>`;
     }
 
     let rows = top.map((e, i) => renderRow(e, i + 1)).join('');
 
-    if (userWindow && userRank > top.length) {
-        rows += `<div class="lb-separator">· · ·</div>`;
-        userWindow.entries.forEach((e, i) => {
-            rows += renderRow(e, userWindow.startRank + i);
-        });
-    } else if (userRank && !myNickLower) {
-        // nothing extra
+    if (userRank && userRank > top.length && myNick) {
+        const myEntry = userWindow?.entries?.find(e => e.nickname?.toLowerCase() === myNickLower);
+        if (myEntry) {
+            rows += `<div class="lb-separator">· · ·</div>`;
+            rows += renderRow(myEntry, userRank);
+        }
     }
 
-    let footer = '';
-    if (userRank) {
-        footer = `<div class="lb-your-rank">${isIt ? `La tua posizione: #${userRank}` : `Your rank: #${userRank}`}</div>`;
-    }
+    const footer = userRank
+        ? `<div class="lb-your-rank">${isIt ? `La tua posizione: #${userRank}` : `Your rank: #${userRank}`}</div>`
+        : '';
 
     return `<div class="lb-table">${rows}</div>${footer}`;
 }
