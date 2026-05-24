@@ -2919,9 +2919,9 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 #ml-left .tile.invisible { display: none; }
 
 #ml-left .tile {
-    /* clamp: fits 14 tiles in 62vw minus paddings/gaps */
-    width: clamp(22px, calc((62vw - 80px) / 14), 40px);
-    height: clamp(30px, calc((62vw - 80px) / 14 * 1.5), 60px);
+    /* clamp: fits 16 tiles in 62vw minus paddings/gaps */
+    width: clamp(22px, calc((62vw - 80px) / 16), 40px);
+    height: clamp(30px, calc((62vw - 80px) / 16 * 1.5), 60px);
     font-size: clamp(0.6rem, 2.5vw, 1.2rem);
     border-radius: 4px;
 }
@@ -3038,8 +3038,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 @media (max-width: 1024px) and (orientation: portrait) {
     :root {
-        /* Fit 14 tiles in available width without overflow */
-        --tile-size: clamp(18px, calc((100vw - 80px) / 14), 65px);
+        /* Fit 16 tiles in available width without overflow */
+        --tile-size: clamp(18px, calc((100vw - 80px) / 16), 65px);
         --tile-gap: clamp(1px, 0.4vw, 4px);
     }
 
@@ -6309,9 +6309,9 @@ body.manche-finale .board-frame {
 #mp-column .tile.invisible { display: none; }
 
 #mp-column .tile {
-    /* deduction: mp-col pad 16×2=32 + frame 4×2=8 + inner 4×2=8 + 13gaps×2=26 + 4 safety = 78px */
-    width: clamp(20px, calc((100vw - 78px) / 14), 34px);
-    height: clamp(30px, calc((100vw - 78px) / 14 * 1.8), 58px);
+    /* deduction: mp-col pad 16×2=32 + frame 4×2=8 + inner 4×2=8 + 15gaps×2=30 + 4 safety = 82px */
+    width: clamp(20px, calc((100vw - 82px) / 16), 34px);
+    height: clamp(30px, calc((100vw - 82px) / 16 * 1.8), 58px);
     font-size: clamp(0.75rem, 5.5vw, 1.3rem);
     border-radius: 4px;
 }

@@ -121,7 +121,7 @@ function triggerConfettiRain() {
 // ===== Board fit check =====
 export function canFitOnBoard(phrase) {
     const words = phrase.split(' ');
-    return !!splitPhraseIntoRows(words, [12, 14, 14, 12]);
+    return !!splitPhraseIntoRows(words, [14, 16, 16, 16, 14]);
 }
 
 // ===== Letter Actions =====
@@ -551,7 +551,7 @@ export function startNextManche() {
     //     const isNotUsed = !gameState.usedPhrases.has(normalized);
     //     const isNotExcluded = !gameState.excludedPhrases.has(normalized);
     //     const words = puzzle.phrase.split(' ');
-    //     const fits = !!splitPhraseIntoRows(words, [12, 14, 14, 12]);
+    //     const fits = !!splitPhraseIntoRows(words, [14, 16, 16, 16, 14]);
     //     if (fits && isNotUsed && isNotExcluded) {
     //         gameState.originalPhrase = puzzle.phrase;
     //         gameState.phrase = sanitizePhrase(puzzle.phrase);
@@ -562,7 +562,7 @@ export function startNextManche() {
     // }
 
     // If excluded phrases cover the entire database, reset to avoid permanent deadlock
-    const fitsCount = puzzleDatabase.filter(p => !!splitPhraseIntoRows(p.phrase.split(' '), [12, 14, 14, 12])).length;
+    const fitsCount = puzzleDatabase.filter(p => !!splitPhraseIntoRows(p.phrase.split(' '), [14, 16, 16, 16, 14])).length;
     if (fitsCount > 0 && gameState.excludedPhrases.size >= fitsCount) {
         gameState.excludedPhrases.clear();
     }
@@ -578,7 +578,7 @@ export function startNextManche() {
         const isNotExcluded = !gameState.excludedPhrases.has(normalized);
 
         const words = randomPuzzle.phrase.split(' ');
-        const fits = !!splitPhraseIntoRows(words, [12, 14, 14, 12]);
+        const fits = !!splitPhraseIntoRows(words, [14, 16, 16, 16, 14]);
 
         if (fits && isNotUsed && isNotExcluded) {
             gameState.originalPhrase = randomPuzzle.phrase;
@@ -593,9 +593,9 @@ export function startNextManche() {
         // Last resort: pick any fitting phrase not equal to the current one
         const currentNorm = normalizePhrase(gameState.phrase || '');
         const candidate = puzzleDatabase.find(p => {
-            const fits = !!splitPhraseIntoRows(p.phrase.split(' '), [12, 14, 14, 12]);
+            const fits = !!splitPhraseIntoRows(p.phrase.split(' '), [14, 16, 16, 16, 14]);
             return fits && normalizePhrase(p.phrase) !== currentNorm;
-        }) || puzzleDatabase.find(p => !!splitPhraseIntoRows(p.phrase.split(' '), [12, 14, 14, 12]));
+        }) || puzzleDatabase.find(p => !!splitPhraseIntoRows(p.phrase.split(' '), [14, 16, 16, 16, 14]));
         if (candidate) {
             gameState.originalPhrase = candidate.phrase;
             gameState.phrase = sanitizePhrase(candidate.phrase);
@@ -778,7 +778,7 @@ export function startGameLocal() {
         attempts++;
         const randomPuzzle = puzzleDatabase[Math.floor(Math.random() * puzzleDatabase.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
-        const fits = !!splitPhraseIntoRows(randomPuzzle.phrase.split(' '), [12, 14, 14, 12]);
+        const fits = !!splitPhraseIntoRows(randomPuzzle.phrase.split(' '), [14, 16, 16, 16, 14]);
         if (!gameState.usedPhrases.has(normalized) && fits) {
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
             gameState.originalPhrase = randomPuzzle.phrase;
@@ -790,7 +790,7 @@ export function startGameLocal() {
     if (!valid) {
         const fallback = puzzleDatabase.find(p => {
             const words = p.phrase.split(' ');
-            return !!splitPhraseIntoRows(words, [12, 14, 14, 12]);
+            return !!splitPhraseIntoRows(words, [14, 16, 16, 16, 14]);
         }) || OFFLINE_PHRASES_IT[0];
         gameState.phrase = sanitizePhrase(fallback.phrase);
         gameState.originalPhrase = fallback.phrase;
@@ -887,7 +887,7 @@ export function skipPhrase() {
         const normalized = normalizePhrase(randomPuzzle.phrase);
         const isNotUsed = !gameState.usedPhrases.has(normalized);
         const isNotExcluded = !gameState.excludedPhrases.has(normalized);
-        const fits = !!splitPhraseIntoRows(randomPuzzle.phrase.split(' '), [12, 14, 14, 12]);
+        const fits = !!splitPhraseIntoRows(randomPuzzle.phrase.split(' '), [14, 16, 16, 16, 14]);
         if (fits && isNotUsed && isNotExcluded) {
             gameState.originalPhrase = randomPuzzle.phrase;
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
@@ -903,7 +903,7 @@ export function skipPhrase() {
         gameState.excludedPhrases.clear();
         const currentNorm = normalizePhrase(gameState.phrase || '');
         for (const p of puzzleDatabase) {
-            const fits = !!splitPhraseIntoRows(p.phrase.split(' '), [12, 14, 14, 12]);
+            const fits = !!splitPhraseIntoRows(p.phrase.split(' '), [14, 16, 16, 16, 14]);
             if (fits && normalizePhrase(p.phrase) !== currentNorm) {
                 gameState.originalPhrase = p.phrase;
                 gameState.phrase = sanitizePhrase(p.phrase);
