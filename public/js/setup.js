@@ -15,6 +15,7 @@ export function resetSoloSelection() {
     const setupCard = document.querySelector('.setup-card:not(.setup-custom-card)');
     document.getElementById('macro-solo-btn')?.classList.add('active');
     document.getElementById('macro-multi-btn')?.classList.remove('active');
+    document.getElementById('ssc-track')?.classList.remove('multi-active');
     setupCard?.classList.add('solo-active');
     document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'none');
     document.getElementById('add-player-btn')?.style.setProperty('display', 'none');
@@ -46,6 +47,8 @@ export function initSetup() {
         });
     });
 
+    const sscTrack = document.getElementById('ssc-track');
+
     // Macro: Solo
     const macroSoloBtn = document.getElementById('macro-solo-btn');
     if (macroSoloBtn) {
@@ -54,6 +57,7 @@ export function initSetup() {
             soloSelected = true;
             macroSoloBtn.classList.add('active');
             document.getElementById('macro-multi-btn')?.classList.remove('active');
+            sscTrack?.classList.remove('multi-active');
             setupCard?.classList.add('solo-active');
             document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'none');
             document.getElementById('add-player-btn').style.display = 'none';
@@ -70,6 +74,7 @@ export function initSetup() {
             soloSelected = false;
             macroMultiBtn.classList.add('active');
             document.getElementById('macro-solo-btn')?.classList.remove('active');
+            sscTrack?.classList.add('multi-active');
             setupCard?.classList.remove('solo-active');
             document.getElementById('mode-smartphone-btn')?.style.setProperty('display', 'flex');
             updateModeInfoCard('multi');

@@ -106,15 +106,18 @@
                 <div class="setup-card">
 
                     <!-- ① MACRO CHOICE: Solo / Multi -->
-                    <div class="setup-macro-row">
-                        <button class="macro-mode-btn macro-solo active" id="macro-solo-btn">
-                            <span class="macro-icon">🎯</span>
-                            <span class="macro-label" data-i18n="setup.solo.pill">Solitario</span>
-                        </button>
-                        <button class="macro-mode-btn macro-multi" id="macro-multi-btn">
-                            <span class="macro-icon">👥</span>
-                            <span class="macro-label">Multiplayer</span>
-                        </button>
+                    <div class="setup-segment-control">
+                        <div class="ssc-track" id="ssc-track">
+                            <div class="ssc-indicator"></div>
+                            <button class="ssc-btn active" id="macro-solo-btn">
+                                <svg class="ssc-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7" r="3.5"/><path d="M3 18c0-3.87 3.13-7 7-7s7 3.13 7 7"/></svg>
+                                <span data-i18n="setup.solo.pill">Solitario</span>
+                            </button>
+                            <button class="ssc-btn" id="macro-multi-btn">
+                                <svg class="ssc-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="7" r="3"/><path d="M1 18c0-3.31 2.91-6 6.5-6"/><circle cx="13.5" cy="7" r="3"/><path d="M8 18c0-3.31 2.91-6 6.5-6s6.5 2.69 6.5 6"/></svg>
+                                <span>Multiplayer</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Mode info badges -->
