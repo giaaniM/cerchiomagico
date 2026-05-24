@@ -532,7 +532,6 @@ export function startNextManche() {
         gameState.hint = gameState.customHint || 'Personalizzato';
         gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
         gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
-        console.log(`🎡 Custom — [${gameState.hint}] ${gameState.originalPhrase}`);
         elements.popupMessage.style.display = 'none';
         elements.modalOverlay.style.display = 'none';
         elements.currentWheelValue.textContent = '-';
@@ -559,7 +558,6 @@ export function startNextManche() {
     gameState.hint = puzzle.hint;
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
     gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
-    console.log(`🎡 Manche ${gameState.currentManche} — [${gameState.hint}] ${gameState.originalPhrase}`);
 
     elements.popupMessage.style.display = 'none';
     elements.modalOverlay.style.display = 'none';
@@ -715,7 +713,6 @@ export function startGameLocal() {
     gameState.phrase = sanitizePhrase(puzzle.phrase);
     gameState.hint = puzzle.hint;
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
-    console.log(`🎡 Manche ${gameState.currentManche} — [${gameState.hint}] ${gameState.originalPhrase}`);
     gameState.revealedLetters = new Set();
     gameState.usedLetters = new Set();
     gameState.wheelPhase = 'idle';
@@ -796,7 +793,6 @@ export function skipPhrase() {
     gameState.hint = puzzle.hint;
     gameState.normalizedPhrase = normalizePhrase(gameState.phrase);
     gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
-    console.log(`↻ Skip → Manche ${gameState.currentManche} — [${gameState.hint}] ${gameState.originalPhrase}`);
 
     elements.popupMessage.style.display = 'none';
     elements.modalOverlay.style.display = 'none';

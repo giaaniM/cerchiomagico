@@ -172,14 +172,29 @@ export function showSoloResults(newGame) {
             const isMe = String(e.nickname).toLowerCase() === nickLower;
             return `<div class="lb-row ${i < 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}">
                 <span class="lb-rank">${medal}</span>
-                <span class="lb-name">${String(e.nickname).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>
-                <span class="lb-score">${fmtTime(e.time_seconds ?? 0)}</span>
+                <span class="lb-name">${String(e.nickname).replace(/&/g,'&amp;').replace(/</g,'&lt;')}${isMe ? ' 👈' : ''}</span>
+                <span class="lb-metrics">
+                    <span class="lb-time">${fmtTime(e.time_seconds ?? 0)}</span>
+                    <span class="lb-score">€${Number(e.score).toLocaleString('it-IT')}</span>
+                </span>
             </div>`;
         }).join('');
 
         const alreadyVisible = userRank && userRank <= top.length;
-        const rankBadge = userRank && !alreadyVisible ? `<div class="solo-lb-rank-badge">${isIt ? `La tua posizione: #${userRank}` : `Your rank: #${userRank}`}</div>` : '';
-        lbEl.innerHTML = `<div class="lb-table">${rows}</div>${rankBadge}`;
+        let myRowHtml = '';
+        if (userRank && !alreadyVisible) {
+            myRowHtml = `
+                <div class="lb-separator">· · ·</div>
+                <div class="lb-row lb-me">
+                    <span class="lb-rank">${userRank}</span>
+                    <span class="lb-name">${nick} 👈</span>
+                    <span class="lb-metrics">
+                        <span class="lb-time">${fmtTime(totalTime)}</span>
+                        <span class="lb-score">€${totalScore.toLocaleString('it-IT')}</span>
+                    </span>
+                </div>`;
+        }
+        lbEl.innerHTML = `<div class="lb-table">${rows}${myRowHtml}</div>`;
     })();
 
     const shareBtn = document.getElementById('solo-share-btn');
@@ -197,6 +212,8 @@ export function showSoloResults(newGame) {
         });
     }
 
+    // Reset manche so newGame() skips the abandon confirmation
+    gameState.currentManche = 0;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     winScreen?.classList.add('active');
     window.scrollTo(0, 0);

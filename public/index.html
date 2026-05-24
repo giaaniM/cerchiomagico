@@ -54,7 +54,7 @@
       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}
     }
     </script>
-    <link rel="stylesheet" href="style.css?v=3.4">
+    <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 
 <body>
@@ -63,6 +63,87 @@
         <div>
             <strong data-i18n="rotate.title">Ruota il dispositivo</strong>
             <p data-i18n="rotate.body">Il gioco funziona in orizzontale. Gira il telefono per giocare.</p>
+        </div>
+    </div>
+
+    <!-- User Panel (slide-in) -->
+    <div id="user-panel-overlay" class="user-panel-overlay" style="display:none;" onclick="if(event.target===this)closUserPanel()"></div>
+    <div id="user-panel" class="user-panel">
+        <div class="user-panel-header">
+            <div class="user-panel-avatar" id="panel-avatar"></div>
+            <div class="user-panel-info">
+                <div class="user-panel-username" id="panel-username">—</div>
+                <div class="user-panel-sub">Il tuo profilo</div>
+            </div>
+            <button class="user-panel-close" onclick="closUserPanel()">✕</button>
+        </div>
+
+        <!-- Nav tabs -->
+        <div class="user-panel-tabs">
+            <button class="up-tab active" data-section="friends">Amici</button>
+            <button class="up-tab" data-section="requests">Richieste <span id="req-badge" class="req-badge" style="display:none">0</span></button>
+            <button class="up-tab" data-section="leaderboard">Classifica</button>
+        </div>
+
+        <!-- Friends section -->
+        <div class="up-section active" id="section-friends">
+            <div class="add-friend-row">
+                <input id="add-friend-input" type="text" placeholder="Cerca username..." maxlength="20">
+                <button id="add-friend-btn" class="add-friend-btn">+</button>
+            </div>
+            <div id="add-friend-msg" class="add-friend-msg" style="display:none"></div>
+            <div id="friends-list" class="friends-list">
+                <div class="friends-empty">Nessun amico ancora. Cerca un username!</div>
+            </div>
+        </div>
+
+        <!-- Requests section -->
+        <div class="up-section" id="section-requests">
+            <div id="requests-list" class="friends-list">
+                <div class="friends-empty">Nessuna richiesta in arrivo</div>
+            </div>
+        </div>
+
+        <!-- Leaderboard section -->
+        <div class="up-section" id="section-leaderboard">
+            <div id="leaderboard-list" class="leaderboard-list">
+                <div class="friends-empty">Caricamento...</div>
+            </div>
+        </div>
+
+        <div class="user-panel-footer">
+            <button class="logout-btn" id="logout-btn">Esci dall'account</button>
+        </div>
+    </div>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-overlay" style="display:none;">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <img src="/assets/icons/icon-192.png" alt="MagicSpin" width="56" height="56" style="border-radius:14px;">
+                <span class="auth-logo-title">MagicSpin</span>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Accedi</button>
+                <button class="auth-tab" data-tab="register">Registrati</button>
+            </div>
+
+            <div id="auth-error" class="auth-error" style="display:none;"></div>
+
+            <form id="auth-form" autocomplete="off">
+                <div class="auth-field">
+                    <label>Username</label>
+                    <input id="auth-username" type="text" placeholder="il tuo username" maxlength="20" autocomplete="off">
+                </div>
+                <div class="auth-field">
+                    <label>Password</label>
+                    <input id="auth-password" type="password" placeholder="••••••" autocomplete="off">
+                </div>
+                <button type="submit" class="auth-btn" id="auth-submit">Accedi</button>
+            </form>
+
+            <button class="auth-skip" id="auth-skip">Gioca senza account →</button>
         </div>
     </div>
 
@@ -554,6 +635,7 @@
     <script src="js/confetti.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/auth-ui.js"></script>
     <script>
     // ===== TUTORIAL SYSTEM =====
     (function() {

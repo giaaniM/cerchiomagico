@@ -280,7 +280,8 @@ export function showFinalResults(newGame) {
     const ctaStack = document.getElementById('win-cta-stack');
     if (ctaStack) ctaStack.style.display = 'flex';
 
-    // Show win screen
+    // Show win screen — reset manche so newGame() doesn't show abandon popup
+    gameState.currentManche = 0;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('win-screen')?.classList.add('active');
     window.scrollTo(0, 0);

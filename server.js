@@ -4,7 +4,11 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'magicspin-secret-change-in-prod';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
@@ -98,6 +102,111 @@ let localIP = 'localhost';
 function generateLobbyId() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
+
+// ─── Auth middleware ────────────────────────────────────────────────────────
+function authMiddleware(req, res, next) {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'No token' });
+    try {
+        req.user = jwt.verify(token, JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).json({ error: 'Invalid token' });
+    }
+}
+
+// ─── Auth routes ─────────────────────────────────────────────────────────────
+app.post('/api/auth/register', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username e password richiesti' });
+    if (username.length < 3) return res.status(400).json({ error: 'Username minimo 3 caratteri' });
+    if (password.length < 6) return res.status(400).json({ error: 'Password minimo 6 caratteri' });
+
+    const { data: existing } = await supabase.from('users').select('id').eq('username', username).single();
+    if (existing) return res.status(409).json({ error: 'Username già in uso' });
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const { data: user, error } = await supabase
+        .from('users').insert({ username, password_hash }).select('id, username, avatar_color').single();
+    if (error) return res.status(500).json({ error: 'Errore registrazione' });
+
+    await supabase.from('leaderboard_online').insert({ user_id: user.id });
+
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user.id, username: user.username, avatar_color: user.avatar_color } });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username e password richiesti' });
+
+    const { data: user } = await supabase
+        .from('users').select('id, username, password_hash, avatar_color').eq('username', username).single();
+    if (!user) return res.status(401).json({ error: 'Credenziali errate' });
+
+    const ok = await bcrypt.compare(password, user.password_hash);
+    if (!ok) return res.status(401).json({ error: 'Credenziali errate' });
+
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user.id, username: user.username, avatar_color: user.avatar_color } });
+});
+
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+    const { data: user } = await supabase
+        .from('users').select('id, username, avatar_color').eq('id', req.user.id).single();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user });
+});
+
+// ─── Friends routes ───────────────────────────────────────────────────────────
+app.post('/api/friends/request', authMiddleware, async (req, res) => {
+    const { username } = req.body;
+    const { data: target } = await supabase.from('users').select('id').eq('username', username).single();
+    if (!target) return res.status(404).json({ error: 'Utente non trovato' });
+    if (target.id === req.user.id) return res.status(400).json({ error: 'Non puoi aggiungere te stesso' });
+
+    const { error } = await supabase.from('friendships')
+        .insert({ user_id: req.user.id, friend_id: target.id });
+    if (error) return res.status(409).json({ error: 'Richiesta già inviata' });
+    res.json({ ok: true });
+});
+
+app.post('/api/friends/accept', authMiddleware, async (req, res) => {
+    const { friendId } = req.body;
+    const { error } = await supabase.from('friendships')
+        .update({ status: 'accepted' })
+        .eq('user_id', friendId).eq('friend_id', req.user.id);
+    if (error) return res.status(500).json({ error: 'Errore' });
+    // Create reverse friendship
+    await supabase.from('friendships').upsert({ user_id: req.user.id, friend_id: friendId, status: 'accepted' });
+    res.json({ ok: true });
+});
+
+app.get('/api/friends', authMiddleware, async (req, res) => {
+    const { data } = await supabase
+        .from('friendships')
+        .select('friend_id, status, users!friendships_friend_id_fkey(username, avatar_color)')
+        .eq('user_id', req.user.id);
+    res.json({ friends: data || [] });
+});
+
+app.get('/api/friends/requests', authMiddleware, async (req, res) => {
+    const { data } = await supabase
+        .from('friendships')
+        .select('user_id, users!friendships_user_id_fkey(username, avatar_color)')
+        .eq('friend_id', req.user.id).eq('status', 'pending');
+    res.json({ requests: data || [] });
+});
+
+// ─── Leaderboard online ───────────────────────────────────────────────────────
+app.get('/api/leaderboard/online', async (req, res) => {
+    const { data } = await supabase
+        .from('leaderboard_online')
+        .select('wins, losses, total_score, users(username, avatar_color)')
+        .order('wins', { ascending: false })
+        .limit(50);
+    res.json({ leaderboard: data || [] });
+});
 
 // Create lobby
 app.post('/api/lobby/create', (req, res) => {
@@ -269,7 +378,149 @@ app.post('/api/puzzle/remove', async (req, res) => {
     }
 });
 
-// Socket.io connection handling
+// ─── Challenge game engine ────────────────────────────────────────────────────
+const CHALLENGE_SEGMENTS = [
+    300, 200, 700, 500, 'PASSA', 1000,
+    'CROLLO', 350, 300, 450, 700, 'PASSA',
+    'RADDOPPIA', 'PASSA', 800, 300, 600, 500,
+    'SCUDO', 300, 500, 200, 'PASSA', 200
+];
+
+const challengeGames = new Map(); // challengeId → gameState
+const userSockets   = new Map(); // userId → socketId
+
+function spinWheel() {
+    const idx = Math.floor(Math.random() * CHALLENGE_SEGMENTS.length);
+    return CHALLENGE_SEGMENTS[idx];
+}
+
+function buildCells(phrase, revealed) {
+    return phrase.split('').map((ch, i) => {
+        if (ch === ' ') return { type: 'space' };
+        if (revealed.has(i)) return { type: 'letter', ch };
+        return { type: 'hidden' };
+    });
+}
+
+function isComplete(phrase, revealed) {
+    return phrase.split('').every((ch, i) => ch === ' ' || revealed.has(i));
+}
+
+function startTurnTimer(game) {
+    clearTurnTimer(game);
+    game.timerValue = 10;
+    game.timer = setInterval(() => {
+        game.timerValue--;
+        io.to(`challenge:${game.id}`).emit('challenge:timer', { seconds: game.timerValue });
+        if (game.timerValue <= 0) {
+            clearTurnTimer(game);
+            passTurn(game);
+        }
+    }, 1000);
+}
+
+function clearTurnTimer(game) {
+    if (game.timer) { clearInterval(game.timer); game.timer = null; }
+}
+
+function passTurn(game) {
+    game.mancheScore[game.currentPlayerIdx] = 0;
+    game.currentPlayerIdx = 1 - game.currentPlayerIdx;
+    game.phase = 'spin';
+    game.currentSpinValue = null;
+    broadcastState(game);
+    startTurnTimer(game);
+}
+
+function broadcastState(game) {
+    io.to(`challenge:${game.id}`).emit('challenge:state', {
+        cells: buildCells(game.puzzle.phrase, game.revealed),
+        hint: game.puzzle.hint,
+        usedLetters: [...game.usedLetters],
+        mancheScore: game.mancheScore,
+        totalScore: game.totalScore,
+        currentPlayerIdx: game.currentPlayerIdx,
+        phase: game.phase,
+        spinValue: game.currentSpinValue,
+        players: game.players.map(p => ({ username: p.username, shield: p.shield })),
+        timerValue: game.timerValue
+    });
+}
+
+async function startChallengeGame(game) {
+    const lang = game.lang || 'it';
+    const { data: puzzles } = await supabase.from('puzzles').select('id, phrase, hint').eq('lang', lang).eq('active', true);
+    if (!puzzles || !puzzles.length) return;
+    const puzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+    game.puzzle = puzzle;
+    game.revealed = new Set();
+    game.usedLetters = new Set();
+    game.phase = 'spin';
+    game.currentSpinValue = null;
+    game.mancheScore = [0, 0];
+    game.totalScore = [0, 0];
+    game.timerValue = 10;
+    game.timer = null;
+    io.to(`challenge:${game.id}`).emit('challenge:started', {
+        players: game.players.map(p => ({ username: p.username }))
+    });
+    broadcastState(game);
+    startTurnTimer(game);
+}
+
+async function endChallenge(game, winnerIdx) {
+    clearTurnTimer(game);
+    const winner = game.players[winnerIdx];
+    const loser  = game.players[1 - winnerIdx];
+
+    await supabase.from('challenges').update({
+        status: 'completed',
+        winner_id: winner.userId,
+        challenger_score: game.totalScore[0],
+        opponent_score: game.totalScore[1],
+        completed_at: new Date().toISOString()
+    }).eq('id', game.id);
+
+    // Update leaderboard
+    for (let i = 0; i < 2; i++) {
+        const p = game.players[i];
+        const isWinner = i === winnerIdx;
+        await supabase.from('leaderboard_online').upsert({
+            user_id: p.userId,
+            wins: isWinner ? 1 : 0,
+            losses: isWinner ? 0 : 1,
+            total_score: game.totalScore[i]
+        }, {
+            onConflict: 'user_id',
+            ignoreDuplicates: false
+        });
+        // Raw SQL increment
+        await supabase.rpc ? null : null; // increment handled via separate update below
+    }
+    // Increment wins/losses properly
+    if (winner.userId) {
+        await supabase.from('leaderboard_online')
+            .update({ wins: supabase.raw ? undefined : undefined })
+            .eq('user_id', winner.userId);
+        // Use raw SQL increment
+        const { createClient: cc } = require('@supabase/supabase-js');
+        // Simple approach: fetch then update
+        const { data: wRow } = await supabase.from('leaderboard_online').select('wins,losses,total_score').eq('user_id', winner.userId).single();
+        if (wRow) await supabase.from('leaderboard_online').update({ wins: (wRow.wins||0)+1, total_score: (wRow.total_score||0)+game.totalScore[winnerIdx] }).eq('user_id', winner.userId);
+        const { data: lRow } = await supabase.from('leaderboard_online').select('wins,losses,total_score').eq('user_id', loser.userId).single();
+        if (lRow) await supabase.from('leaderboard_online').update({ losses: (lRow.losses||0)+1, total_score: (lRow.total_score||0)+game.totalScore[1-winnerIdx] }).eq('user_id', loser.userId);
+    }
+
+    io.to(`challenge:${game.id}`).emit('challenge:game-over', {
+        winnerIdx,
+        winner: winner.username,
+        totalScore: game.totalScore,
+        players: game.players.map(p => ({ username: p.username }))
+    });
+    setTimeout(() => challengeGames.delete(game.id), 60000);
+}
+
+// ─── Socket.io connection handling ───────────────────────────────────────────
 io.on('connection', (socket) => {
     const online = io.engine.clientsCount;
     console.log(`[CONN] +1 connesso | online: ${online} | id: ${socket.id}`);
@@ -488,10 +739,226 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ─── Challenge socket events ────────────────────────────────────────────
+    socket.on('challenge:auth', ({ token }) => {
+        try {
+            const payload = jwt.verify(token, JWT_SECRET);
+            socket.userId   = payload.id;
+            socket.username = payload.username;
+            userSockets.set(payload.id, socket.id);
+            socket.emit('challenge:auth-ok');
+        } catch {
+            socket.emit('challenge:auth-err');
+        }
+    });
+
+    socket.on('challenge:send', async ({ opponentId }) => {
+        if (!socket.userId) return;
+        const { data: challenge, error } = await supabase.from('challenges')
+            .insert({ challenger_id: socket.userId, opponent_id: opponentId, status: 'pending' })
+            .select().single();
+        if (error) return socket.emit('challenge:error', 'Errore creazione sfida');
+
+        const opponentSocket = userSockets.get(opponentId);
+        if (opponentSocket) {
+            io.to(opponentSocket).emit('challenge:invite', {
+                challengeId: challenge.id,
+                from: socket.username
+            });
+        }
+        socket.emit('challenge:sent', { challengeId: challenge.id });
+    });
+
+    socket.on('challenge:accept', async ({ challengeId }) => {
+        if (!socket.userId) return;
+        const { data: ch } = await supabase.from('challenges').select('*').eq('id', challengeId).single();
+        if (!ch || ch.opponent_id !== socket.userId) return;
+
+        await supabase.from('challenges').update({ status: 'active' }).eq('id', challengeId);
+
+        const { data: challenger } = await supabase.from('users').select('id, username').eq('id', ch.challenger_id).single();
+        const { data: opponent }   = await supabase.from('users').select('id, username').eq('id', ch.opponent_id).single();
+
+        const game = {
+            id: challengeId,
+            lang: ch.lang || 'it',
+            players: [
+                { userId: challenger.id, socketId: userSockets.get(challenger.id), username: challenger.username, shield: false },
+                { userId: opponent.id,   socketId: socket.id, username: opponent.username, shield: false }
+            ],
+            currentPlayerIdx: 0,
+            puzzle: null, revealed: null, usedLetters: null,
+            phase: 'spin', currentSpinValue: null,
+            mancheScore: [0, 0], totalScore: [0, 0],
+            timer: null, timerValue: 10
+        };
+        challengeGames.set(challengeId, game);
+
+        // Both join the room
+        socket.join(`challenge:${challengeId}`);
+        const challengerSocket = userSockets.get(challenger.id);
+        if (challengerSocket) io.sockets.sockets.get(challengerSocket)?.join(`challenge:${challengeId}`);
+
+        await startChallengeGame(game);
+    });
+
+    socket.on('challenge:decline', async ({ challengeId }) => {
+        if (!socket.userId) return;
+        await supabase.from('challenges').update({ status: 'declined' }).eq('id', challengeId);
+        const { data: ch } = await supabase.from('challenges').select('challenger_id').eq('id', challengeId).single();
+        if (ch) {
+            const challengerSocket = userSockets.get(ch.challenger_id);
+            if (challengerSocket) io.to(challengerSocket).emit('challenge:declined', { challengeId });
+        }
+    });
+
+    socket.on('challenge:spin', ({ challengeId }) => {
+        if (!socket.userId) return;
+        const game = challengeGames.get(challengeId);
+        if (!game || game.phase !== 'spin') return;
+        if (game.players[game.currentPlayerIdx].userId !== socket.userId) return;
+
+        clearTurnTimer(game);
+        const value = spinWheel();
+        game.currentSpinValue = value;
+
+        if (value === 'PASSA') {
+            io.to(`challenge:${game.id}`).emit('challenge:spin-result', { value, label: 'PASSA' });
+            setTimeout(() => passTurn(game), 1500);
+        } else if (value === 'CROLLO') {
+            const p = game.players[game.currentPlayerIdx];
+            if (p.shield) {
+                p.shield = false;
+                io.to(`challenge:${game.id}`).emit('challenge:spin-result', { value, label: 'CROLLO', shielded: true });
+                game.phase = 'spin';
+                broadcastState(game);
+                setTimeout(() => startTurnTimer(game), 1800);
+            } else {
+                game.mancheScore[game.currentPlayerIdx] = 0;
+                io.to(`challenge:${game.id}`).emit('challenge:spin-result', { value, label: 'CROLLO' });
+                setTimeout(() => passTurn(game), 1500);
+            }
+        } else if (value === 'SCUDO') {
+            game.players[game.currentPlayerIdx].shield = true;
+            io.to(`challenge:${game.id}`).emit('challenge:spin-result', { value, label: 'SCUDO' });
+            game.phase = 'spin';
+            broadcastState(game);
+            setTimeout(() => startTurnTimer(game), 1800);
+        } else if (value === 'RADDOPPIA') {
+            game.mancheScore[game.currentPlayerIdx] *= 2;
+            io.to(`challenge:${game.id}`).emit('challenge:spin-result', { value, label: 'RADDOPPIA' });
+            game.phase = 'consonant';
+            broadcastState(game);
+            setTimeout(() => startTurnTimer(game), 1800);
+        } else {
+            // Numeric
+            io.to(`challenge:${game.id}`).emit('challenge:spin-result', { value, label: `${value}€` });
+            game.phase = 'consonant';
+            broadcastState(game);
+            setTimeout(() => startTurnTimer(game), 1800);
+        }
+    });
+
+    socket.on('challenge:consonant', ({ challengeId, letter }) => {
+        if (!socket.userId) return;
+        const game = challengeGames.get(challengeId);
+        if (!game || game.phase !== 'consonant') return;
+        if (game.players[game.currentPlayerIdx].userId !== socket.userId) return;
+
+        clearTurnTimer(game);
+        const L = letter.toUpperCase();
+        if (game.usedLetters.has(L)) { startTurnTimer(game); return; }
+        game.usedLetters.add(L);
+
+        const phrase = game.puzzle.phrase;
+        let count = 0;
+        phrase.split('').forEach((ch, i) => {
+            if (ch === L) { game.revealed.add(i); count++; }
+        });
+
+        if (count > 0) {
+            const spinVal = typeof game.currentSpinValue === 'number' ? game.currentSpinValue : 300;
+            game.mancheScore[game.currentPlayerIdx] += spinVal * count;
+            game.phase = 'action';
+            if (isComplete(phrase, game.revealed)) {
+                game.totalScore[game.currentPlayerIdx] += game.mancheScore[game.currentPlayerIdx];
+                broadcastState(game);
+                setTimeout(() => endChallenge(game, game.currentPlayerIdx), 2000);
+                return;
+            }
+        } else {
+            game.phase = 'spin';
+            broadcastState(game);
+            setTimeout(() => passTurn(game), 1500);
+            return;
+        }
+        broadcastState(game);
+        startTurnTimer(game);
+    });
+
+    socket.on('challenge:vowel', ({ challengeId, letter }) => {
+        if (!socket.userId) return;
+        const game = challengeGames.get(challengeId);
+        if (!game || game.phase !== 'action') return;
+        if (game.players[game.currentPlayerIdx].userId !== socket.userId) return;
+        if (game.mancheScore[game.currentPlayerIdx] < 1000) return;
+
+        clearTurnTimer(game);
+        const L = letter.toUpperCase();
+        if (game.usedLetters.has(L)) { startTurnTimer(game); return; }
+        game.usedLetters.add(L);
+        game.mancheScore[game.currentPlayerIdx] -= 1000;
+
+        const phrase = game.puzzle.phrase;
+        phrase.split('').forEach((ch, i) => {
+            if (ch === L) game.revealed.add(i);
+        });
+
+        if (isComplete(phrase, game.revealed)) {
+            game.totalScore[game.currentPlayerIdx] += game.mancheScore[game.currentPlayerIdx];
+            broadcastState(game);
+            setTimeout(() => endChallenge(game, game.currentPlayerIdx), 2000);
+            return;
+        }
+        broadcastState(game);
+        startTurnTimer(game);
+    });
+
+    socket.on('challenge:solve', ({ challengeId, solution }) => {
+        if (!socket.userId) return;
+        const game = challengeGames.get(challengeId);
+        if (!game) return;
+        if (game.players[game.currentPlayerIdx].userId !== socket.userId) return;
+
+        clearTurnTimer(game);
+        const correct = solution.toUpperCase().trim() === game.puzzle.phrase.trim();
+        if (correct) {
+            game.totalScore[game.currentPlayerIdx] += game.mancheScore[game.currentPlayerIdx];
+            broadcastState(game);
+            setTimeout(() => endChallenge(game, game.currentPlayerIdx), 2000);
+        } else {
+            io.to(`challenge:${game.id}`).emit('challenge:solve-wrong', { by: socket.username });
+            setTimeout(() => passTurn(game), 1500);
+        }
+    });
+
+    socket.on('challenge:action-spin', ({ challengeId }) => {
+        if (!socket.userId) return;
+        const game = challengeGames.get(challengeId);
+        if (!game || game.phase !== 'action') return;
+        if (game.players[game.currentPlayerIdx].userId !== socket.userId) return;
+        game.phase = 'spin';
+        game.currentSpinValue = null;
+        broadcastState(game);
+        startTurnTimer(game);
+    });
+
     // Disconnect handling
     socket.on('disconnect', () => {
         const online = io.engine.clientsCount;
         console.log(`[CONN] -1 disconnesso | online: ${online} | id: ${socket.id}`);
+        // Clean up user socket mapping
+        if (socket.userId) userSockets.delete(socket.userId);
         // Find if this socket belongs to a host or player
         for (const [lobbyId, lobby] of lobbies.entries()) {
             if (lobby.hostSocketId === socket.id) {
