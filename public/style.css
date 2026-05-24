@@ -724,12 +724,12 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.1);
     padding: 6px; /* Elegant border thickness */
     position: relative;
-    clip-path: polygon(7.14% 0%, 92.86% 0%,
-            92.86% 25%, 100% 25%,
-            100% 75%, 92.86% 75%,
-            92.86% 100%, 7.14% 100%,
-            7.14% 75%, 0% 75%,
-            0% 25%, 7.14% 25%);
+    clip-path: polygon(6.25% 0%, 93.75% 0%,
+            93.75% 20%, 100% 20%,
+            100% 80%, 93.75% 80%,
+            93.75% 100%, 6.25% 100%,
+            6.25% 80%, 0% 80%,
+            0% 20%, 6.25% 20%);
 }
 
 .game-board-inner {
@@ -739,12 +739,12 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     padding: 8px; /* Tighter internal padding */
     position: relative;
     overflow: hidden;
-    clip-path: polygon(7.14% 0%, 92.86% 0%,
-            92.86% 25%, 100% 25%,
-            100% 75%, 92.86% 75%,
-            92.86% 100%, 7.14% 100%,
-            7.14% 75%, 0% 75%,
-            0% 25%, 7.14% 25%);
+    clip-path: polygon(6.25% 0%, 93.75% 0%,
+            93.75% 20%, 100% 20%,
+            100% 80%, 93.75% 80%,
+            93.75% 100%, 6.25% 100%,
+            6.25% 80%, 0% 80%,
+            0% 20%, 6.25% 20%);
     transition: background 1s ease;
 }
 
