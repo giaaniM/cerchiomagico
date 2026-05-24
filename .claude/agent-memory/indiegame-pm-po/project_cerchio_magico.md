@@ -4,44 +4,47 @@ description: Stato attuale del gioco — nome, URL, infrastruttura, SEO, funzion
 type: project
 ---
 
-**Nome gioco:** Cerchio Magico
-**URL live:** https://cerchiomagico.onrender.com
-**Piattaforma hosting:** Render (free tier, presumibilmente)
-**Stack:** Next.js + Supabase (migrato da Node.js/Express puro — confermato 2026-05-16)
+**Nome gioco:** Cerchio Magico (EN: MagicSpin)
+**URL live:** https://magicspingame.com
+**Piattaforma hosting:** Render — con Uptime Robot attivo = server SEMPRE online, nessun cold start
+**Stack:** Node.js + Express + Socket.io + Supabase (PostgreSQL)
 
-**SEO — stato al 2026-05-07:**
-- Google Search Console aggiunto ieri (2026-05-06), file di verifica presente (google066ef04112dcac44.html)
-- Meta tag title, description, keywords presenti in index.html
-- sitemap.xml presente e corretta (URL: https://cerchiomagico.onrender.com/sitemap.xml)
-- robots.txt presente e corretto, punta alla sitemap
-- Schema.org VideoGame implementato in JSON-LD
-- OG tags e Twitter card presenti
-- Canonical URL impostato
-- Valerio non sa ancora come usare Search Console — non ha sottomesso la sitemap, non sa leggere le metriche
+**SEO — stato al 2026-05-21:**
+- Google Search Console presente, sitemap NON ancora sottomessa (azione urgente)
+- Meta tag, OG tags, Twitter card, Schema.org VideoGame JSON-LD, robots.txt: tutti presenti
+- Canonical URL: https://magicspingame.com
+- Redirect 301: cerchiomagico.onrender.com → magicspingame.com (in server.js)
+- SEO organic quasi zero (2 Google, 2 Bing in 28 giorni) — dominio nuovo, indicizzazione in corso
 
-**Funzionalità gioco:**
-- 2-5 giocatori locali, turni alternati
-- Modalità smartphone come controller (sperimentale)
-- 5 manche, ruota con 26 spicchi
-- Spicchi speciali: PERDITUTTO, PASSA, RADDOPPIA, MEGATURNO (EXPRESS mode), SCUDO, ?500
-- Manche finale (final round)
-- Vocali a €500
-- Categoria mostrata ("hint")
+**Funzionalità gioco (stato aggiornato 2026-05-21):**
+- Modalità **1 giocatore** (Solitario a tempo — timer visibile, punteggio finale, classifica globale)
+- Modalità **2-5 giocatori** locali, turni alternati
+- Modalità **smartphone come controller** (sperimentale, Socket.io)
+- 5 manche, ruota con spicchi multipli
+- Spicchi speciali: **CROLLO** (non "Perditutto"), PASSA, RADDOPPIA, MEGATURNO (express mode), SCUDO, ?500
+- Manche finale (final round — manche 5 con meccaniche speciali)
+- **Vocali costano €1.000** (non €500)
+- Categoria/indizio mostrato ("hint") sopra la board
+- **Classifica globale**: top 8 + finestra posizione personale, tab Solo/Torneo, highlight nome proprio
+- Frasi dal DB Supabase (270 frasi IT attive + EN), con accenti italiani corretti (DIVENTÒ, PIÙ, ecc.)
+- i18n italiano/inglese con toggle lingua
 
-**Groq API:**
-- Già integrata nel server ma non attiva (frasi ancora statiche da puzzles.js)
-- Strategia consigliata: generazione batch notturna (non real-time) quando si raggiungono 200-300 DAU sostenuti
-- Soglia economica reale: ~$1/mese a 1.000 DAU con generazione real-time — problema non è costo ma latenza e rate limit
-- Mai generare real-time per ogni partita; usare caching aggressivo
+**Database frasi:**
+- Frasi caricate da Supabase (tabella `puzzles`): 270 IT attive, frasi EN presenti
+- Formato: hint = soggetto breve, phrase = descrizione lunga da indovinare (25-55 caratteri), accenti italiani corretti
+- Frasi generate manualmente + con agente AI — NON usare Groq real-time
+- Frasi disattivate (active=false) vengono eliminate periodicamente
 
-**Analytics GA4 — snapshot 21 apr–18 mag 2026 (28 giorni) — DATI AGGIORNATI:**
-- Utenti attivi: 209, Nuovi utenti: 206 (retention quasi zero — <2% ritorno)
-- Sessione media: ~10 minuti (chi gioca, gioca davvero — segnale di qualità del prodotto)
-- Canali: Direct ~120, Organic Social ~80 (quasi tutto Facebook), Organic Search quasi zero
-- Picco traffico 17 maggio: condivisione su pochi gruppi Facebook
-- Fidelizzazione: cade a 0% dopo il picco — traffico a ondate, non sostenuto
-- 100% web, nessuna app
-- Conclusione: traffico quasi interamente Facebook (post virale/condiviso), SEO organic praticamente zero
+**Analytics GA4 — snapshot 23 apr–20 mag 2026 (28 giorni) — DATI AGGIORNATI:**
+- Utenti attivi: 332, Nuovi utenti: 331 (99,7% nuovi — retention quasi zero)
+- Durata media coinvolgimento: 2m 39s (in calo rispetto al dato precedente di ~10 min — possibile cambio di audience o bounce precoce)
+- Conteggio eventi: 1.800
+- Canali: Direct ~217 sessioni, Facebook referral ~226 sessioni totali (lm/l/m/facebook), Organic Search 7 sessioni Google + 5 Reddit
+- Picco traffico 3-10 maggio, poi calo netto
+- Bounce rate pagina principale: 90,4% — critico
+- Città anomale: Aspen, Council Bluffs, San Jose (USA) — probabili bot/crawler, ~24 utenti sospetti
+- Traffico Facebook: 60% del totale — dipendenza alta da un singolo canale non sostenibile
+- SEO organic: praticamente zero (2 Google, 2 Bing in 28 giorni)
 
 **Dominio aggiornato (2026-05-19):**
 - Produzione: magicspingame.com (custom domain su Render)
@@ -61,5 +64,48 @@ type: project
 - Schema Organization con logo NON ancora aggiunto (necessario per logo nei risultati)
 - OG image: presente negli OG tag ma dimensioni/esistenza non verificate (deve essere 1200x630px minimo)
 
+**Struttura partita solitario (corretta 2026-05-21):**
+- `SOLO_ROUNDS = 3` in solo.js — 3 manche, 1 frase per manche = 3 frasi totali (manche ≡ frase nel solitario)
+- Frasi descrittive lunghe (25-55 car), 1 per manche
+- Proposta in discussione: ridurre a 1 manche (1 sola frase) = partita oneshot rapidissima, fine partita con classifica + condividi + pub + NUOVA PARTITA
+
+**Punteggio cumulativo tra sessioni:**
+- Scartato per ora: richiede login/account, troppo complesso
+- Alternativa leggera: streak giornaliero in localStorage (no account necessario)
+
+**Retention — stato analisi (2026-05-21):**
+- Record personale solo in localStorage (fragile, no cross-device)
+- Classifica globale top 8 presente — manca leva emotiva nel messaggio di fine partita
+- Azioni raccomandate: messaggio fine partita con delta classifica + "Riprova" prominente, streak giornaliero localStorage, Daily Challenge
+- NO account utente fino a 500+ utenti attivi mensili
+
+**SEO — diagnosi blocco (2026-05-21):**
+- Causa principale: zero backlink da siti terzi verso magicspingame.com
+- Dominio nuovo in possibile "sandbox" Google (< 6-12 mesi)
+- Keyword "ruota della fortuna online" troppo competitiva per dominio nuovo
+- Azioni P0: sitemap in Search Console, itch.io per backlink, keyword coda lunga
+- Azioni P1: testo HTML indicizzabile nella pagina (i giochi web spesso mancano di testo crawlabile)
+- Obiettivo realistico: da 2 a 20 click/giorno in 2-3 mesi
+
+**Strategia piattaforme — decisione maggio 2026:**
+- Direzione confermata: porting su app mobile tramite **Capacitor** (WebView wrapper — non riscrittura)
+- PWA scartata: notifiche push su iOS inaffidabili, boomer non sanno installare PWA da Safari
+- React Native / Flutter scartati: riscrittura troppo costosa
+- Codice condiviso al 60-70%: backend/Supabase/logica gioco condivisi, notifiche e store pipeline separati
+- Notifiche push via **OneSignal** (gratuito fino a 10k subscriber) — killer feature per boomer
+- Tempi realistici store: 10-14 settimane dalla decisione al live su entrambi gli store
+- Apple Developer Program: 99$/anno — prerequisito iOS, da attivare prima di Capacitor
+- Socket.io multiplayer "smartphone come controller" a rischio in ambiente app — possibile "web only" per v1
+- Due pubblici (boomer/giovani) = un solo prodotto, due messaggi: boomer → app, giovani → web da proiettare su TV
+- AirPlay/Chromecast come messaggio marketing non ancora sfruttato
+- Email list "avvisami al lancio app" da costruire subito nella win screen
+- Daily Challenge: feature prioritaria sia per web retention che per notifiche push app
+
+**Roadmap fasi:**
+- Fase 0 (now): sitemap GSC, testo HTML indicizzabile, Itch.io, email list waitlist app, Daily Challenge
+- Fase 1 (sett 3-6): Capacitor setup, notifiche push, test dispositivi reali
+- Fase 2 (sett 7-10): Store submission (Play Store prima, App Store dopo)
+- Fase 3 (sett 11+): Cross-promotion web ↔ app, campagna Facebook post-launch
+
 **Why:** Contesto necessario per consigliare SEO, monetizzazione e roadmap in modo specifico per questo gioco.
-**How to apply:** Ogni consiglio su SEO/monetizzazione/distribuzione va calibrato su questo specifico URL, stack e funzionalità.
+**How to apply:** Ogni consiglio su SEO/monetizzazione/distribuzione va calibrato su questo specifico URL, stack e funzionalità. Per il porting app, riferirsi sempre a Capacitor come tecnologia scelta.

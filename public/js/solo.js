@@ -10,9 +10,9 @@ const HISTORY_KEY = 'magicspin_history_v1';
 let timerInterval = null;
 
 export function startSoloTimer() {
+    if (timerInterval) return; // already running — don't reset on phrase skip race condition
     gameState.soloElapsedSeconds = 0;
     gameState.soloRoundSplits = [];
-    clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         gameState.soloElapsedSeconds++;
         updateTimerDisplay();

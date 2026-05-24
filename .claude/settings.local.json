@@ -52,7 +52,10 @@
       "Bash(npx playwright *)",
       "Bash(lsof -ti:3000)",
       "Bash(gh api *)",
-      "Skill(caveman:caveman)"
+      "Skill(caveman:caveman)",
+      "Bash(git *)",
+      "Bash(grep *)",
+      "Bash(npx esbuild *)"
     ]
   }
 }
