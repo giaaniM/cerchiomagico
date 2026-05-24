@@ -2,7 +2,7 @@ import { gameState } from './state.js';
 import { t, getCurrentLang } from './lang.js';
 import { showPopup, popup } from './utils.js';
 import { saveSoloGame } from './history.js';
-import { showSubmitAndLeaderboard } from './leaderboard.js';
+import { submitScore, fetchLeaderboard, getSavedNickname } from './leaderboard.js';
 
 export const SOLO_ROUNDS = 3;
 const HISTORY_KEY = 'magicspin_history_v1';
@@ -108,6 +108,8 @@ export function showSoloResults(newGame) {
     const winCard = winScreen?.querySelector('.win-card');
     if (!winCard) return;
 
+    const nick = getSavedNickname() || playerName;
+
     winCard.innerHTML = `
         <div class="solo-results">
             <div class="solo-results-header">
@@ -129,22 +131,55 @@ export function showSoloResults(newGame) {
 
             ${splitsHtml ? `<div class="solo-splits">${splitsHtml}</div>` : ''}
 
+            <div class="solo-lb-section">
+                <div class="solo-lb-title">🏆 ${isIt ? 'Classifica Globale' : 'Global Leaderboard'}</div>
+                <div id="solo-lb-inline" class="solo-lb-inline"><div class="lb-loading">⏳</div></div>
+            </div>
+
             <div class="win-cta-stack">
-                <button class="win-cta-lb" id="solo-lb-btn">🏆 ${isIt ? 'Vai alla Classifica' : 'View Leaderboard'}</button>
                 <button class="win-cta-primary" id="solo-newgame-btn">${t('solo.newgame')}</button>
                 <button class="win-cta-share" id="solo-share-btn">${t('solo.share.btn')}</button>
             </div>
 
-            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="win-kofi-link">
+            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="win-kofi-btn">
                 ☕ ${isIt ? 'Offrimi un caffè' : 'Buy me a coffee'}
             </a>
         </div>
     `;
 
     document.getElementById('solo-newgame-btn')?.addEventListener('click', newGame);
-    document.getElementById('solo-lb-btn')?.addEventListener('click', () => {
-        showSubmitAndLeaderboard({ mode: 'solo', score: totalScore, time_seconds: totalTime, suggestedName: playerName });
-    });
+
+    // Auto-submit + load leaderboard in background
+    (async () => {
+        const rank = await submitScore({ nickname: nick, mode: 'solo', score: totalScore, time_seconds: totalTime });
+        const data = await fetchLeaderboard('solo', nick);
+        const lbEl = document.getElementById('solo-lb-inline');
+        if (!lbEl) return;
+
+        const top = data?.top ?? [];
+        const userRank = rank ?? data?.userRank ?? null;
+        const nickLower = nick.toLowerCase();
+
+        function fmtTime(s) { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
+
+        if (!top.length) {
+            lbEl.innerHTML = `<div class="lb-empty">${isIt ? 'Primo nella classifica!' : 'First on the board!'}</div>`;
+            return;
+        }
+
+        let rows = top.map((e, i) => {
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+            const isMe = String(e.nickname).toLowerCase() === nickLower;
+            return `<div class="lb-row ${i < 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}">
+                <span class="lb-rank">${medal}</span>
+                <span class="lb-name">${String(e.nickname).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>
+                <span class="lb-score">${fmtTime(e.time_seconds ?? 0)}</span>
+            </div>`;
+        }).join('');
+
+        const rankBadge = userRank ? `<div class="solo-lb-rank-badge">${isIt ? `La tua posizione: #${userRank}` : `Your rank: #${userRank}`}</div>` : '';
+        lbEl.innerHTML = `<div class="lb-table">${rows}</div>${rankBadge}`;
+    })();
 
     const shareBtn = document.getElementById('solo-share-btn');
     if (shareBtn) {

@@ -103,11 +103,7 @@ export function initSetup() {
     // History button
     const histBtn = document.getElementById('history-btn');
     if (histBtn) {
-        if (!hasHistory()) {
-            histBtn.style.display = 'none';
-        } else {
-            histBtn.addEventListener('click', () => { soundManager.playClick(); showHistoryPopup(); });
-        }
+        histBtn.addEventListener('click', () => { soundManager.playClick(); showHistoryPopup(); });
     }
 
     // Back button smartphone lobby

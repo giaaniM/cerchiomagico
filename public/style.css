@@ -7104,6 +7104,59 @@ body.manche-finale .board-frame {
     background: rgba(251,191,36,0.05);
 }
 
+.win-kofi-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #1a1108;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border: none;
+    box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+    transition: all 0.2s ease;
+    margin-top: 8px;
+    letter-spacing: 0.3px;
+}
+.win-kofi-btn:hover {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    box-shadow: 0 6px 24px rgba(245,158,11,0.5);
+    transform: translateY(-1px);
+}
+
+.solo-lb-section {
+    width: 100%;
+    margin: 12px 0 4px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 12px;
+}
+.solo-lb-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-align: center;
+}
+.solo-lb-inline {
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.solo-lb-rank-badge {
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fbbf24;
+    padding: 8px 0 4px;
+    letter-spacing: 0.5px;
+}
+
 /* ===== SOLO RESULTS — redesign ===== */
 .solo-results-crown { font-size: 2rem; line-height: 1; }
 .solo-results-player {
