@@ -32,6 +32,8 @@ function applyPortrait() {
     const get = id => document.getElementById(id);
     const skipBtn = get('skip-phrase-btn');
 
+    const expressBanner = get('express-banner');
+
     const pos = el => el ? { parent: el.parentNode, next: el.nextSibling } : null;
     saved = {
         hintDisplay:    pos(els.hintDisplay),
@@ -41,6 +43,7 @@ function applyPortrait() {
         centralAction:  pos(els.centralAction),
         actionsRow:     pos(els.actionsRow),
         skipBtn:        pos(skipBtn),
+        expressBanner:  pos(expressBanner),
     };
 
     const col = document.createElement('div');
@@ -48,6 +51,7 @@ function applyPortrait() {
     col.appendChild(els.hintDisplay);
     col.appendChild(els.boardContainer);
     col.appendChild(els.centralAction);
+    if (expressBanner) col.appendChild(expressBanner);
     col.appendChild(els.actionsRow);
 
     const scoresRow = document.createElement('div');
@@ -106,6 +110,7 @@ function restoreLayout() {
     restoreEl(qs('.players-sidebar'),     saved.playersSidebar);
     restoreEl(qs('.wheel-value-sidebar'), saved.wheelSidebar);
     restoreEl(get('central-action-area'), saved.centralAction);
+    restoreEl(get('express-banner'),      saved.expressBanner);
     restoreEl(qs('.game-actions-row'),    saved.actionsRow);
     restoreEl(get('skip-phrase-btn'),     saved.skipBtn);
 

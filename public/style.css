@@ -6466,6 +6466,43 @@ body.manche-finale .board-frame {
     max-width: 100%;
 }
 
+/* Consonant call container: compact on mobile */
+#mp-column .consonant-call-container {
+    padding: 8px 12px;
+    gap: 10px;
+    border-radius: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+}
+#mp-column .value-box {
+    padding-right: 10px;
+}
+#mp-column .value-label-small {
+    font-size: 0.62rem;
+}
+#mp-column .value-amount {
+    font-size: 1.3rem;
+}
+#mp-column .consonant-input-wrapper {
+    gap: 6px;
+}
+#mp-column .consonant-input-wrapper input {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+}
+
+/* Express banner inline on mobile */
+#mp-column .express-banner {
+    margin: 0;
+    border-radius: 12px;
+    padding: 8px 14px;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+}
+
 /* Vocale + Risolvi in colonna */
 #mp-column .game-actions-row {
     width: 100%;
