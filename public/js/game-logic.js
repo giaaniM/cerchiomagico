@@ -266,7 +266,17 @@ export function callConsonant() {
         soundManager.playError();
         gameState.pendingWheelValue = null;
         elements.currentWheelValue.textContent = '-';
-        if (gameState.soloMode) {
+        if (gameState.wheelPhase === 'express') {
+            soundManager.stopExpress();
+            hideExpressBanner();
+            soundManager.playGameOver();
+            gameState.partialScores[player.name] = 0;
+            gameState.wheelPhase = 'idle';
+            renderPlayersList();
+            if (elements.boardInner) elements.boardInner.classList.remove('express-active');
+            showPopup(popup('💥', `"${letter}" – ${t('msg.crollo.title')}`, t('msg.crollo.body')), 4000, 'danger');
+            setTimeout(passTurn, 4500);
+        } else if (gameState.soloMode) {
             const sec = 20;
             addTimePenalty(sec);
             gameState.wheelPhase = 'idle';

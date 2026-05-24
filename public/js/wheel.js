@@ -683,6 +683,7 @@ window.resolveShieldChoice = function (useShield) {
         if (penaltyType === 'CROLLO') {
             soundManager.playGameOver();
             gameState.partialScores[player.name] = 0;
+            gameState.hasShield[player.name] = false;
             renderPlayersList();
             showPopup(popup('💥', t('msg.crollo.title'), t('wheel.shield.saved.crollo')), 4000, 'danger');
             setTimeout(passTurn, 4500);
@@ -736,14 +737,21 @@ window.resolveMysteryChoice = function (choice) {
     if (choice === 'RAFFLE') {
         soundManager.playSpin();
         const rafflePool = [200, 300, 400, 700, 800, 1000];
-        const selectedIdx = Math.floor(Math.random() * rafflePool.length);
-        finalValue = rafflePool[selectedIdx];
+        finalValue = rafflePool[Math.floor(Math.random() * rafflePool.length)];
 
-        showPopup(popup('🎲', t('wheel.mystery.drawn'), `€${finalValue}`), 2000, 'warning');
+        showPopup(`<div class="popup-mystery-result" style="text-align:center;padding:8px 0">
+            <div style="font-size:2rem;margin-bottom:6px">🎲</div>
+            <div style="font-size:1rem;font-weight:600;color:#d1d5db;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${t('wheel.mystery.drawn')}</div>
+            <span class="popup-value">€${finalValue}</span>
+        </div>`, 2500, 'warning');
     } else {
         soundManager.playReveal();
         finalValue = Number(choice);
-        showPopup(popup('💶', t('wheel.mystery.chose'), `€${finalValue}`), 2000, 'warning');
+        showPopup(`<div class="popup-mystery-result" style="text-align:center;padding:8px 0">
+            <div style="font-size:2rem;margin-bottom:6px">💶</div>
+            <div style="font-size:1rem;font-weight:600;color:#d1d5db;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${t('wheel.mystery.chose')}</div>
+            <span class="popup-value">€${finalValue}</span>
+        </div>`, 2500, 'warning');
     }
 
     gameState.pendingWheelValue = finalValue;
@@ -755,5 +763,5 @@ window.resolveMysteryChoice = function (choice) {
         gameState.wheelPhase = 'call_consonant';
         updateUI();
         showMessage(t('wheel.callconsonant.msg').replace('{val}', gameState.pendingWheelValue), 'info');
-    }, 2000);
+    }, 2500);
 };
