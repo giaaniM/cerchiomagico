@@ -32,8 +32,6 @@ export const gameState = {
     wheelPhase: 'idle',
     allConsonantsRevealed: false,
     wheelRotation: 0,
-    usedPhrases: new Set(),
-    excludedPhrases: new Set(),
     finalSpinComplete: false,
     finalRoundValue: 0,
     expressAccumulated: 0,
