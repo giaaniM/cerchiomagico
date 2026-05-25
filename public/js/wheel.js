@@ -1,7 +1,7 @@
 import { gameState } from './state.js';
 import { t, getCurrentLang } from './lang.js';
 import { elements } from './elements.js';
-import { showPopup, showMessage, popup } from './utils.js';
+import { showPopup, showMessage, popup, npPopup, avatarUrl } from './utils.js';
 import { soundManager } from './sound.js';
 import { getCurrentPlayer, passTurn, renderPlayersList } from './players.js';
 import { updateUI, checkFinalRoundBanner, checkExpressBanner } from './ui.js';
@@ -560,7 +560,7 @@ export function onWheelStop(result) {
             soundManager.playError();
             elements.currentWheelValue.textContent = t('wheel.display.PASSA');
             elements.currentWheelValue.className = 'wheel-value passa';
-            showPopup(popup('⏭️', t('wheel.passa.title'), t('msg.turnoflost')), 2000, 'warning');
+            showPopup(npPopup({ badge: t('popup.passa_badge'), badgeColor: 'gold', avatar: avatarUrl(player.name), main: player.name, sub: t('msg.turnoflost') }), 2000, 'warning slim-pad');
             setTimeout(passTurn, 2500);
         }
     } else if (result.value === 'RADDOPPIA') {
@@ -586,7 +586,7 @@ export function onWheelStop(result) {
             elements.currentWheelValue.className = 'wheel-value crollo';
             gameState.partialScores[player.name] = 0;
             renderPlayersList();
-            showPopup(popup('💥', t('msg.crollo.title'), t('wheel.crollo.popup.body')), 4000, 'danger');
+            showPopup(npPopup({ badge: t('msg.crollo.title'), badgeColor: 'red', avatar: avatarUrl(player.name), main: player.name, sub: t('wheel.crollo.popup.body') }), 4000, 'danger slim-pad');
             setTimeout(passTurn, 4500);
         }
     } else if (result.value === '?500') {
@@ -672,7 +672,7 @@ window.resolveShieldChoice = function (useShield) {
         soundManager.playReveal();
         gameState.hasShield[player.name] = false;
         renderPlayersList();
-        showPopup(popup('🛡️', t('wheel.shield.used.title'), `${player.name} ${t('wheel.shield.safe')}`), 2500, 'subtle-success');
+        showPopup(npPopup({ badge: t('wheel.shield.used.title'), badgeColor: 'green', avatar: avatarUrl(player.name), main: player.name, sub: t('wheel.shield.safe') }), 2500, 'subtle-success slim-pad');
 
         setTimeout(() => {
             gameState.wheelPhase = 'idle';
@@ -685,7 +685,7 @@ window.resolveShieldChoice = function (useShield) {
             gameState.partialScores[player.name] = 0;
             gameState.hasShield[player.name] = false;
             renderPlayersList();
-            showPopup(popup('💥', t('msg.crollo.title'), t('wheel.shield.saved.crollo')), 4000, 'danger');
+            showPopup(npPopup({ badge: t('msg.crollo.title'), badgeColor: 'red', avatar: avatarUrl(player.name), main: player.name, sub: t('wheel.crollo.popup.body') }), 4000, 'danger slim-pad');
             setTimeout(passTurn, 4500);
         } else if (typeof penaltyType === 'string' && penaltyType.startsWith('TEMPO+')) {
             const sec = parseInt(penaltyType.replace('TEMPO+', ''), 10);
@@ -695,7 +695,7 @@ window.resolveShieldChoice = function (useShield) {
             updateUI();
         } else {
             soundManager.playError();
-            showPopup(popup('⏭️', t('wheel.passa.title'), `${player.name} ${t('wheel.shield.saved.passa')}`), 2500, 'warning');
+            showPopup(npPopup({ badge: t('popup.passa_badge'), badgeColor: 'gold', avatar: avatarUrl(player.name), main: player.name, sub: t('msg.turnoflost') }), 2500, 'warning slim-pad');
             setTimeout(passTurn, 3000);
         }
     }
