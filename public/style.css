@@ -1067,7 +1067,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .hint-label {
-    font-size: 1rem;
+    font-size: 0.7rem;
     color: var(--accent-gold);
     text-transform: uppercase;
     font-weight: 800;
@@ -1075,12 +1075,16 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 #hint-text {
-    font-size: 1.5rem;
+    font-size: 0.95rem;
     font-weight: 800;
     color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 1px;
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.is-native #hint-text {
+    font-size: 0.85rem;
 }
 
 .btn-skip-phrase {
@@ -7354,6 +7358,11 @@ body.manche-finale .board-frame {
 
 /* Hide floating quick-actions on setup screen */
 body:has(#setup-screen.active) .quick-actions-container {
+    display: none !important;
+}
+
+/* Hide quick-actions entirely on native app */
+.is-native .quick-actions-container {
     display: none !important;
 }
 

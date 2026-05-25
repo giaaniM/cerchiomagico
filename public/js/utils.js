@@ -49,8 +49,15 @@ export function isConsonant(letter) {
 const GAME_SCREENS = ['game-screen', 'win-screen'];
 
 export function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenId)?.classList.add('active');
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none'; // force hide, in case CSS specificity issue on native
+    });
+    const target = document.getElementById(screenId);
+    if (target) {
+        target.style.display = '';
+        target.classList.add('active');
+    }
 
     const langBtn = document.getElementById('lang-toggle-btn');
     if (langBtn) langBtn.style.display = GAME_SCREENS.includes(screenId) ? 'none' : '';

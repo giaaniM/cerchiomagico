@@ -194,6 +194,14 @@ window.soundManager = soundManager;
 if (isNative) {
     document.documentElement.classList.add('is-native');
 
+    // Inject Lucide icons into mode cards (replaces emoji)
+    import('./icons.js').then(({ ic }) => {
+        const soloIcon  = document.getElementById('mode-icon-solo');
+        const multiIcon = document.getElementById('mode-icon-multi');
+        if (soloIcon)  soloIcon.innerHTML  = ic('rotate', 28);
+        if (multiIcon) multiIcon.innerHTML = ic('users', 28);
+    });
+
     // Android back button — no confirmation, always go home directly
     document.addEventListener('backbutton', () => {
         const active = document.querySelector('.screen.active');
@@ -203,7 +211,7 @@ if (isNative) {
             gameState.currentManche = 0; // bypass confirmation popup
             newGame();
         }
-        // setup-screen / login-screen: do nothing (let Android minimize app)
+        // setup-screen / login-screen: let Android minimize app
     });
 }
 
