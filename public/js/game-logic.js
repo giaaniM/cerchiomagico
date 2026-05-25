@@ -64,7 +64,48 @@ function shuffleArray(arr) {
     }
 }
 
+const PLAYED_KEY = 'ms_played_phrases_v1';
+
+function getPlayedIds(lang) {
+    try {
+        const data = JSON.parse(localStorage.getItem(PLAYED_KEY) || '{}');
+        return new Set(data[lang] || []);
+    } catch { return new Set(); }
+}
+
+function markPlayed(lang, id) {
+    if (id == null) return;
+    try {
+        const data = JSON.parse(localStorage.getItem(PLAYED_KEY) || '{}');
+        if (!data[lang]) data[lang] = [];
+        if (!data[lang].includes(id)) data[lang].push(id);
+        localStorage.setItem(PLAYED_KEY, JSON.stringify(data));
+    } catch {}
+}
+
 function pickNextPhrase() {
+    const lang = getCurrentLang();
+    const played = getPlayedIds(lang);
+
+    // Phrases with ids (from Supabase) — filter out already played
+    const hasIds = puzzleDatabase.some(p => p.id != null);
+    if (hasIds) {
+        let available = puzzleDatabase.filter(p => !played.has(p.id));
+        if (available.length === 0) {
+            // All played — reset and use full db
+            try {
+                const data = JSON.parse(localStorage.getItem(PLAYED_KEY) || '{}');
+                data[lang] = [];
+                localStorage.setItem(PLAYED_KEY, JSON.stringify(data));
+            } catch {}
+            available = puzzleDatabase;
+        }
+        const puzzle = available[Math.floor(Math.random() * available.length)];
+        markPlayed(lang, puzzle.id);
+        return puzzle;
+    }
+
+    // Offline fallback — use old index rotation
     if (phraseIndex >= puzzleDatabase.length) {
         shuffleArray(puzzleDatabase);
         phraseIndex = 0;
