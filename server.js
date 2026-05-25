@@ -185,7 +185,7 @@ app.get('/api/leaderboard', async (req, res) => {
     const mode = req.query.mode === 'mp' ? 'mp' : 'solo';
     const lang = req.query.lang === 'en' ? 'en' : 'it';
     const nickname = req.query.nickname ? String(req.query.nickname).trim().slice(0, 30) : null;
-    const TOP_N = 8;
+    const TOP_N = 100;
     const orderCol = mode === 'solo' ? 'time_seconds' : 'score';
     const ascending = mode === 'solo';
 
@@ -297,7 +297,8 @@ app.post('/api/auth/register', async (req, res) => {
     const { username, password, email } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username e password richiesti' });
     const clean = username.trim().toLowerCase();
-    if (!/^[a-z0-9_]{3,20}$/.test(clean)) return res.status(400).json({ error: 'Username non valido (3-20 caratteri: lettere, numeri, _)' });
+    if (!/^[a-z0-9_]{3,20}$/.test(clean)) return res.status(400).json({ error: 'Username non valido: 3-20 caratteri, solo lettere minuscole, numeri e _' });
+    if (password.length < 6) return res.status(400).json({ error: 'Password minimo 6 caratteri' });
     const { data: existing } = await supabase.from('users').select('id').eq('username', clean).single();
     if (existing) return res.status(409).json({ error: 'Username già in uso' });
     const hash = await bcrypt.hash(password, 10);
@@ -358,6 +359,18 @@ app.get('/api/friends/requests', authMiddleware, async (req, res) => {
     const ids = data.map(r => r.user_id);
     const { data: users } = await supabase.from('users').select('id, username').in('id', ids);
     res.json(users ?? []);
+});
+
+app.get('/api/users/search', authMiddleware, async (req, res) => {
+    const q = req.query.q?.trim().toLowerCase();
+    if (!q || q.length < 2) return res.json([]);
+    const { data } = await supabase
+        .from('users')
+        .select('id, username')
+        .ilike('username', `${q}%`)
+        .neq('id', req.user.id)
+        .limit(8);
+    res.json(data ?? []);
 });
 
 // Socket.io connection handling
@@ -776,15 +789,36 @@ function genRoomCode() {
     return Math.random().toString(36).slice(2, 7).toUpperCase();
 }
 
+// Mirror of client createBoard row limits
+const BOARD_ROW_LIMITS = [12, 14, 14, 12];
+function phraseFitsBoard(normalized) {
+    const words = normalized.split(' ');
+    let rowIdx = 0, rowLen = 0;
+    for (const word of words) {
+        if (rowIdx >= BOARD_ROW_LIMITS.length) return false;
+        const space = rowLen > 0 ? 1 : 0;
+        if (rowLen + space + word.length <= BOARD_ROW_LIMITS[rowIdx]) {
+            rowLen += space + word.length;
+        } else {
+            rowIdx++;
+            if (rowIdx >= BOARD_ROW_LIMITS.length) return false;
+            if (word.length > BOARD_ROW_LIMITS[rowIdx]) return false;
+            rowLen = word.length;
+        }
+    }
+    return true;
+}
+
 async function fetchRandomPhrase(lang = 'it') {
     const { data } = await supabase
         .from('puzzles')
         .select('id, phrase, hint')
         .eq('active', true)
-        .eq('lang', lang)
-        .limit(50);
+        .eq('lang', lang);
     if (!data?.length) return null;
-    return data[Math.floor(Math.random() * data.length)];
+    const fitting = data.filter(p => phraseFitsBoard(normalizePhrase(p.phrase)));
+    const pool = fitting.length ? fitting : data;
+    return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function createRoom(p1, p2, isBot = false, privateCode = null) {
@@ -1142,7 +1176,9 @@ io.on('connection', (socket) => {
         const room = onlineRooms.get(code);
         if (!room || room.status !== 'playing') return;
         const idx = room.players.findIndex(p => p.socketId === socket.id);
-        if (idx !== room.currentTurn || room.phase !== 'spin') return;
+        if (idx !== room.currentTurn || (room.phase !== 'spin' && room.phase !== 'action')) return;
+        if (room.phase === 'action') room.pendingValue = null;
+        room.phase = 'spin';
         clearInterval(room.timer);
         const seg = spinOnlineWheel();
         applyWheelValue(room, seg);
@@ -1214,32 +1250,26 @@ io.on('connection', (socket) => {
         if (!ch || ch.status !== 'pending') return;
         await supabase.from('challenges').update({ status: 'active' }).eq('id', challengeId);
         const { data: profiles } = await supabase.from('users').select('id, username').in('id', [ch.challenger_id, ch.opponent_id]);
-        const getName = (id) => {
-            const p = profiles?.find(p => p.id === id);
-            return p?.username || 'Giocatore';
-        };
+        const getName = (id) => (profiles?.find(p => p.id === id)?.username) || 'Giocatore';
+
         const challengerSocketId = userSockets.get(ch.challenger_id);
-        const game = {
-            id: challengeId,
-            players: [
-                { profileId: ch.challenger_id, username: getName(ch.challenger_id), socketId: challengerSocketId, shield: false },
-                { profileId: ch.opponent_id,   username: getName(ch.opponent_id),   socketId: socket.id, shield: false }
-            ],
-            lang: ch.lang || 'it',
-            currentPlayerIdx: 0,
-            mancheScore: [0, 0],
-            totalScore: [0, 0],
-            revealed: new Set(),
-            usedLetters: new Set(),
-            phase: 'spin',
-            currentSpinValue: null,
-            timer: null,
-            timerValue: 10
-        };
-        challengeGames.set(challengeId, game);
-        socket.join(`ch:${challengeId}`);
-        if (challengerSocketId) io.in(challengerSocketId).socketsJoin(`ch:${challengeId}`);
-        await chStartGame(game);
+        const phraseRow = await fetchRandomPhrase(ch.lang || 'it');
+        if (!phraseRow) return socket.emit('online:error', { msg: 'Nessuna frase disponibile' });
+
+        // Create a standard online room for the challenge (reuses full game logic)
+        const p1 = { socketId: challengerSocketId, userId: ch.challenger_id, displayName: getName(ch.challenger_id) };
+        const p2 = { socketId: socket.id, userId: ch.opponent_id, displayName: getName(ch.opponent_id), phrase: phraseRow.phrase, hint: phraseRow.hint };
+        const room = createRoom(p1, p2, false);
+
+        // Tell both clients to switch to the online game screen
+        if (challengerSocketId) io.to(challengerSocketId).emit('challenge:room_ready', { code: room.code });
+        socket.emit('challenge:room_ready', { code: room.code });
+
+        // Send initial game state after short delay (let clients render the screen first)
+        setTimeout(() => {
+            emitRoomState(room);
+            startTurnTimer(room);
+        }, 600);
     });
 
     socket.on('challenge:decline', async ({ challengeId }) => {

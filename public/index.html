@@ -160,6 +160,9 @@
                         <span data-i18n="logo.word2">MAGICO</span>
                     </h1>
                 </div>
+                <div class="app-greeting" id="app-greeting" style="display:none;">
+                    Ciao, <span id="app-greeting-name"></span> 👋
+                </div>
 
                 <div class="setup-layout">
 
@@ -351,6 +354,9 @@
                     <div class="prof-record" id="prof-record"></div>
                 </div>
 
+                <!-- Pending challenge invites -->
+                <div id="profile-invites-section" style="display:none;"></div>
+
                 <div class="prof-actions-grid">
                     <button class="prof-action-cell" id="prof-friends-btn">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.31 3.13-6 7-6"/><circle cx="17" cy="8" r="3"/><path d="M13 20c0-3.31 3.13-6 7-6"/></svg>
@@ -381,9 +387,9 @@
                         <button class="fp-close" id="fp-close-btn">✕</button>
                     </div>
                     <div class="fp-add-row">
-                        <input id="fp-username-input" class="fp-input" type="text" placeholder="Username amico" maxlength="20" autocomplete="off">
-                        <button class="fp-add-btn" id="fp-add-btn">Aggiungi</button>
+                        <input id="fp-username-input" class="fp-input" type="text" placeholder="Cerca username..." maxlength="30" autocomplete="off">
                     </div>
+                    <div id="fp-search-results" class="fp-search-results"></div>
                     <div id="fp-add-status" class="fp-add-status"></div>
                     <div class="fp-section-title">Richieste in arrivo</div>
                     <div id="fp-requests-list" class="fp-list"></div>

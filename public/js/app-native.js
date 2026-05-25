@@ -1,8 +1,8 @@
 import { isNative } from './native.js';
-import { login, register, verifySession, logout, getSavedUser, getFriends, sendFriendRequest, getPendingRequests, acceptFriendRequest, currentProfile } from './auth.js';
+import { login, register, verifySession, logout, getSavedUser, getFriends, sendFriendRequest, getPendingRequests, acceptFriendRequest, searchUsers, currentProfile } from './auth.js';
 import { showScreen } from './utils.js';
 import { formatTime } from './solo.js';
-import { initChallengeSocket, sendChallenge } from './challenge.js';
+import { initChallengeSocket, sendChallenge, showChallengeLobby } from './challenge.js';
 import { ic } from './icons.js';
 
 let _onReady = () => {};
@@ -13,6 +13,7 @@ export async function bootNative() {
 
     showScreen('login-screen');
     _wireLoginScreen();
+    _warmServer();
 
     // Try restoring saved session
     const saved = getSavedUser();
@@ -23,6 +24,12 @@ export async function bootNative() {
             return;
         }
     }
+}
+
+function _warmServer() {
+    import('./native.js').then(({ API_BASE }) => {
+        fetch(`${API_BASE}/api/puzzles?lang=it&_warm=1`, { method: 'GET' }).catch(() => {});
+    });
 }
 
 function _wireLoginScreen() {
@@ -111,6 +118,14 @@ function showProfileBar(user) {
     if (profUsername) profUsername.textContent = username;
     if (profAvatar)   profAvatar.textContent   = avatarChar;
 
+    // Greeting in home tab
+    const greeting = document.getElementById('app-greeting');
+    const greetingName = document.getElementById('app-greeting-name');
+    if (greeting && greetingName) {
+        greetingName.textContent = username;
+        greeting.style.display = 'block';
+    }
+
     // Wire spb-signout-btn (used by profile tab sign-out via proxy click)
     const signoutBtn = document.getElementById('spb-signout-btn');
     signoutBtn?.addEventListener('click', () => {
@@ -135,19 +150,41 @@ function openFriendsPanel() {
         document.getElementById('spb-friends-btn')?.addEventListener('click', openFriendsPanel, { once: true });
     }, { once: true });
 
-    document.getElementById('fp-add-btn')?.addEventListener('click', async () => {
-        const input  = document.getElementById('fp-username-input');
-        const status = document.getElementById('fp-add-status');
-        const username = input?.value?.trim();
-        if (!username) return;
-        try {
-            await sendFriendRequest(username);
-            if (status) status.textContent = '✅ Richiesta inviata!';
-            if (input) input.value = '';
-        } catch (e) {
-            if (status) status.textContent = `❌ ${e.message}`;
-        }
-        setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+    // Live user search
+    const fpInput  = document.getElementById('fp-username-input');
+    const fpStatus = document.getElementById('fp-add-status');
+    const fpResults = document.getElementById('fp-search-results');
+
+    let _searchTimer = null;
+    fpInput?.addEventListener('input', () => {
+        clearTimeout(_searchTimer);
+        const q = fpInput.value.trim();
+        if (!fpResults) return;
+        if (q.length < 2) { fpResults.innerHTML = ''; return; }
+        _searchTimer = setTimeout(async () => {
+            fpResults.innerHTML = '<div class="fp-loading">⏳</div>';
+            const users = await searchUsers(q);
+            if (!users.length) {
+                fpResults.innerHTML = '<div class="fp-empty">Nessun utente trovato</div>';
+                return;
+            }
+            fpResults.innerHTML = users.map(u => `
+                <div class="fp-result-row" data-id="${u.id}" data-username="${escHtml(u.username)}">
+                    <span class="fp-name">${escHtml(u.username)}</span>
+                    <button class="fp-add-btn">${ic('user-plus', 15)} Aggiungi</button>
+                </div>`).join('');
+            fpResults.querySelectorAll('.fp-result-row').forEach(row => {
+                row.querySelector('.fp-add-btn')?.addEventListener('click', async () => {
+                    const uname = row.dataset.username;
+                    try {
+                        await sendFriendRequest(uname);
+                        row.innerHTML = `<span class="fp-name">${escHtml(uname)}</span><span style="color:rgba(255,255,255,0.4);font-size:.8rem">✅ Richiesta inviata</span>`;
+                    } catch (e) {
+                        if (fpStatus) { fpStatus.textContent = `❌ ${e.message}`; setTimeout(() => fpStatus.textContent = '', 3000); }
+                    }
+                });
+            });
+        }, 350);
     });
 }
 
@@ -160,10 +197,12 @@ async function refreshFriendsPanel() {
     requestsList.innerHTML = '<div class="fp-loading">⏳</div>';
 
     const [friends, requests] = await Promise.all([getFriends(), getPendingRequests()]);
+    const friendsArr  = Array.isArray(friends)  ? friends  : [];
+    const requestsArr = Array.isArray(requests) ? requests : [];
 
-    requestsList.innerHTML = requests.length === 0
+    requestsList.innerHTML = requestsArr.length === 0
         ? '<div class="fp-empty">Nessuna richiesta</div>'
-        : requests.map(u => `
+        : requestsArr.map(u => `
             <div class="fp-row">
                 <span class="fp-name">${escHtml(u.username)}</span>
                 <button class="fp-accept-btn" data-id="${u.id}">${ic("check",16)} Accetta</button>
@@ -176,9 +215,9 @@ async function refreshFriendsPanel() {
         });
     });
 
-    friendsList.innerHTML = friends.length === 0
+    friendsList.innerHTML = friendsArr.length === 0
         ? '<div class="fp-empty">Nessun amico ancora</div>'
-        : friends.map(u => `
+        : friendsArr.map(u => `
             <div class="fp-row">
                 <span class="fp-name">${escHtml(u.username)}</span>
                 <button class="fp-challenge-btn" data-id="${u.id}">${ic("swords",16)} Sfida</button>
@@ -186,8 +225,10 @@ async function refreshFriendsPanel() {
 
     friendsList.querySelectorAll('.fp-challenge-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            sendChallenge(btn.dataset.id);
+            const username = btn.closest('.fp-row')?.querySelector('.fp-name')?.textContent || '?';
             document.getElementById('friends-panel').style.display = 'none';
+            showChallengeLobby(username);
+            sendChallenge(btn.dataset.id);
         });
     });
 }

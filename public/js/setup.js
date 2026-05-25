@@ -15,6 +15,10 @@ export function resetSoloSelection() {
     _activateSolo();
 }
 
+export function refreshModeInfoCard() {
+    updateModeInfoCard(soloSelected ? 'solo' : 'multi');
+}
+
 let playerCount = 2;
 let soloSelected = true;
 

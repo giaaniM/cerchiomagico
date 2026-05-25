@@ -3,25 +3,49 @@ import { currentProfile } from './auth.js';
 import { t, getCurrentLang } from './lang.js';
 import { showScreen } from './utils.js';
 import { soundManager } from './sound.js';
+import { gameState } from './state.js';
+import { elements } from './elements.js';
+import { createBoard, revealLetter } from './board.js';
+import { renderPlayersList } from './players.js';
+import { drawWheel, renderWheelToCache } from './wheel.js';
 
 let socket = null;
 let roomCode = null;
 let myIndex = null;
 let roomState = null;
-let timerInterval = null;
+let _onlineMode = false;
+let _prevPhrase = null;
+let _wheelSpinning = false;
+let _spinResultPending = null;
 
 // ── Connect ──
+function _registerSocketHandlers(s) {
+    s.on('online:state', onState);
+    s.on('online:timer', onTimer);
+    s.on('online:spin_result', onSpinResult);
+    s.on('online:match_found', onMatchFound);
+    s.on('online:waiting', onWaiting);
+    s.on('online:private_created', onPrivateCreated);
+    s.on('online:error', onServerError);
+}
+
 function ensureSocket() {
     if (socket?.connected) return socket;
     socket = window.io(SOCKET_URL);
-    socket.on('online:state', onState);
-    socket.on('online:timer', onTimer);
-    socket.on('online:spin_result', onSpinResult);
-    socket.on('online:match_found', onMatchFound);
-    socket.on('online:waiting', onWaiting);
-    socket.on('online:private_created', onPrivateCreated);
-    socket.on('online:error', onServerError);
+    _registerSocketHandlers(socket);
     return socket;
+}
+
+// Called from challenge.js when challenge is accepted — reuses existing socket
+export function joinChallengeRoom(code, challengeSocket) {
+    roomCode = code;
+    if (challengeSocket && (!socket || socket === challengeSocket)) {
+        socket = challengeSocket;
+        _registerSocketHandlers(socket);
+    } else {
+        ensureSocket();
+    }
+    _initOnlineGameScreen();
 }
 
 // ── Public API ──
@@ -100,11 +124,6 @@ export function joinPrivateRoom(code) {
     });
 }
 
-export function spinWheel() {
-    if (!canAct('spin')) return;
-    socket?.emit('online:spin', { code: roomCode });
-}
-
 export function callConsonant(letter) {
     if (!canAct('letter')) return;
     socket?.emit('online:call_consonant', { code: roomCode, letter });
@@ -125,32 +144,269 @@ export function pass() {
 }
 
 function canAct(phase) {
-    return roomState && myIndex === roomState.currentTurn && roomState.phase === phase && roomState.status === 'playing';
+    if (!roomState || myIndex !== roomState.currentTurn || roomState.status !== 'playing') return false;
+    return roomState.phase === phase;
+}
+
+// ── Main game screen for online play ──
+
+function _initOnlineGameScreen() {
+    _onlineMode = true;
+    _prevPhrase = null;
+    _wheelSpinning = false;
+    _spinResultPending = null;
+
+    showScreen('game-screen');
+
+    // Initialize wheel canvas
+    renderWheelToCache();
+    drawWheel(gameState.wheelRotation || 0);
+
+    // Hide loader
+    const loader = document.getElementById('game-loader');
+    if (loader) loader.style.display = 'none';
+
+    // Adapt UI for online mode
+    const skipBtn = document.getElementById('skip-phrase-btn');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const soloTimerWrap = document.getElementById('solo-timer-wrap');
+    const footer = document.querySelector('.game-footer');
+    if (skipBtn) skipBtn.style.display = 'none';
+    if (newGameBtn) newGameBtn.style.display = 'none';
+    if (footer) footer.style.display = 'none';
+
+    // Repurpose solo timer for online countdown
+    if (soloTimerWrap) {
+        soloTimerWrap.style.display = 'flex';
+        const label = soloTimerWrap.querySelector('.solo-timer-label');
+        if (label) label.textContent = '⏱ TURNO';
+        const recordRow = document.getElementById('solo-record-row');
+        if (recordRow) recordRow.style.display = 'none';
+    }
+
+    // Manche indicator → "ONLINE"
+    const mancheIndicator = document.querySelector('.manche-indicator');
+    if (mancheIndicator) mancheIndicator.innerHTML = '<span style="font-size:0.9rem;letter-spacing:1px;opacity:0.9;">🌐 ONLINE</span>';
+
+    // Show home button as exit (top-right quick action)
+    const homeBtn = document.getElementById('home-btn');
+    if (homeBtn) {
+        homeBtn.style.display = 'flex';
+        homeBtn.onclick = () => _exitOnlineGame();
+    }
+
+    // Inject "Abbandona" button into game footer
+    let abandonBtn = document.getElementById('online-abandon-btn');
+    if (!abandonBtn) {
+        const footer = document.querySelector('.game-footer') || document.getElementById('game-screen');
+        abandonBtn = document.createElement('div');
+        abandonBtn.id = 'online-abandon-btn';
+        abandonBtn.style.cssText = 'display:flex;justify-content:center;padding:8px 0 12px;';
+        abandonBtn.innerHTML = '<button style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.45);font-size:0.8rem;padding:6px 18px;border-radius:20px;cursor:pointer;letter-spacing:0.05em;">🏳 Abbandona partita</button>';
+        abandonBtn.querySelector('button').onclick = () => _exitOnlineGame();
+        footer?.parentNode?.insertBefore(abandonBtn, footer.nextSibling) || document.getElementById('game-screen')?.appendChild(abandonBtn);
+    }
+    abandonBtn.style.display = 'flex';
+
+    // Override control buttons
+    _overrideControls();
+}
+
+let _controlsWired = false;
+
+function _overrideControls() {
+    if (_controlsWired) return; // Add listeners once only; _onlineMode flag guards behavior
+    _controlsWired = true;
+
+    // Capture-phase listeners fire before game-logic handlers.
+    // When _onlineMode is true: handle + stop propagation.
+    // When _onlineMode is false: do nothing, let local game handler run.
+
+    document.getElementById('spin-btn')?.addEventListener('click', e => {
+        if (!_onlineMode) return;
+        e.stopImmediatePropagation();
+        if (_wheelSpinning) return;
+        const phase = roomState?.phase;
+        if (phase !== 'spin' && phase !== 'action') return;
+        if (myIndex !== roomState?.currentTurn || roomState?.status !== 'playing') return;
+        soundManager.playClick?.();
+        _doOnlineSpin();
+        socket?.emit('online:spin', { code: roomCode });
+    }, true);
+
+    document.getElementById('consonant-btn')?.addEventListener('click', e => {
+        if (!_onlineMode) return;
+        e.stopImmediatePropagation();
+        const letter = document.getElementById('consonant-input')?.value.trim().toUpperCase().slice(0, 1);
+        if (!letter || !canAct('letter')) return;
+        soundManager.playClick?.();
+        callConsonant(letter);
+        const ci = document.getElementById('consonant-input');
+        if (ci) ci.value = '';
+    }, true);
+
+    document.getElementById('vowel-btn')?.addEventListener('click', e => {
+        if (!_onlineMode) return;
+        e.stopImmediatePropagation();
+        const letter = document.getElementById('vowel-input')?.value.trim().toUpperCase().slice(0, 1);
+        if (!letter || !canAct('action')) return;
+        soundManager.playClick?.();
+        buyVowel(letter);
+        const vi = document.getElementById('vowel-input');
+        if (vi) vi.value = '';
+    }, true);
+
+    document.getElementById('solve-btn')?.addEventListener('click', e => {
+        if (!_onlineMode) return;
+        e.stopImmediatePropagation();
+        const attempt = document.getElementById('solution-input')?.value.trim();
+        if (!attempt || myIndex !== roomState?.currentTurn) return;
+        soundManager.playClick?.();
+        solve(attempt);
+        const si = document.getElementById('solution-input');
+        if (si) si.value = '';
+    }, true);
+}
+
+// ── Wheel spin animation ──
+
+function _doOnlineSpin() {
+    _wheelSpinning = true;
+    _spinResultPending = null;
+
+    const overlay = document.getElementById('wheel-overlay');
+    if (overlay) overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    renderWheelToCache();
+
+    const duration = 3000;
+    const start = performance.now();
+    let rot = gameState.wheelRotation || 0;
+
+    function animate(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        // Speed: fast at start, slow at end
+        const speed = (1 - ease) * 15 + 0.5;
+        rot += speed;
+        gameState.wheelRotation = rot;
+        drawWheel(rot);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            _finishSpin();
+        }
+    }
+    requestAnimationFrame(animate);
+}
+
+function _finishSpin() {
+    _wheelSpinning = false;
+    const overlay = document.getElementById('wheel-overlay');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+
+    if (_spinResultPending != null) {
+        _showSpinResult(_spinResultPending);
+        _spinResultPending = null;
+    }
+}
+
+function _showSpinResult(value) {
+    soundManager.playSpin?.();
+    const msgEl = document.getElementById('message-display');
+    if (!msgEl) return;
+    const text = typeof value === 'number'
+        ? `💰 €${value.toLocaleString('it-IT')}`
+        : `⚡ ${value}`;
+    msgEl.textContent = text;
+    msgEl.style.color = typeof value === 'number' ? '#4ade80' : '#f87171';
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 3000);
+}
+
+// Short spin animation for the observer (other player)
+function _doOnlineSpinObserver() {
+    _wheelSpinning = true;
+
+    const overlay = document.getElementById('wheel-overlay');
+    if (overlay) overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    renderWheelToCache();
+
+    const duration = 1800;
+    const start = performance.now();
+    let rot = gameState.wheelRotation || 0;
+
+    function animate(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const speed = (1 - ease) * 15 + 0.5;
+        rot += speed;
+        gameState.wheelRotation = rot;
+        drawWheel(rot);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            _finishSpin();
+        }
+    }
+    requestAnimationFrame(animate);
+}
+
+function _exitOnlineGame() {
+    _onlineMode = false;
+    socket?.emit('online:pass', { code: roomCode });
+    const homeBtn = document.getElementById('home-btn');
+    if (homeBtn) homeBtn.style.display = 'none';
+    const abandonBtn = document.getElementById('online-abandon-btn');
+    if (abandonBtn) abandonBtn.style.display = 'none';
+    const skipBtn = document.getElementById('skip-phrase-btn');
+    const footer = document.querySelector('.game-footer');
+    if (skipBtn) skipBtn.style.display = '';
+    if (footer) footer.style.display = '';
+    document.getElementById('og-gameover-overlay')?.remove();
+    showScreen('setup-screen');
 }
 
 // ── Event handlers ──
+
 function onMatchFound({ code, vsBot }) {
     roomCode = code;
-    showOnlineGameScreen();
-    if (vsBot) showMessage('Nessun avversario trovato. Giochi contro il Bot 🤖');
+    _initOnlineGameScreen();
+    if (vsBot) {
+        const msgEl = document.getElementById('message-display');
+        if (msgEl) msgEl.textContent = 'Nessun avversario trovato. Giochi contro il Bot 🤖';
+    }
 }
 
 function onState(state) {
     roomState = state;
     myIndex = state.myIndex;
-    renderOnlineGame(state);
+    _renderToMainScreen(state);
 }
 
 function onTimer(secs) {
-    const el = document.getElementById('online-timer');
-    if (el) {
-        el.textContent = secs;
-        el.className = 'online-timer' + (secs <= 3 ? ' urgent' : '');
+    const timerEl = document.getElementById('solo-timer');
+    if (timerEl) {
+        const s = typeof secs === 'number' ? secs : 10;
+        timerEl.textContent = s < 10 ? `0:0${s}` : `0:${s}`;
+        timerEl.style.color = s <= 3 ? '#ef4444' : '';
     }
 }
 
 function onSpinResult({ segment }) {
-    soundManager.playSpin?.();
+    _spinResultPending = segment?.value ?? null;
+    if (!_wheelSpinning) {
+        // We're the observer — show wheel spinning too
+        _doOnlineSpinObserver();
+    }
+    // If _wheelSpinning: we're the active player, animation already running, _finishSpin will pick up _spinResultPending
 }
 
 function onWaiting({ position }) {
@@ -163,7 +419,177 @@ function onPrivateCreated({ code }) {
 }
 
 function onServerError({ msg }) {
-    showMessage(msg, 'error');
+    const msgEl = document.getElementById('message-display');
+    if (msgEl) { msgEl.textContent = `⚠️ ${msg}`; msgEl.style.color = '#f87171'; }
+}
+
+// ── Render to main game screen ──
+
+function _renderToMainScreen(state) {
+    if (!_onlineMode) return;
+
+    const players = state.players || [];
+
+    // gameState.players expected as [{name}]
+    gameState.players = players.map(p => ({ name: p.displayName }));
+    gameState.currentPlayerIndex = state.currentTurn ?? 0;
+
+    // Scores keyed by displayName
+    gameState.partialScores = {};
+    gameState.totalScores = {};
+    players.forEach((p, i) => {
+        gameState.partialScores[p.displayName] = state.scores?.[i] ?? 0;
+        gameState.totalScores[p.displayName] = state.total?.[i] ?? 0;
+    });
+
+    // Hint
+    if (elements.hintText) elements.hintText.textContent = state.hint || '';
+
+    // Board — init once per phrase
+    if (state.normalized && state.normalized !== _prevPhrase) {
+        _prevPhrase = state.normalized;
+        gameState.phrase = state.normalized;
+        gameState.revealedLetters = new Set();
+        const words = state.normalized.split(' ');
+        console.warn('[ONLINE] createBoard phrase:', JSON.stringify(state.normalized));
+        console.warn('[ONLINE] words:', words, 'lengths:', words.map(w => w.length));
+        createBoard();
+    }
+
+    // Reveal letters that haven't been shown yet
+    (state.revealed || []).forEach(letter => {
+        if (!gameState.revealedLetters.has(letter)) {
+            revealLetter(letter, false);
+        }
+    });
+
+    // Players list + total winnings
+    renderPlayersList();
+
+    // Controls
+    const isMyTurn = state.currentTurn === myIndex && state.status === 'playing';
+    _updateControls(state, isMyTurn);
+
+    // Timer
+    if (state.timerLeft != null) onTimer(state.timerLeft);
+
+    // Game over
+    if (state.status === 'finished') _showGameOver(state);
+}
+
+function _updateControls(state, isMyTurn) {
+    const spinBtn    = document.getElementById('spin-btn');
+    const consCont   = document.getElementById('consonant-call-container');
+    const vowelGroup = document.getElementById('vowel-group');
+    const solveGroup = document.getElementById('solve-group');
+    const exprCont   = document.getElementById('express-input-container');
+    const finalCont  = document.getElementById('final-round-input-container');
+    const centralArea = document.getElementById('central-action-area');
+    const msgEl      = document.getElementById('message-display');
+
+    // Always hide express / final round modes
+    if (exprCont)  exprCont.style.display  = 'none';
+    if (finalCont) finalCont.style.display = 'none';
+    if (centralArea) centralArea.style.display = 'flex';
+
+    if (!isMyTurn) {
+        const opponentName = state.players?.[state.currentTurn]?.displayName || '…';
+        if (spinBtn) {
+            spinBtn.style.display  = 'block';
+            spinBtn.disabled       = true;
+            spinBtn.textContent    = `⏳ ${opponentName}`;
+        }
+        if (consCont)   consCont.style.display   = 'none';
+        if (vowelGroup) vowelGroup.style.display  = 'none';
+        if (solveGroup) solveGroup.style.display  = 'none';
+        if (msgEl) { msgEl.textContent = `Turno di ${opponentName}...`; msgEl.style.color = ''; }
+        return;
+    }
+
+    if (msgEl && state.phase === 'spin') { msgEl.textContent = '🎯 Tocca a te!'; msgEl.style.color = '#4ade80'; }
+
+    // My turn
+    if (state.phase === 'spin') {
+        if (spinBtn) {
+            spinBtn.style.display = 'block';
+            spinBtn.disabled      = false;
+            spinBtn.textContent   = t('game.spin') || 'GIRA IL CERCHIO';
+        }
+        if (consCont)   consCont.style.display   = 'none';
+        if (vowelGroup) vowelGroup.style.display  = 'none';
+        if (solveGroup) solveGroup.style.display  = 'none';
+
+    } else if (state.phase === 'letter') {
+        if (spinBtn) spinBtn.style.display = 'none';
+        if (consCont) {
+            consCont.style.display = 'flex';
+            const valEl = document.getElementById('current-wheel-value');
+            if (valEl) valEl.textContent = `€${(state.pendingValue || 0).toLocaleString('it-IT')}`;
+        }
+        if (vowelGroup) vowelGroup.style.display  = 'none';
+        if (solveGroup) solveGroup.style.display  = 'block';
+        // Focus consonant input
+        const ci = document.getElementById('consonant-input');
+        if (ci) { ci.value = ''; ci.disabled = false; setTimeout(() => ci.focus(), 50); }
+        const cb = document.getElementById('consonant-btn');
+        if (cb) cb.disabled = false;
+
+    } else if (state.phase === 'action') {
+        // Spin again + optional vowel + solve
+        if (spinBtn) {
+            spinBtn.style.display = 'block';
+            spinBtn.disabled      = false;
+            spinBtn.textContent   = '🎡 Gira ancora';
+        }
+        if (consCont) consCont.style.display = 'none';
+
+        const canVowel = (state.total?.[myIndex] ?? 0) >= 1000;
+        if (vowelGroup) {
+            vowelGroup.style.display = canVowel ? 'flex' : 'none';
+            const vi = document.getElementById('vowel-input');
+            const vb = document.getElementById('vowel-btn');
+            if (vi) { vi.value = ''; vi.disabled = false; }
+            if (vb) vb.disabled = false;
+        }
+        if (solveGroup) solveGroup.style.display = 'block';
+        const si = document.getElementById('solution-input');
+        const sb = document.getElementById('solve-btn');
+        if (si) si.disabled = false;
+        if (sb) sb.disabled = false;
+    }
+}
+
+function _showGameOver(state) {
+    const winnerIdx = (state.total?.[0] ?? 0) >= (state.total?.[1] ?? 0) ? 0 : 1;
+    const iWon = winnerIdx === myIndex;
+
+    // Remove existing overlay if any
+    document.getElementById('og-gameover-overlay')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'og-gameover-overlay';
+    overlay.className = 'og-gameover-overlay';
+    overlay.innerHTML = `
+        <div class="og-gameover-card">
+            <div class="og-gameover-icon">${iWon ? '🏆' : '😔'}</div>
+            <div class="og-gameover-title">${iWon ? (t('online.won') || 'Hai vinto!') : (t('online.lost') || 'Hai perso!')}</div>
+            <div class="og-gameover-scores">
+                ${(state.players || []).map((p, i) => `
+                    <div class="og-gameover-row ${i === winnerIdx ? 'og-gameover-winner' : ''}">
+                        <span>${p.displayName}</span>
+                        <span>€${Number(state.total?.[i] ?? 0).toLocaleString('it-IT')}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <button class="btn-primary og-home-btn" id="og-home-btn">🏠 ${t('online.home') || 'Torna alla Home'}</button>
+        </div>
+    `;
+    document.getElementById('game-screen')?.appendChild(overlay);
+
+    document.getElementById('og-home-btn')?.addEventListener('click', () => {
+        overlay.remove();
+        _exitOnlineGame();
+    });
 }
 
 // ── UI: Matchmaking screen ──
@@ -178,8 +604,8 @@ function showMatchmakingScreen(mode) {
     el.innerHTML = `
         <div class="mm-container">
             <div class="mm-spinner">🔄</div>
-            <div class="mm-title">${mode === 'searching' ? t('online.searching') : t('online.waiting') || 'Attendo...'}</div>
-            <div class="mm-status" id="mm-status">${t('online.timeout')}</div>
+            <div class="mm-title">${mode === 'searching' ? (t('online.searching') || 'Ricerca avversario...') : (t('online.waiting') || 'Attendo...')}</div>
+            <div class="mm-status" id="mm-status">${t('online.timeout') || ''}</div>
             <button class="mm-cancel-btn" id="mm-cancel-btn">${t('cancel') || 'Annulla'}</button>
         </div>
     `;
@@ -211,229 +637,4 @@ function showPrivateRoomScreen(code) {
     });
     document.getElementById('mm-cancel-btn')?.addEventListener('click', () => showScreen('setup-screen'));
     showScreen('online-private-screen');
-}
-
-// ── UI: Online game screen ──
-function showOnlineGameScreen() {
-    let el = document.getElementById('online-game-screen');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'online-game-screen';
-        el.className = 'screen online-screen';
-        document.querySelector('.game-container').appendChild(el);
-        el.innerHTML = buildOnlineGameHTML();
-        wireOnlineGameControls();
-    }
-    showScreen('online-game-screen');
-}
-
-function buildOnlineGameHTML() {
-    return `
-    <div class="og-container">
-        <!-- Header: scores + timer -->
-        <div class="og-header">
-            <div class="og-player-card" id="og-player-0">
-                <span class="og-player-name" id="og-name-0">—</span>
-                <span class="og-player-score" id="og-score-0">€0</span>
-            </div>
-            <div class="og-timer-wrap">
-                <div class="online-timer" id="online-timer">${10}</div>
-                <div class="og-hint" id="og-hint"></div>
-            </div>
-            <div class="og-player-card og-player-right" id="og-player-1">
-                <span class="og-player-name" id="og-name-1">—</span>
-                <span class="og-player-score" id="og-score-1">€0</span>
-            </div>
-        </div>
-
-        <!-- Board -->
-        <div class="og-board" id="og-board"></div>
-
-        <!-- Turn banner -->
-        <div class="og-turn-banner" id="og-turn-banner"></div>
-
-        <!-- Actions -->
-        <div class="og-actions" id="og-actions">
-            <button class="og-btn og-spin-btn" id="og-spin-btn">🎡 Gira</button>
-            <button class="og-btn og-solve-btn" id="og-solve-btn">💡 Risolvi</button>
-        </div>
-
-        <!-- Letter keyboard -->
-        <div class="og-keyboard" id="og-keyboard">
-            <div class="og-consonants" id="og-consonants"></div>
-            <div class="og-vowels" id="og-vowels"></div>
-        </div>
-
-        <!-- Solve input (hidden by default) -->
-        <div class="og-solve-area" id="og-solve-area" style="display:none;">
-            <input id="og-solve-input" class="og-solve-input" type="text" placeholder="Scrivi la frase..." autocomplete="off" autocorrect="off" autocapitalize="characters">
-            <button class="og-btn" id="og-solve-confirm">✓ Conferma</button>
-            <button class="og-btn og-btn-secondary" id="og-solve-cancel">✕</button>
-        </div>
-    </div>
-    `;
-}
-
-const CONSONANTS = 'BCDFGHJKLMNPQRSTVWXYZ'.split('');
-const VOWELS = ['A','E','I','O','U'];
-
-function wireOnlineGameControls() {
-    document.getElementById('og-spin-btn')?.addEventListener('click', () => { soundManager.playClick(); spinWheel(); });
-
-    document.getElementById('og-solve-btn')?.addEventListener('click', () => {
-        soundManager.playClick();
-        document.getElementById('og-solve-area').style.display = 'flex';
-        document.getElementById('og-solve-input')?.focus();
-    });
-
-    document.getElementById('og-solve-confirm')?.addEventListener('click', () => {
-        const val = document.getElementById('og-solve-input')?.value || '';
-        solve(val);
-        document.getElementById('og-solve-area').style.display = 'none';
-    });
-
-    document.getElementById('og-solve-cancel')?.addEventListener('click', () => {
-        document.getElementById('og-solve-area').style.display = 'none';
-    });
-
-    document.getElementById('og-solve-input')?.addEventListener('keydown', e => {
-        if (e.key === 'Enter') document.getElementById('og-solve-confirm')?.click();
-    });
-
-    // Build consonant buttons
-    const consDiv = document.getElementById('og-consonants');
-    if (consDiv) {
-        CONSONANTS.forEach(l => {
-            const btn = document.createElement('button');
-            btn.className = 'og-key og-consonant-key';
-            btn.textContent = l;
-            btn.dataset.letter = l;
-            btn.addEventListener('click', () => { soundManager.playClick(); callConsonant(l); });
-            consDiv.appendChild(btn);
-        });
-    }
-
-    // Build vowel buttons
-    const vowDiv = document.getElementById('og-vowels');
-    if (vowDiv) {
-        VOWELS.forEach(l => {
-            const btn = document.createElement('button');
-            btn.className = 'og-key og-vowel-key';
-            btn.textContent = l;
-            btn.dataset.letter = l;
-            btn.addEventListener('click', () => { soundManager.playClick(); buyVowel(l); });
-            vowDiv.appendChild(btn);
-        });
-    }
-}
-
-function renderOnlineGame(state) {
-    // Player names + scores
-    state.players.forEach((p, i) => {
-        const nameEl = document.getElementById(`og-name-${i}`);
-        const scoreEl = document.getElementById(`og-score-${i}`);
-        if (nameEl) nameEl.textContent = p.displayName;
-        if (scoreEl) scoreEl.textContent = `€${Number(p.score).toLocaleString('it-IT')}`;
-
-        const card = document.getElementById(`og-player-${i}`);
-        if (card) {
-            card.classList.toggle('og-active-player', i === state.currentTurn);
-            card.classList.toggle('og-my-player', i === myIndex);
-        }
-    });
-
-    // Hint
-    const hintEl = document.getElementById('og-hint');
-    if (hintEl) hintEl.textContent = state.hint || '';
-
-    // Board
-    renderBoard(state);
-
-    // Turn banner
-    const banner = document.getElementById('og-turn-banner');
-    if (banner) {
-        const isMyTurn = state.currentTurn === myIndex;
-        banner.textContent = isMyTurn
-            ? `🎯 ${t('online.myturn')}`
-            : `⏳ ${t('online.theirturn').replace('{name}', state.players[state.currentTurn]?.displayName || '…')}`;
-        banner.className = 'og-turn-banner' + (isMyTurn ? ' og-my-turn' : '');
-    }
-
-    // Controls visibility
-    const isMyTurn = state.currentTurn === myIndex && state.status === 'playing';
-    const spinBtn = document.getElementById('og-spin-btn');
-    const solveBtn = document.getElementById('og-solve-btn');
-    const keyboard = document.getElementById('og-keyboard');
-
-    if (spinBtn) spinBtn.style.display = (isMyTurn && state.phase === 'spin') ? '' : 'none';
-    if (solveBtn) solveBtn.style.display = isMyTurn ? '' : 'none';
-
-    // Keyboard: show consonants on 'letter', vowels on 'action'
-    const consDiv = document.getElementById('og-consonants');
-    const vowDiv = document.getElementById('og-vowels');
-    if (consDiv) consDiv.style.display = (isMyTurn && state.phase === 'letter') ? '' : 'none';
-    if (vowDiv) vowDiv.style.display = (isMyTurn && state.phase === 'action') ? '' : 'none';
-
-    // Mark used letters
-    document.querySelectorAll('.og-key').forEach(btn => {
-        btn.disabled = state.used.includes(btn.dataset.letter);
-        btn.classList.toggle('og-key-used', state.used.includes(btn.dataset.letter));
-    });
-
-    // Game over
-    if (state.status === 'finished') {
-        showGameOver(state);
-    }
-}
-
-function renderBoard(state) {
-    const board = document.getElementById('og-board');
-    if (!board) return;
-    const normalized = state.normalized;
-    const revealed = new Set(state.revealed);
-    const words = normalized.split(' ');
-    board.innerHTML = words.map(word => {
-        const letters = word.split('').map(l => {
-            const show = revealed.has(l);
-            return `<span class="og-tile ${show ? 'og-tile-revealed' : ''}">${show ? l : ''}</span>`;
-        }).join('');
-        return `<div class="og-word">${letters}</div>`;
-    }).join('');
-}
-
-function showGameOver(state) {
-    const winnerIdx = state.total[0] >= state.total[1] ? 0 : 1;
-    const iWon = winnerIdx === myIndex;
-    const overlay = document.createElement('div');
-    overlay.className = 'og-gameover-overlay';
-    overlay.innerHTML = `
-        <div class="og-gameover-card">
-            <div class="og-gameover-icon">${iWon ? '🏆' : '😔'}</div>
-            <div class="og-gameover-title">${iWon ? t('online.won') : t('online.lost')}</div>
-            <div class="og-gameover-scores">
-                ${state.players.map((p, i) => `
-                    <div class="og-gameover-row ${i === winnerIdx ? 'og-gameover-winner' : ''}">
-                        <span>${p.displayName}</span>
-                        <span>€${Number(state.total[i]).toLocaleString('it-IT')}</span>
-                    </div>
-                `).join('')}
-            </div>
-            <button class="btn-primary og-rematch-btn" id="og-rematch-btn">🔄 ${t('online.rematch')}</button>
-            <button class="og-btn-secondary og-home-btn" id="og-home-btn">🏠 ${t('online.home')}</button>
-        </div>
-    `;
-    document.getElementById('online-game-screen')?.appendChild(overlay);
-    document.getElementById('og-rematch-btn')?.addEventListener('click', () => {
-        overlay.remove();
-        joinMatchmaking();
-    });
-    document.getElementById('og-home-btn')?.addEventListener('click', () => {
-        overlay.remove();
-        showScreen('setup-screen');
-    });
-}
-
-function showMessage(text, type = 'info') {
-    const el = document.getElementById('og-turn-banner');
-    if (el) { el.textContent = text; el.className = `og-turn-banner og-msg-${type}`; }
 }

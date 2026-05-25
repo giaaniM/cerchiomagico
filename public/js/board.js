@@ -51,6 +51,7 @@ export function splitPhraseIntoRows(words, rowLimits) {
 }
 
 export function createBoard() {
+    console.log('[BOARD] createBoard called, phrase:', JSON.stringify(gameState.phrase), new Error().stack.split('\n')[2]?.trim());
     elements.gameBoard.innerHTML = '';
     const words = gameState.phrase.split(' ');
     const BOARD_ROWS = 4;
@@ -61,7 +62,7 @@ export function createBoard() {
     let contentRows = splitPhraseIntoRows(words, ROW_CAPACITIES);
 
     if (!contentRows) {
-        console.error("Frase troppo lunga per il tabellone!");
+        console.error("Frase troppo lunga per il tabellone! Frase:", JSON.stringify(gameState.phrase), "Parole:", words);
         return;
     }
 

@@ -5,6 +5,9 @@ import { ic } from './icons.js';
 
 let socket = null;
 
+// Pending invites kept in memory so they survive banner dismissal
+const _pendingInvites = [];
+
 export function getChallengeSocket() { return socket; }
 
 export function initChallengeSocket(existingSocket) {
@@ -14,16 +17,34 @@ export function initChallengeSocket(existingSocket) {
         socket = window.io(SOCKET_URL);
     }
 
-    socket.on('challenge:invite', ({ challengeId, from, lang }) => showInvite(challengeId, from, lang));
-    socket.on('challenge:sent', ({ challengeId }) => {
-        const el = document.getElementById('ch-send-status');
-        if (el) el.textContent = 'Sfida inviata! In attesa...';
+    // Re-auth after reconnect (server restart clears userSockets)
+    socket.on('connect', () => authSocket());
+
+    socket.on('challenge:invite', ({ challengeId, from, lang }) => {
+        _currentChallengeId = challengeId;
+        // Store invite if not already present
+        if (!_pendingInvites.find(i => i.challengeId === challengeId)) {
+            const invite = { challengeId, from, lang, ts: Date.now() };
+            _pendingInvites.push(invite);
+            // Auto-expire after 30s
+            setTimeout(() => _removeInvite(challengeId), 30000);
+        }
+        showBadge();
+        showInvite(challengeId, from, lang);
+        _renderProfileInvites();
     });
-    socket.on('challenge:declined', ({ challengeId }) => {
-        showToast('La sfida è stata rifiutata.');
+    socket.on('challenge:sent', () => {
+        _lobbySetState('waiting');
     });
-    socket.on('challenge:started', ({ players }) => {
-        buildUI(players);
+    socket.on('challenge:declined', () => {
+        _lobbySetState('declined');
+    });
+    socket.on('challenge:room_ready', ({ code }) => {
+        _closeLobby();
+        clearBadge();
+        _pendingInvites.length = 0;
+        _renderProfileInvites();
+        import('./online-game.js').then(m => m.joinChallengeRoom(code, socket));
     });
     socket.on('challenge:state', (state) => renderState(state));
     socket.on('challenge:timer', ({ seconds }) => {
@@ -41,6 +62,60 @@ function authSocket() {
     socket.emit('challenge:auth', {
         profileId: currentProfile.id,
         username: currentProfile.username
+    });
+}
+
+function _removeInvite(challengeId) {
+    const idx = _pendingInvites.findIndex(i => i.challengeId === challengeId);
+    if (idx !== -1) _pendingInvites.splice(idx, 1);
+    _renderProfileInvites();
+    if (_pendingInvites.length === 0) clearBadge();
+}
+
+export function renderProfileInvites() {
+    _renderProfileInvites();
+}
+
+function _renderProfileInvites() {
+    const section = document.getElementById('profile-invites-section');
+    if (!section) return;
+    if (_pendingInvites.length === 0) {
+        section.style.display = 'none';
+        section.innerHTML = '';
+        return;
+    }
+    section.style.display = 'block';
+    section.innerHTML = `
+        <div class="pi-title">⚔️ Sfide in arrivo</div>
+        ${_pendingInvites.map(inv => `
+            <div class="pi-row" data-cid="${inv.challengeId}">
+                <div class="pi-avatar">${escHtml(inv.from[0]?.toUpperCase() ?? '?')}</div>
+                <div class="pi-info">
+                    <div class="pi-from">${escHtml(inv.from)}</div>
+                    <div class="pi-sub">ti ha sfidato!</div>
+                </div>
+                <div class="pi-btns">
+                    <button class="pi-accept" data-cid="${inv.challengeId}">✓</button>
+                    <button class="pi-decline" data-cid="${inv.challengeId}">✕</button>
+                </div>
+            </div>
+        `).join('')}
+    `;
+    section.querySelectorAll('.pi-accept').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const cid = btn.dataset.cid;
+            socket?.emit('challenge:accept', { challengeId: cid });
+            _removeInvite(cid);
+            document.getElementById('ch-invite-banner')?.remove();
+        });
+    });
+    section.querySelectorAll('.pi-decline').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const cid = btn.dataset.cid;
+            socket?.emit('challenge:decline', { challengeId: cid });
+            _removeInvite(cid);
+            document.getElementById('ch-invite-banner')?.remove();
+        });
     });
 }
 
@@ -215,31 +290,113 @@ function renderState(state) {
 }
 
 let _currentChallengeId = null;
+let _lobbyOpponent = '';
 function getCurrentChallengeId() { return _currentChallengeId; }
 
+// ── Lobby (challenger waiting) ──
+
+export function showChallengeLobby(opponentUsername) {
+    _lobbyOpponent = opponentUsername;
+    let lobby = document.getElementById('ch-lobby');
+    if (!lobby) {
+        lobby = document.createElement('div');
+        lobby.id = 'ch-lobby';
+        document.body.appendChild(lobby);
+    }
+    lobby.innerHTML = `
+        <div class="ch-lobby-box">
+            <div class="ch-lobby-avatar">${escHtml(opponentUsername[0]?.toUpperCase() ?? '?')}</div>
+            <div class="ch-lobby-name">${escHtml(opponentUsername)}</div>
+            <div class="ch-lobby-dots" id="ch-lobby-msg">
+                <span class="ch-lobby-text">Sfida inviata</span>
+                <span class="ch-dot-anim"><span>.</span><span>.</span><span>.</span></span>
+            </div>
+            <button class="ch-lobby-cancel" id="ch-lobby-cancel">${ic('x', 16)} Annulla</button>
+        </div>`;
+    lobby.style.display = 'flex';
+    document.getElementById('ch-lobby-cancel')?.addEventListener('click', () => {
+        if (_currentChallengeId && socket?.connected) {
+            socket.emit('challenge:cancel', { challengeId: _currentChallengeId });
+        }
+        _closeLobby();
+    });
+}
+
+function _lobbySetState(state) {
+    const msg = document.getElementById('ch-lobby-msg');
+    const cancelBtn = document.getElementById('ch-lobby-cancel');
+    if (!msg) return;
+    if (state === 'waiting') {
+        msg.innerHTML = `<span class="ch-lobby-text">In attesa che accetti</span><span class="ch-dot-anim"><span>.</span><span>.</span><span>.</span></span>`;
+    } else if (state === 'declined') {
+        msg.innerHTML = `<span class="ch-lobby-text ch-lobby-declined">${ic('x-circle', 18)} Ha rifiutato la sfida</span>`;
+        if (cancelBtn) { cancelBtn.textContent = 'Chiudi'; cancelBtn.style.marginTop = '8px'; }
+    }
+}
+
+function _closeLobby() {
+    const lobby = document.getElementById('ch-lobby');
+    if (lobby) lobby.style.display = 'none';
+    _currentChallengeId = null;
+}
+
+// ── Badge notifica sul tab Profilo ──
+
+function showBadge() {
+    const tab = document.getElementById('btb-profile');
+    if (!tab) return;
+    if (!tab.querySelector('.btb-badge')) {
+        const dot = document.createElement('span');
+        dot.className = 'btb-badge';
+        tab.appendChild(dot);
+    }
+}
+
+function clearBadge() {
+    document.querySelector('#btb-profile .btb-badge')?.remove();
+}
+
 function showInvite(challengeId, from, lang) {
-    _currentChallengeId = challengeId;
-    const toast = document.createElement('div');
-    toast.className = 'ch-invite-toast';
-    toast.innerHTML = `
-        <div class="ch-invite-msg">${ic('swords', 16)} <strong>${escHtml(from)}</strong> ti sfida!</div>
-        <div class="ch-invite-btns">
-            <button class="ch-btn ch-btn-accept" id="ch-accept-${challengeId}">${ic('check', 16)} Accetta</button>
-            <button class="ch-btn ch-btn-decline" id="ch-decline-${challengeId}">${ic('x', 16)} Rifiuta</button>
+    // Remove any existing invite banner
+    document.getElementById('ch-invite-banner')?.remove();
+
+    const banner = document.createElement('div');
+    banner.id = 'ch-invite-banner';
+    banner.className = 'ch-invite-banner';
+    banner.innerHTML = `
+        <div class="ch-invite-avatar">${escHtml(from[0]?.toUpperCase() ?? '?')}</div>
+        <div class="ch-invite-info">
+            <div class="ch-invite-from">${escHtml(from)}</div>
+            <div class="ch-invite-sub">ti ha sfidato!</div>
         </div>
-    `;
-    document.body.appendChild(toast);
+        <div class="ch-invite-actions">
+            <button class="ch-invite-btn ch-invite-accept" id="ch-accept-${challengeId}">${ic('check', 18)}</button>
+            <button class="ch-invite-btn ch-invite-decline" id="ch-decline-${challengeId}">${ic('x', 18)}</button>
+        </div>`;
+    document.body.appendChild(banner);
+
+    // Animate in
+    requestAnimationFrame(() => banner.classList.add('ch-invite-visible'));
+
+    const removeBanner = () => {
+        banner.classList.remove('ch-invite-visible');
+        setTimeout(() => banner.remove(), 300);
+        clearBadge();
+    };
 
     document.getElementById(`ch-accept-${challengeId}`)?.addEventListener('click', () => {
         socket?.emit('challenge:accept', { challengeId });
-        toast.remove();
+        _removeInvite(challengeId);
+        removeBanner();
     });
     document.getElementById(`ch-decline-${challengeId}`)?.addEventListener('click', () => {
         socket?.emit('challenge:decline', { challengeId });
-        toast.remove();
+        _removeInvite(challengeId);
+        removeBanner();
     });
 
-    setTimeout(() => toast.remove(), 30000);
+    const autoRemove = setTimeout(removeBanner, 30000);
+    banner.addEventListener('remove', () => clearTimeout(autoRemove), { once: true });
 }
 
 function showGameOver({ winnerIdx, winner, totalScore, players }) {

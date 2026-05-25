@@ -29,9 +29,9 @@ import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGam
 import { callExpressConsonant, buyExpressVowel, setEndManche as expressSetEndManche } from './express.js';
 import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndManche, setSyncGameState as finalRoundSetSyncGameState } from './finalRound.js';
 import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
-import { initSetup, setStartGameDirectly, initSoloButton, resetSoloSelection } from './setup.js';
+import { initSetup, setStartGameDirectly, initSoloButton, resetSoloSelection, refreshModeInfoCard } from './setup.js';
 import { initMobileLayout } from './mobile-layout.js';
-import { showLeaderboardPopup } from './leaderboard.js';
+import { showLeaderboardPopup, fetchLeaderboard } from './leaderboard.js';
 import { joinMatchmaking, showPrivateRoomChoice } from './online-game.js';
 
 // ===== Wire cross-module dependencies =====
@@ -100,6 +100,7 @@ document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
 function toggleLanguage() {
     const newLang = getCurrentLang() === 'it' ? 'en' : 'it';
     setLang(newLang);
+    refreshModeInfoCard();
     clearWheelCache();
     renderWheelToCache();
     drawWheel(gameState.wheelRotation);
@@ -187,33 +188,35 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-// ── Bottom tab bar + tab panel switching (native only) ──
-if (isNative) {
+// ── Bottom tab bar + tab panel switching ──
+// Listeners always attached; CSS controls visibility (.is-native .bottom-tab-bar)
+{
     let _lbMode = 'solo';
 
     function switchTab(tabName) {
-        // Update tab bar active state
         document.querySelectorAll('.btb-tab').forEach(b => {
             b.classList.toggle('active', b.dataset.tab === tabName);
         });
-        // Switch tab panels
         document.querySelectorAll('.tab-panel').forEach(p => {
             p.classList.toggle('active', p.id === `tab-${tabName}`);
         });
-        // Leaderboard: load content on first switch or refresh
         if (tabName === 'leaderboard') {
             _loadLbTab(_lbMode);
         }
-        // Profile: sync data from hidden proxy elements
         if (tabName === 'profile') {
             const name   = document.getElementById('spb-name')?.textContent;
             const avatar = document.getElementById('spb-avatar')?.textContent;
             const rec    = document.getElementById('spb-record')?.textContent;
-            if (name)   document.getElementById('prof-username').textContent = name;
-            if (avatar) document.getElementById('prof-avatar').textContent   = avatar;
-            if (rec)    document.getElementById('prof-record').textContent   = rec;
+            if (name)   { const el = document.getElementById('prof-username'); if (el) el.textContent = name; }
+            if (avatar) { const el = document.getElementById('prof-avatar');   if (el) el.textContent = avatar; }
+            if (rec)    { const el = document.getElementById('prof-record');   if (el) el.textContent = rec; }
+            // Refresh pending challenge invites
+            import('./challenge.js').then(m => m.renderProfileInvites?.());
         }
     }
+
+    // Expose so other modules can call it (e.g. after sign-out)
+    window._switchTab = switchTab;
 
     document.querySelectorAll('.btb-tab').forEach(tab => {
         tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -223,30 +226,29 @@ if (isNative) {
     async function _loadLbTab(mode) {
         const body = document.getElementById('tab-lb-body');
         if (!body) return;
-        body.innerHTML = '<div class="lb-loading">⏳</div>';
-        const { fetchLeaderboard } = await import('./leaderboard.js');
+        body.innerHTML = '<div class="lb-loading" style="text-align:center;padding:32px;">⏳</div>';
         const data = await fetchLeaderboard(mode, '');
         body.innerHTML = _renderLbRows(data, mode);
     }
 
     function _renderLbRows(data, mode) {
         const top = data?.top ?? [];
-        if (!top.length) return '<div class="lb-empty" style="text-align:center;padding:32px;color:rgba(255,255,255,0.3)">Nessun punteggio ancora</div>';
+        if (!top.length) return '<div style="text-align:center;padding:32px;color:rgba(255,255,255,0.3)">Nessun punteggio ancora</div>';
         const isSolo = mode === 'solo';
-        function fmt(n) { return `€${Number(n).toLocaleString('it-IT')}`; }
-        function fmtT(s) { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
-        function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+        const fmt  = n => `€${Number(n).toLocaleString('it-IT')}`;
+        const fmtT = s => { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; };
+        const esc  = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
         const rows = top.map((e, i) => {
             const rank = i + 1;
-            const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+            const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `<span style="opacity:.5">${rank}</span>`;
             const metric = isSolo ? fmtT(e.time_seconds ?? 0) : fmt(e.score);
-            return `<div class="lb-row ${rank <= 3 ? 'lb-top' : ''}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                <span class="lb-rank" style="width:28px;text-align:center;font-size:${rank<=3?'1.1':'0.85'}rem;">${medal}</span>
-                <span class="lb-name" style="flex:1;font-size:0.88rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(e.nickname)}</span>
-                <span style="font-size:0.78rem;color:rgba(251,191,36,0.7);font-weight:600;">${metric}</span>
+            return `<div style="display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <span style="width:28px;text-align:center;font-size:${rank<=3?'1.1':'0.82'}rem;">${medal}</span>
+                <span style="flex:1;font-size:0.88rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(e.nickname)}</span>
+                <span style="font-size:0.78rem;color:rgba(251,191,36,0.7);font-weight:600;white-space:nowrap;">${metric}</span>
             </div>`;
         }).join('');
-        return `<div class="lb-table" style="padding:0 2px;">${rows}</div>`;
+        return `<div style="padding:0 2px;">${rows}</div>`;
     }
 
     document.querySelectorAll('.tab-lb-tab').forEach(btn => {
@@ -262,9 +264,9 @@ if (isNative) {
     document.getElementById('prof-friends-btn')?.addEventListener('click', () => {
         const fp = document.getElementById('friends-panel');
         if (!fp) return;
-        const open = fp.style.display !== 'none';
-        fp.style.display = open ? 'none' : 'block';
-        if (!open) document.getElementById('spb-friends-btn')?.click();
+        const isOpen = fp.style.display !== 'none';
+        fp.style.display = isOpen ? 'none' : 'flex';
+        if (!isOpen) document.getElementById('spb-friends-btn')?.click();
     });
 
     document.getElementById('fp-close-btn')?.addEventListener('click', () => {
