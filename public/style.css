@@ -4623,16 +4623,18 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .express-banner-amount {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 2px 10px;
+    background: rgba(250, 204, 21, 0.18);
+    padding: 4px 16px;
     border-radius: 20px;
-    color: #fff;
+    color: #fef08a;
     font-weight: 900;
-    font-size: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    min-width: 70px;
+    font-size: 1.35rem;
+    border: 1.5px solid rgba(250, 204, 21, 0.55);
+    min-width: 90px;
     text-align: center;
     position: relative;
+    text-shadow: 0 0 12px rgba(250, 204, 21, 0.6);
+    letter-spacing: 0.02em;
 }
 
 .express-banner-flash {
