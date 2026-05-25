@@ -131,7 +131,7 @@ function renderTable(data, mode, myNick) {
         const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}`;
         const isMe = myNickLower && escHtml(e.nickname).toLowerCase() === myNickLower;
         const timeStr = isSolo ? `<span class="lb-time">${formatTime(e.time_seconds ?? 0)}</span>` : '';
-        const scoreStr = `<span class="lb-score">${fmt(e.score)}</span>`;
+        const scoreStr = `<span class="lb-score${isSolo ? '' : ' lb-score--primary'}">${fmt(e.score)}</span>`;
         return `<div class="lb-row ${rank <= 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}" data-rank="${rank}">
             <span class="lb-rank">${medal}</span>
             <span class="lb-name">${escHtml(e.nickname)}${isMe ? ' 👈' : ''}</span>
