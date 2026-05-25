@@ -4655,6 +4655,11 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 .flash-gain { color: #4ade80; }
 .flash-loss { color: #f87171; }
 
+.popup-crollo-express { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; }
+.crollo-letter { font-size: 3.5rem; font-weight: 900; color: #f87171; line-height: 1; letter-spacing: 0.05em; text-shadow: 0 0 20px rgba(248,113,113,0.7); }
+.crollo-title { font-size: 1.1rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+.crollo-reason { font-size: 0.82rem; color: rgba(255,255,255,0.55); }
+
 @keyframes flashSlideUp {
     0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
     100% { opacity: 0; transform: translateX(-50%) translateY(-36px); }
