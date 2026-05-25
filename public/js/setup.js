@@ -25,6 +25,7 @@ function _activateSolo() {
     soloSelected = true;
     document.getElementById('mode-card-solo')?.classList.add('active');
     document.getElementById('mode-card-multi')?.classList.remove('active');
+    document.getElementById('ssc-track')?.classList.remove('multi-active');
     document.getElementById('player-count-row')?.style.setProperty('display', 'none');
     document.getElementById('online-multi-row')?.style.setProperty('display', 'none');
     document.getElementById('multi-locale-divider')?.style.setProperty('display', 'none');
@@ -39,6 +40,7 @@ function _activateMulti(count) {
     playerCount = count || playerCount || 2;
     document.getElementById('mode-card-solo')?.classList.remove('active');
     document.getElementById('mode-card-multi')?.classList.add('active');
+    document.getElementById('ssc-track')?.classList.add('multi-active');
 
     const isNative = !!window.Capacitor?.isNativePlatform?.();
 

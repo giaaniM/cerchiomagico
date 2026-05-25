@@ -187,6 +187,113 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
+// ── Bottom tab bar + tab panel switching (native only) ──
+if (isNative) {
+    let _lbMode = 'solo';
+
+    function switchTab(tabName) {
+        // Update tab bar active state
+        document.querySelectorAll('.btb-tab').forEach(b => {
+            b.classList.toggle('active', b.dataset.tab === tabName);
+        });
+        // Switch tab panels
+        document.querySelectorAll('.tab-panel').forEach(p => {
+            p.classList.toggle('active', p.id === `tab-${tabName}`);
+        });
+        // Leaderboard: load content on first switch or refresh
+        if (tabName === 'leaderboard') {
+            _loadLbTab(_lbMode);
+        }
+        // Profile: sync data from hidden proxy elements
+        if (tabName === 'profile') {
+            const name   = document.getElementById('spb-name')?.textContent;
+            const avatar = document.getElementById('spb-avatar')?.textContent;
+            const rec    = document.getElementById('spb-record')?.textContent;
+            if (name)   document.getElementById('prof-username').textContent = name;
+            if (avatar) document.getElementById('prof-avatar').textContent   = avatar;
+            if (rec)    document.getElementById('prof-record').textContent   = rec;
+        }
+    }
+
+    document.querySelectorAll('.btb-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
+
+    // ── Leaderboard tab inline ──
+    async function _loadLbTab(mode) {
+        const body = document.getElementById('tab-lb-body');
+        if (!body) return;
+        body.innerHTML = '<div class="lb-loading">⏳</div>';
+        const { fetchLeaderboard } = await import('./leaderboard.js');
+        const data = await fetchLeaderboard(mode, '');
+        body.innerHTML = _renderLbRows(data, mode);
+    }
+
+    function _renderLbRows(data, mode) {
+        const top = data?.top ?? [];
+        if (!top.length) return '<div class="lb-empty" style="text-align:center;padding:32px;color:rgba(255,255,255,0.3)">Nessun punteggio ancora</div>';
+        const isSolo = mode === 'solo';
+        function fmt(n) { return `€${Number(n).toLocaleString('it-IT')}`; }
+        function fmtT(s) { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
+        function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+        const rows = top.map((e, i) => {
+            const rank = i + 1;
+            const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+            const metric = isSolo ? fmtT(e.time_seconds ?? 0) : fmt(e.score);
+            return `<div class="lb-row ${rank <= 3 ? 'lb-top' : ''}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <span class="lb-rank" style="width:28px;text-align:center;font-size:${rank<=3?'1.1':'0.85'}rem;">${medal}</span>
+                <span class="lb-name" style="flex:1;font-size:0.88rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(e.nickname)}</span>
+                <span style="font-size:0.78rem;color:rgba(251,191,36,0.7);font-weight:600;">${metric}</span>
+            </div>`;
+        }).join('');
+        return `<div class="lb-table" style="padding:0 2px;">${rows}</div>`;
+    }
+
+    document.querySelectorAll('.tab-lb-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            _lbMode = btn.dataset.mode;
+            document.querySelectorAll('.tab-lb-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            _loadLbTab(_lbMode);
+        });
+    });
+
+    // ── Profile tab actions ──
+    document.getElementById('prof-friends-btn')?.addEventListener('click', () => {
+        const fp = document.getElementById('friends-panel');
+        if (!fp) return;
+        const open = fp.style.display !== 'none';
+        fp.style.display = open ? 'none' : 'block';
+        if (!open) document.getElementById('spb-friends-btn')?.click();
+    });
+
+    document.getElementById('fp-close-btn')?.addEventListener('click', () => {
+        const fp = document.getElementById('friends-panel');
+        if (fp) fp.style.display = 'none';
+    });
+
+    document.getElementById('prof-history-btn')?.addEventListener('click', () => {
+        document.getElementById('history-btn')?.click();
+    });
+
+    document.getElementById('prof-rules-btn')?.addEventListener('click', () => {
+        document.getElementById('how-to-play-btn')?.click();
+    });
+
+    document.getElementById('prof-lang-btn')?.addEventListener('click', () => {
+        document.getElementById('lang-toggle-btn')?.click();
+    });
+
+    document.getElementById('prof-audio-btn')?.addEventListener('click', () => {
+        document.getElementById('audio-toggle-btn')?.click();
+    });
+
+    document.getElementById('prof-signout-btn')?.addEventListener('click', () => {
+        document.getElementById('spb-signout-btn')?.click();
+        switchTab('play');
+    });
+}
+
 // Expose soundManager globally so the inline tutorial/audio script can use it
 window.soundManager = soundManager;
 

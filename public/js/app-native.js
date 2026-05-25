@@ -94,31 +94,32 @@ function _onLoginSuccess(user) {
 }
 
 function showProfileBar(user) {
-    const bar = document.getElementById('setup-profile-bar');
-    if (!bar) return;
+    const username = user.username || 'Ospite';
+    const avatarChar = username[0].toUpperCase();
 
-    const nameEl   = document.getElementById('spb-name');
-    const avatarEl = document.getElementById('spb-avatar');
-    const recordEl = document.getElementById('spb-record');
+    // Populate hidden proxy elements (used by main.js tab switching)
+    const spbName   = document.getElementById('spb-name');
+    const spbAvatar = document.getElementById('spb-avatar');
+    const spbRecord = document.getElementById('spb-record');
+    if (spbName)   spbName.textContent   = username;
+    if (spbAvatar) spbAvatar.textContent = avatarChar;
+    if (spbRecord) spbRecord.textContent = '';
 
-    if (nameEl) nameEl.textContent = user.username || 'Ospite';
-    if (avatarEl) avatarEl.textContent = (user.username || '?')[0].toUpperCase();
-    if (recordEl) recordEl.textContent = '';
+    // Also populate profile tab directly
+    const profUsername = document.getElementById('prof-username');
+    const profAvatar   = document.getElementById('prof-avatar');
+    if (profUsername) profUsername.textContent = username;
+    if (profAvatar)   profAvatar.textContent   = avatarChar;
 
-    bar.style.display = 'flex';
-
-    const friendsBtn = document.getElementById('spb-friends-btn');
-    if (friendsBtn) friendsBtn.innerHTML = ic('users', 18);
-
+    // Wire spb-signout-btn (used by profile tab sign-out via proxy click)
     const signoutBtn = document.getElementById('spb-signout-btn');
-    if (signoutBtn) signoutBtn.innerHTML = ic('logout', 18);
-
     signoutBtn?.addEventListener('click', () => {
         logout();
-        bar.style.display = 'none';
         showScreen('login-screen');
     }, { once: true });
 
+    // Wire friends panel open (triggered by prof-friends-btn via proxy)
+    const friendsBtn = document.getElementById('spb-friends-btn');
     friendsBtn?.addEventListener('click', openFriendsPanel, { once: true });
 }
 
