@@ -324,11 +324,15 @@ if (isNative) {
     });
 }
 
-
-// TEST HELPER — skip to manche 5 from console: _skipToManche5()
-window._skipToManche5 = () => {
-    gameState.currentManche = 4;
-    endManche();
+// TEST HELPERS
+window._skipToManche5 = () => { gameState.currentManche = 4; endManche(); };
+window._gs = gameState;
+window._triggerExpress = () => {
+    gameState.wheelPhase = 'express';
+    gameState.expressAccumulated = 0;
+    document.getElementById('board-inner')?.classList.add('express-active');
+    import('./ui.js').then(m => m.updateUI());
+    import('./ui.js').then(m => m.checkExpressBanner());
 };
 
 // Boot: native shows login first, web boots directly

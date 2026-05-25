@@ -46,17 +46,16 @@ export function callFinalConsonant() {
         const unrevealed = [...document.querySelectorAll(`.tile.letter[data-letter="${normalized}"]`)].filter(t => !t.classList.contains('revealed'));
         const lastTile = unrevealed[unrevealed.length - 1];
 
-        revealLetter(letter, true, () => {
-            gameState.partialScores[player.name] += earnings;
-            renderPlayersList();
-            soundManager.playCash();
-            _syncGameState();
-        });
+        revealLetter(letter, true, null);
 
         if (lastTile) setTimeout(() => showFloatingScore(lastTile, `+€${totalEarnings}`, true), (occurrences - 1) * 1500 + 600);
 
         const totalDelay = occurrences * 1500;
         setTimeout(() => {
+            gameState.partialScores[player.name] += totalEarnings;
+            renderPlayersList();
+            soundManager.playCash();
+            _syncGameState();
             if (checkWin()) {
                 _endManche();
             } else {
