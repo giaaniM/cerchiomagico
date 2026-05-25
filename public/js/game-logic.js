@@ -269,12 +269,20 @@ export function callConsonant() {
         if (gameState.wheelPhase === 'express') {
             soundManager.stopExpress();
             hideExpressBanner();
-            soundManager.playGameOver();
-            gameState.partialScores[player.name] = 0;
-            gameState.wheelPhase = 'idle';
-            renderPlayersList();
             if (elements.boardInner) elements.boardInner.classList.remove('express-active');
-            showPopup(popup('💥', `"${letter}" – ${t('msg.crollo.title')}`, t('msg.crollo.body')), 4000, 'danger');
+            gameState.expressAccumulated = 0;
+            gameState.wheelPhase = 'idle';
+            if (gameState.hasShield[player.name]) {
+                gameState.hasShield[player.name] = false;
+                soundManager.playReveal();
+                renderPlayersList();
+                showPopup(popup('🛡️', t('wheel.shield.used.title'), `${player.name} ${t('wheel.shield.safe')}`), 4000, 'subtle-success');
+            } else {
+                soundManager.playGameOver();
+                gameState.partialScores[player.name] = 0;
+                renderPlayersList();
+                showPopup(popup('💥', `"${letter}" – ${t('msg.crollo.title')}`, t('msg.crollo.body')), 4000, 'danger');
+            }
             setTimeout(passTurn, 4500);
         } else if (gameState.soloMode) {
             const sec = 20;
@@ -383,15 +391,21 @@ export function trySolve() {
         if (gameState.wheelPhase === 'express') {
             soundManager.stopExpress();
             hideExpressBanner();
-            soundManager.playGameOver();
-            const player = getCurrentPlayer();
-            gameState.partialScores[player.name] = 0;
-            gameState.wheelPhase = 'idle';
-            renderPlayersList();
-
             if (elements.boardInner) elements.boardInner.classList.remove('express-active');
-
-            showPopup(popup('💥', t('msg.crollo.title'), t('msg.crollo.body')), 4000, 'danger');
+            const player = getCurrentPlayer();
+            gameState.expressAccumulated = 0;
+            gameState.wheelPhase = 'idle';
+            if (gameState.hasShield[player.name]) {
+                gameState.hasShield[player.name] = false;
+                soundManager.playReveal();
+                renderPlayersList();
+                showPopup(popup('🛡️', t('wheel.shield.used.title'), `${player.name} ${t('wheel.shield.safe')}`), 4000, 'subtle-success');
+            } else {
+                soundManager.playGameOver();
+                gameState.partialScores[player.name] = 0;
+                renderPlayersList();
+                showPopup(popup('💥', t('msg.crollo.title'), t('msg.crollo.body')), 4000, 'danger');
+            }
             setTimeout(passTurn, 4500);
         } else if (gameState.soloMode) {
             const sec = 30;

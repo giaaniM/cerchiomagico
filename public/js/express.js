@@ -67,8 +67,7 @@ export function buyExpressVowel() {
     }
 
     const cost = 500;
-    const currentTotal = (gameState.partialScores[player.name] || 0) + gameState.expressAccumulated;
-    if (currentTotal < cost) {
+    if (gameState.expressAccumulated < cost) {
         showMessage(t('msg.insufficientbalance'), 'error');
         return;
     }
@@ -79,15 +78,7 @@ export function buyExpressVowel() {
         return;
     }
 
-    // Deduct cost from accumulated first, then balance
-    if (gameState.expressAccumulated >= cost) {
-        gameState.expressAccumulated -= cost;
-    } else {
-        const remaining = cost - gameState.expressAccumulated;
-        gameState.expressAccumulated = 0;
-        gameState.partialScores[player.name] -= remaining;
-        renderPlayersList();
-    }
+    gameState.expressAccumulated -= cost;
 
     gameState.usedLetters.add(normalized);
     const occurrences = countLetterOccurrences(letter);
@@ -111,19 +102,27 @@ export function buyExpressVowel() {
 
 export function triggerExpressBankruptcy(reason) {
     soundManager.stopExpress();
-    soundManager.playGameOver();
     const player = getCurrentPlayer();
-    gameState.partialScores[player.name] = 0;
+    const hasShield = gameState.hasShield[player.name];
+
     gameState.expressAccumulated = 0;
     gameState.wheelPhase = 'idle';
-    renderPlayersList();
     hideExpressBanner();
-
-    // Remove Gold board style
     if (elements.boardInner) elements.boardInner.classList.remove('express-active');
 
-    showPopup(popup('💥', t('msg.crollo.title'), reason), 4000, 'danger');
-    setTimeout(passTurn, 4500);
+    if (hasShield) {
+        gameState.hasShield[player.name] = false;
+        soundManager.playReveal();
+        renderPlayersList();
+        showPopup(popup('🛡️', t('wheel.shield.used.title'), `${player.name} ${t('wheel.shield.safe')}`), 4000, 'subtle-success');
+        setTimeout(passTurn, 4500);
+    } else {
+        soundManager.playGameOver();
+        gameState.partialScores[player.name] = 0;
+        renderPlayersList();
+        showPopup(popup('💥', t('msg.crollo.title'), reason), 4000, 'danger');
+        setTimeout(passTurn, 4500);
+    }
 }
 
 export function endExpress() {
