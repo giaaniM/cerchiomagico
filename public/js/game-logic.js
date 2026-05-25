@@ -55,6 +55,52 @@ const OFFLINE_PHRASES_EN = [
 ];
 
 let puzzleDatabase = [...OFFLINE_PHRASES_IT];
+let phraseIndex = 0;
+
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+const PLAYED_KEY = 'ms_played_phrases_v1';
+
+function getPlayedIds(lang) {
+    try {
+        const data = JSON.parse(localStorage.getItem(PLAYED_KEY) || '{}');
+        return new Set(data[lang] || []);
+    } catch { return new Set(); }
+}
+
+function markPlayed(lang, id) {
+    if (id == null) return;
+    try {
+        const data = JSON.parse(localStorage.getItem(PLAYED_KEY) || '{}');
+        if (!data[lang]) data[lang] = [];
+        if (!data[lang].includes(id)) data[lang].push(id);
+        localStorage.setItem(PLAYED_KEY, JSON.stringify(data));
+    } catch {}
+}
+
+function getAvailableDb() {
+    const lang = getCurrentLang();
+    const played = getPlayedIds(lang);
+    const hasIds = puzzleDatabase.some(p => p.id != null);
+    if (!hasIds) return puzzleDatabase;
+    let available = puzzleDatabase.filter(p => !played.has(p.id));
+    if (available.length === 0) {
+        try {
+            const data = JSON.parse(localStorage.getItem(PLAYED_KEY) || '{}');
+            data[lang] = [];
+            localStorage.setItem(PLAYED_KEY, JSON.stringify(data));
+        } catch {}
+        return puzzleDatabase;
+    }
+    return available;
+}
+
+
 let _loadGen = 0;
 
 export async function loadPuzzles() {
@@ -600,9 +646,10 @@ export function startNextManche() {
     //     }
     // }
 
+    const _availDb1 = getAvailableDb();
     while (!valid && attempts < 200) {
         attempts++;
-        const randomPuzzle = puzzleDatabase[Math.floor(Math.random() * puzzleDatabase.length)];
+        const randomPuzzle = _availDb1[Math.floor(Math.random() * _availDb1.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
         const isNotUsed = !gameState.usedPhrases.has(normalized);
         const isNotExcluded = !gameState.excludedPhrases.has(normalized);
@@ -615,6 +662,7 @@ export function startNextManche() {
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
             gameState.hint = randomPuzzle.hint;
             gameState.usedPhrases.add(normalized);
+            markPlayed(getCurrentLang(), randomPuzzle.id);
             valid = true;
         }
     }
@@ -786,9 +834,10 @@ export function startGameLocal() {
         gameState.usedPhrases.clear();
     }
 
+    const _availDb2 = getAvailableDb();
     while (!valid && attempts < 1000) {
         attempts++;
-        const randomPuzzle = puzzleDatabase[Math.floor(Math.random() * puzzleDatabase.length)];
+        const randomPuzzle = _availDb2[Math.floor(Math.random() * _availDb2.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
         const fits = !!splitPhraseIntoRows(randomPuzzle.phrase.split(' '), [12, 14, 14, 12]);
         if (!gameState.usedPhrases.has(normalized) && fits) {
@@ -796,6 +845,7 @@ export function startGameLocal() {
             gameState.originalPhrase = randomPuzzle.phrase;
             gameState.hint = randomPuzzle.hint;
             gameState.usedPhrases.add(normalized);
+            markPlayed(getCurrentLang(), randomPuzzle.id);
             valid = true;
         }
     }
@@ -887,9 +937,10 @@ export function skipPhrase() {
     // Seleziona nuova frase
     let valid = false;
     let attempts = 0;
+    const _availDb3 = getAvailableDb();
     while (!valid && attempts < 200) {
         attempts++;
-        const randomPuzzle = puzzleDatabase[Math.floor(Math.random() * puzzleDatabase.length)];
+        const randomPuzzle = _availDb3[Math.floor(Math.random() * _availDb3.length)];
         const normalized = normalizePhrase(randomPuzzle.phrase);
         const isNotUsed = !gameState.usedPhrases.has(normalized);
         const isNotExcluded = !gameState.excludedPhrases.has(normalized);
@@ -899,6 +950,7 @@ export function skipPhrase() {
             gameState.phrase = sanitizePhrase(randomPuzzle.phrase);
             gameState.hint = randomPuzzle.hint;
             gameState.usedPhrases.add(normalized);
+            markPlayed(getCurrentLang(), randomPuzzle.id);
             valid = true;
         }
     }
