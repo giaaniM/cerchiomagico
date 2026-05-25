@@ -1,7 +1,7 @@
 import { gameState } from './state.js';
 import { t } from './lang.js';
 import { elements } from './elements.js';
-import { showPopup, showMessage, popup, flashExpressBanner, normalizeChar, isVowel, showFloatingScore } from './utils.js';
+import { showPopup, showMessage, popup, npPopup, avatarUrl, flashExpressBanner, normalizeChar, isVowel, showFloatingScore } from './utils.js';
 import { soundManager } from './sound.js';
 import { getCurrentPlayer, passTurn, renderPlayersList } from './players.js';
 import { updateUI, checkExpressBanner, hideExpressBanner } from './ui.js';
@@ -114,14 +114,14 @@ export function triggerExpressBankruptcy(reason, letter = null) {
         gameState.hasShield[player.name] = false;
         soundManager.playReveal();
         renderPlayersList();
-        showPopup(popup('🛡️', t('wheel.shield.used.title'), `${player.name} ${t('wheel.shield.safe')}`), 4000, 'subtle-success');
+        showPopup(npPopup({ badge: t('wheel.shield.used.title'), badgeColor: 'green', avatar: avatarUrl(player.name), main: player.name, sub: t('wheel.shield.safe') }), 4000, 'subtle-success slim-pad');
         setTimeout(passTurn, 4500);
     } else {
         soundManager.playGameOver();
         gameState.partialScores[player.name] = 0;
         renderPlayersList();
-        const title = letter ? `💥 "${letter}" – ${t('msg.crollo.title')}` : `💥 ${t('msg.crollo.title')}`;
-        showPopup(`<div class="popup-crollo-express"><div class="crollo-letter">${letter ?? '💥'}</div><div class="crollo-title">${t('msg.crollo.title')}</div><div class="crollo-reason">${reason}</div></div>`, 4000, 'danger');
+        const mainHtml = letter ? `<span class="np-letter">${letter}</span>` : `<span class="np-main-text">${t('msg.crollo.title')}</span>`;
+        showPopup(npPopup({ badge: t('msg.crollo.title'), badgeColor: 'red', main: mainHtml, sub: reason }), 4000, 'danger slim-pad');
         setTimeout(passTurn, 4500);
     }
 }

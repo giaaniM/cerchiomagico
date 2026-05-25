@@ -82,6 +82,21 @@ export function popup(icon, title, body = '') {
     </div>`;
 }
 
+export function avatarUrl(name) {
+    return `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(name)}&radius=50`;
+}
+
+// New unified popup builder
+export function npPopup({ badge, badgeColor = 'gold', avatar = null, main, sub = '', extra = '' } = {}) {
+    return `<div class="np">
+        ${badge ? `<div class="np-badge np-badge--${badgeColor}">${badge}</div>` : ''}
+        ${avatar ? `<img class="np-avatar" src="${avatar}" alt="" loading="lazy">` : ''}
+        <div class="np-main">${main}</div>
+        ${sub ? `<div class="np-sub">${sub}</div>` : ''}
+        ${extra}
+    </div>`;
+}
+
 export function showPopup(html, duration = 2000, className = '') {
     elements.modalOverlay.style.display = 'flex';
     elements.popupMessage.style.display = 'block';

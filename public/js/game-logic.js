@@ -9,7 +9,7 @@ let _onNewGame = () => {};
 export function setOnNewGame(fn) { _onNewGame = fn; }
 import { t, getCurrentLang } from './lang.js';
 import { elements } from './elements.js';
-import { normalizeChar, normalizePhrase, sanitizePhrase, isVowel, showScreen, showMessage, showPopup, popup, showFloatingScore } from './utils.js';
+import { normalizeChar, normalizePhrase, sanitizePhrase, isVowel, showScreen, showMessage, showPopup, popup, npPopup, avatarUrl, showFloatingScore } from './utils.js';
 import { applyMobileLayout } from './mobile-layout.js';
 import { soundManager } from './sound.js';
 import { getCurrentPlayer, passTurn, renderPlayersList } from './players.js';
@@ -252,12 +252,12 @@ export function callConsonant() {
                 gameState.hasShield[player.name] = false;
                 soundManager.playReveal();
                 renderPlayersList();
-                showPopup(popup('🛡️', t('wheel.shield.used.title'), `${player.name} ${t('wheel.shield.safe')}`), 4000, 'subtle-success');
+                showPopup(npPopup({ badge: t('wheel.shield.used.title'), badgeColor: 'green', avatar: avatarUrl(player.name), main: player.name, sub: t('wheel.shield.safe') }), 4000, 'subtle-success slim-pad');
             } else {
                 soundManager.playGameOver();
                 gameState.partialScores[player.name] = 0;
                 renderPlayersList();
-                showPopup(popup('💥', `"${letter}" – ${t('msg.crollo.title')}`, t('msg.crollo.body')), 4000, 'danger');
+                showPopup(npPopup({ badge: t('msg.crollo.title'), badgeColor: 'red', main: `<span class="np-letter">${letter}</span>`, sub: t('msg.crollo.body') }), 4000, 'danger slim-pad');
             }
             setTimeout(passTurn, 4500);
         } else if (gameState.soloMode) {
@@ -266,7 +266,12 @@ export function callConsonant() {
             gameState.wheelPhase = 'idle';
             updateUI();
         } else {
-            showPopup(popup('❌', `"${letter}" ${t('msg.notfound')}`, t('msg.turnoflost')), 3000, 'danger');
+            showPopup(npPopup({
+                badge: t('popup.lettera_errata'),
+                badgeColor: 'red',
+                main: `<span class="np-letter">${letter}</span>`,
+                sub: t('msg.turnoflost'),
+            }), 3000, 'danger slim-pad');
             setTimeout(passTurn, 3000);
         }
     }
@@ -375,12 +380,12 @@ export function trySolve() {
                 gameState.hasShield[player.name] = false;
                 soundManager.playReveal();
                 renderPlayersList();
-                showPopup(popup('🛡️', t('wheel.shield.used.title'), `${player.name} ${t('wheel.shield.safe')}`), 4000, 'subtle-success');
+                showPopup(npPopup({ badge: t('wheel.shield.used.title'), badgeColor: 'green', avatar: avatarUrl(player.name), main: player.name, sub: t('wheel.shield.safe') }), 4000, 'subtle-success slim-pad');
             } else {
                 soundManager.playGameOver();
                 gameState.partialScores[player.name] = 0;
                 renderPlayersList();
-                showPopup(popup('💥', t('msg.crollo.title'), t('msg.crollo.body')), 4000, 'danger');
+                showPopup(npPopup({ badge: t('msg.crollo.title'), badgeColor: 'red', main: `<span class="np-main-text">${t('msg.wrongsolution.title')}</span>`, sub: t('msg.crollo.body') }), 4000, 'danger slim-pad');
             }
             setTimeout(passTurn, 4500);
         } else if (gameState.soloMode) {
@@ -437,7 +442,13 @@ export function endManche() {
         ? t('solo.round.popup').replace('{n}', gameState.currentManche)
         : t('msg.manchewon').replace('{n}', gameState.currentManche);
 
-    showPopup(popup('🏆', mancheLabel, `${winner.name}<br><strong style="color:#4ade80;font-size:1.3em">+€${winnings.toLocaleString('it-IT')}</strong>`), 3000, 'subtle-success');
+    showPopup(npPopup({
+        badge: mancheLabel,
+        badgeColor: 'green',
+        avatar: avatarUrl(winner.name),
+        main: winner.name,
+        sub: `<span class="np-money">+€${winnings.toLocaleString('it-IT')}</span>`,
+    }), 3000, 'subtle-success slim-pad');
 
     // Clear board
     if (elements.gameBoard) elements.gameBoard.innerHTML = '';
@@ -481,6 +492,21 @@ export function endManche() {
             }, 4000);
         }
     }, 3000);
+}
+
+function mancheStartHtml(mancheLabel, hint, starterPlayer) {
+    const starterHtml = starterPlayer ? `
+        <div class="np-starter">
+            <span class="np-starter-label">${t('popup.starts')}</span>
+            <img class="np-starter-avatar" src="${avatarUrl(starterPlayer.name)}" alt="" loading="lazy">
+            <span class="np-starter-name">${starterPlayer.name}</span>
+        </div>` : '';
+    return `<div class="np np-manche">
+        <div class="np-badge np-badge--gold">${mancheLabel}</div>
+        <div class="np-hint-cat">${t('popup.indizio')}</div>
+        <div class="np-hint-txt">${hint}</div>
+        ${starterHtml}
+    </div>`;
 }
 
 export function startNextManche() {
@@ -548,12 +574,7 @@ export function startNextManche() {
         renderPlayersList();
         updateUI();
         if (socketState.isMobileMode) syncGameState();
-        showPopup(`<div class="popup-manche-start">
-            <div class="popup-manche-number">✏️ FRASE PERSONALIZZATA</div>
-            <div class="popup-category-label">Indizio:</div>
-            <div class="popup-manche-hint-large">${gameState.hint}</div>
-            <div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>
-        </div>`, 4000, 'transparent-wrapper');
+        showPopup(mancheStartHtml('FRASE PERSONALIZZATA', gameState.hint, getCurrentPlayer()), 4000, 'slim-pad');
         return;
     }
 
@@ -622,17 +643,11 @@ export function startNextManche() {
     updateUI();
     if (socketState.isMobileMode) syncGameState();
 
-    showPopup(`<div class="popup-manche-start">
-        <div class="popup-manche-number">MANCHE ${gameState.currentManche} ${gameState.currentManche === 5 ? '- FINALE' : ''}</div>
-        <div class="popup-category-label">Indizio:</div>
-        <div class="popup-manche-hint-large">${gameState.hint}</div>
-        <div class="popup-turn-player">
-            ${gameState.currentManche === 5 ?
-            '<span class="pulse-action" style="color:#fbbf24">GIRATE PER IL VALORE DEL ROUND</span>' :
-            `INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span>`
-        }
-        </div>
-    </div>`, 4000, 'transparent-wrapper');
+    const mancheLabel5 = gameState.currentManche === 5
+        ? `MANCHE ${gameState.currentManche} — FINALE`
+        : `MANCHE ${gameState.currentManche}`;
+    const starterOrNull = gameState.currentManche === 5 ? null : getCurrentPlayer();
+    showPopup(mancheStartHtml(mancheLabel5, gameState.hint, starterOrNull), 4000, 'slim-pad');
 }
 
 export function startGameDirectly(players, soloMode = false, customOpts = null) {
@@ -748,12 +763,7 @@ export function startGameLocal() {
         renderPlayersList();
         updateUI();
         if (socketState.isMobileMode) syncGameState();
-        showPopup(`<div class="popup-manche-start">
-            <div class="popup-manche-number">✏️ FRASE PERSONALIZZATA</div>
-            <div class="popup-category-label">Indizio:</div>
-            <div class="popup-manche-hint-large">${gameState.hint}</div>
-            ${!gameState.soloMode ? `<div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>` : ''}
-        </div>`, 2500, 'manche-start-popup');
+        showPopup(mancheStartHtml('FRASE PERSONALIZZATA', gameState.hint, gameState.soloMode ? null : getCurrentPlayer()), 2500, 'slim-pad');
         return;
     }
 
@@ -848,12 +858,7 @@ export function startGameLocal() {
         ? `${t('solo.round')} ${gameState.currentManche} ${t('solo.of')} ${SOLO_ROUNDS}`
         : `MANCHE ${gameState.currentManche}`;
 
-    showPopup(`<div class="popup-manche-start">
-        <div class="popup-manche-number">${roundLabel}</div>
-        <div class="popup-category-label">Indizio:</div>
-        <div class="popup-manche-hint-large">${gameState.hint}</div>
-        ${!gameState.soloMode ? `<div class="popup-turn-player">INIZIA IL ROUND:<br><span class="popup-name">${getCurrentPlayer().name}</span></div>` : ''}
-    </div>`, 2500, 'manche-start-popup');
+    showPopup(mancheStartHtml(roundLabel, gameState.hint, gameState.soloMode ? null : getCurrentPlayer()), 2500, 'slim-pad');
 
     if (socketState.isMobileMode) {
         syncGameState();

@@ -1,6 +1,6 @@
 import { gameState } from './state.js';
 import { elements } from './elements.js';
-import { showPopup, popup } from './utils.js';
+import { showPopup, popup, npPopup, avatarUrl } from './utils.js';
 import { t } from './lang.js';
 
 // Forward reference — updateUI and syncGameState injected to avoid circular deps
@@ -100,6 +100,9 @@ export function passTurn() {
     _syncGameState();
 
     const nextPlayer = getCurrentPlayer();
-    // Show turn popup (without hint - hint only at manche start)
-    showPopup(popup('🎯', `${t('msg.turno')} ${nextPlayer.name}`), 2500);
+    showPopup(npPopup({
+        badge: t('msg.turno'),
+        avatar: avatarUrl(nextPlayer.name),
+        main: nextPlayer.name,
+    }), 2500, 'slim-pad');
 }

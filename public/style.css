@@ -1397,6 +1397,104 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
 }
 
+/* ===== Slim pad modifier ===== */
+.popup-message.slim-pad { padding: 0; overflow: hidden; border-radius: 18px; }
+
+/* ===== New Popup System (.np) ===== */
+.np {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 28px 32px;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+}
+.np-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 100px;
+    border: 1.5px solid;
+    line-height: 1.6;
+}
+.np-badge--gold  { color: #fbbf24; border-color: rgba(251,191,36,0.45); background: rgba(251,191,36,0.1); }
+.np-badge--red   { color: #f87171; border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.1); }
+.np-badge--green { color: #4ade80; border-color: rgba(74,222,128,0.45); background: rgba(74,222,128,0.1); }
+.np-badge--blue  { color: #60a5fa; border-color: rgba(96,165,250,0.45); background: rgba(96,165,250,0.1); }
+
+.np-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+}
+.np-main {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.1;
+    text-align: center;
+}
+.np-main-text { font-size: 1.6rem; font-weight: 900; color: #fff; }
+.np-sub {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.4;
+}
+.np-letter {
+    display: block;
+    font-size: 4rem;
+    font-weight: 900;
+    color: #f87171;
+    line-height: 1;
+    text-shadow: 0 0 24px rgba(248,113,113,0.55);
+    letter-spacing: 0.05em;
+}
+.np-money {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #4ade80;
+    text-shadow: 0 0 16px rgba(74,222,128,0.45);
+    line-height: 1.1;
+}
+
+/* Manche start variant */
+.np.np-manche { gap: 10px; }
+.np-hint-cat {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+.np-hint-txt {
+    font-size: clamp(1.4rem, 5vw, 2.4rem);
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(56,189,248,0.35);
+    line-height: 1.15;
+    word-break: break-word;
+}
+.np-starter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 18px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.1);
+    margin-top: 4px;
+}
+.np-starter-label { font-size: 0.6rem; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; }
+.np-starter-avatar { width: 34px; height: 34px; border-radius: 50%; }
+.np-starter-name { font-size: 0.95rem; font-weight: 800; color: #fff; }
+
 /* ===== Popup Inner Structure ===== */
 .popup-body {
     display: flex;
