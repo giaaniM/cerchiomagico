@@ -27,7 +27,6 @@ let playerCount = 2;
 let soloSelected = true;
 
 let customCardPlayerCount = 2;
-let customCardSoloSelected = false;
 
 export function initSetup() {
     soloSelected = true;
@@ -181,27 +180,17 @@ function initCustomCard() {
         });
     }
 
-    // Custom card: player count pills (kept for Crea Frase card)
-    document.querySelectorAll('.count-pill[data-custom-count]').forEach(btn => {
-        btn.addEventListener('click', () => {
+    // Custom card: add player button
+    const customAddBtn = document.getElementById('custom-add-player-btn');
+    if (customAddBtn) {
+        customAddBtn.addEventListener('click', () => {
             soundManager.playClick();
-            document.querySelectorAll('.count-pill[data-custom-count]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            const isSolo = btn.dataset.customCount === 'solo';
-            customCardSoloSelected = isSolo;
-            const customCard = document.querySelector('.setup-custom-card');
-
-            if (isSolo) {
-                customCard?.classList.add('solo-active');
-                renderCustomNameInputs(true);
-            } else {
-                customCard?.classList.remove('solo-active');
-                customCardPlayerCount = parseInt(btn.dataset.customCount);
+            if (customCardPlayerCount < 5) {
+                customCardPlayerCount++;
                 renderCustomNameInputs();
             }
         });
-    });
+    }
 
     // Custom card: start button
     const startCustomBtn = document.getElementById('start-custom-game-btn');
@@ -218,14 +207,6 @@ function initCustomCard() {
             const letters = phrase.replace(/\s/g, '').length;
             if (!phrase || letters < PHRASE_MIN_LETTERS) { shakeInput(phraseInput); return; }
 
-            if (customCardSoloSelected) {
-                const input = document.getElementById('custom-player-name-1');
-                const name = input ? input.value.trim() : '';
-                if (!name) { shakeInput(input); return; }
-                _startGameDirectly([{ name, id: 'solo-1' }], true, { phrase, hint });
-                return;
-            }
-
             const players = [];
             let hasEmpty = false;
             for (let i = 1; i <= customCardPlayerCount; i++) {
@@ -235,7 +216,8 @@ function initCustomCard() {
                 else players.push({ name, id: `local-${i}` });
             }
             if (hasEmpty) return;
-            _startGameDirectly(players, false, { phrase, hint });
+            const isSolo = players.length === 1;
+            _startGameDirectly(players, isSolo, { phrase, hint });
         });
     }
 }
@@ -248,20 +230,22 @@ const MIC_ICONS = {
     medal:   `<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><circle cx="9" cy="12.5" r="4.5"/><path d="M6 7.5L3.5 2.5h4L9 5.5l1.5-3h4L12 7.5a5.5 5.5 0 00-6 0z"/></svg>`,
 };
 
+export function refreshModeInfoCard() { updateModeInfoCard(soloSelected ? 'solo' : 'multi'); }
+
 function updateModeInfoCard(mode) {
     const card = document.getElementById('mode-info-card');
     if (!card) return;
 
     const configs = {
         solo: [
-            { icon: MIC_ICONS.clock,   label: 'Cronometro', cls: 'mic-solo' },
-            { icon: MIC_ICONS.list,    label: '3 Frasi',    cls: 'mic-solo' },
-            { icon: MIC_ICONS.medal,   label: 'Record',     cls: 'mic-solo' },
+            { icon: MIC_ICONS.clock,   label: t('setup.feat.timer'),    cls: 'mic-solo' },
+            { icon: MIC_ICONS.list,    label: t('setup.feat.phrases3'), cls: 'mic-solo' },
+            { icon: MIC_ICONS.medal,   label: t('setup.feat.record'),   cls: 'mic-solo' },
         ],
         multi: [
-            { icon: MIC_ICONS.list,    label: '5 Frasi',        cls: '' },
-            { icon: MIC_ICONS.bolt,    label: 'Megaturno',      cls: 'mic-highlight' },
-            { icon: MIC_ICONS.diamond, label: 'Finale Speciale', cls: 'mic-highlight' },
+            { icon: MIC_ICONS.list,    label: t('setup.feat.phrases5'), cls: '' },
+            { icon: MIC_ICONS.bolt,    label: t('setup.feat.megaturno'), cls: 'mic-highlight' },
+            { icon: MIC_ICONS.diamond, label: t('setup.feat.finale'),   cls: 'mic-highlight' },
         ],
     };
 
@@ -361,18 +345,47 @@ function renderNameInputs(solo = false) {
     }
 }
 
-function renderCustomNameInputs(solo = false) {
+function renderCustomNameInputs() {
     const container = document.getElementById('custom-names-container');
     if (!container) return;
+
+    const existing = [];
+    for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`custom-player-name-${i}`);
+        existing[i] = el ? el.value : '';
+    }
+
     container.innerHTML = '';
-    const count = solo ? 1 : customCardPlayerCount;
-    for (let i = 1; i <= count; i++) {
+    for (let i = 1; i <= customCardPlayerCount; i++) {
         const div = document.createElement('div');
-        div.className = 'name-input-wrap';
-        const placeholder = solo ? (t('setup.solo.nameinput') || 'Il tuo nome') : `${t('setup.player')} ${i}`;
-        div.innerHTML = `<input type="text" id="custom-player-name-${i}" class="player-name-input" placeholder="${placeholder}" maxlength="20" autocomplete="off">`;
+        div.className = 'name-input-row';
+        const placeholder = `${t('setup.player')} ${i}`;
+        const canRemove = customCardPlayerCount > 1;
+        div.innerHTML = `<input type="text" id="custom-player-name-${i}" class="player-name-input" placeholder="${placeholder}" maxlength="20" autocomplete="off">${canRemove ? `<button class="btn-remove-player" type="button" data-idx="${i}">×</button>` : ''}`;
+        if (existing[i]) div.querySelector('input').value = existing[i];
         container.appendChild(div);
     }
+
+    container.querySelectorAll('.btn-remove-player').forEach(btn => {
+        btn.addEventListener('click', () => {
+            soundManager.playClick();
+            const idx = parseInt(btn.dataset.idx);
+            const names = [];
+            for (let i = 1; i <= customCardPlayerCount; i++) {
+                const v = document.getElementById(`custom-player-name-${i}`)?.value || '';
+                if (i !== idx) names.push(v);
+            }
+            customCardPlayerCount--;
+            renderCustomNameInputs();
+            names.forEach((v, i) => {
+                const el = document.getElementById(`custom-player-name-${i + 1}`);
+                if (el) el.value = v;
+            });
+        });
+    });
+
+    const addBtn = document.getElementById('custom-add-player-btn');
+    if (addBtn) addBtn.style.display = customCardPlayerCount < 5 ? 'flex' : 'none';
 }
 
 function shakeInput(input) {

@@ -4,7 +4,7 @@ import { showPopup, showMessage } from './utils.js';
 import { renderPlayersList, getCurrentPlayer } from './players.js';
 import { t, getCurrentLang } from './lang.js';
 import { saveMultiplayerGame } from './history.js';
-import { showSubmitAndLeaderboard, showLeaderboardPopup } from './leaderboard.js';
+import { submitScore, renderInlineLeaderboard } from './leaderboard.js';
 
 // ===== UI Updates =====
 export function updateUI() {
@@ -271,14 +271,17 @@ export function showFinalResults(newGame) {
     elements.nextLevelBtn.textContent = t('win.newgame');
     elements.nextLevelBtn.onclick = newGame;
 
-    const lbBtn = document.getElementById('mp-lb-btn');
-    if (lbBtn) {
-        lbBtn.textContent = `🏆 ${isIt ? 'Vai alla Classifica' : 'View Leaderboard'}`;
-        lbBtn.onclick = () => showSubmitAndLeaderboard({ mode: 'mp', score: maxScore, suggestedName: winner.name });
-    }
-
     const ctaStack = document.getElementById('win-cta-stack');
     if (ctaStack) ctaStack.style.display = 'flex';
+
+    // Auto-submit winner score + show inline leaderboard
+    const lbContainer = document.getElementById('win-lb-inline');
+    if (lbContainer) {
+        (async () => {
+            await submitScore({ nickname: winner.name, mode: 'mp', score: maxScore, time_seconds: 0 });
+            renderInlineLeaderboard(lbContainer, 'mp', winner.name);
+        })();
+    }
 
     // Show win screen — reset manche so newGame() doesn't show abandon popup
     gameState.currentManche = 0;

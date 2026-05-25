@@ -9,7 +9,13 @@ const translations = {
     'logo.compact1': 'CERCHIO',
     'logo.compact2': 'MAGICO',
     // Home
-    'home.tagline': 'Il gioco delle parole da fare in compagnia',
+    // Home mini steps
+    'home.mini.spin': '🎡 Gira',
+    'home.mini.call': '🔤 Chiama',
+    'home.mini.solve': '💡 Risolvi',
+    'home.mini.win': '🏆 Vinci',
+    // Home
+    'home.tagline': 'Il gioco della ruota della fortuna online gratis',
     'home.step1.label': 'Gira il Cerchio',
     'home.step1.sub': 'ottieni un valore',
     'home.step2.label': 'Chiama Lettere',
@@ -40,6 +46,44 @@ const translations = {
     'setup.lobby.waiting': 'In attesa di giocatori...',
     'setup.lobby.start': 'AVVIA PARTITA',
     'setup.lobby.cancel': 'Annulla',
+    'setup.mode.play': 'Gioca',
+    'setup.mode.custom': 'Crea Frase',
+    'setup.multi.pill': 'Multiplayer',
+    'setup.addplayer': '+ Aggiungi giocatore',
+    'setup.custom.title': 'Crea la tua frase',
+    'setup.custom.sub': 'Partita locale · nessuna classifica',
+    'setup.custom.hint.label': 'Indizio',
+    'setup.custom.hint.rule': 'min 2 · max 30 caratteri',
+    'setup.custom.hint.placeholder': 'es. Film, Proverbio, Nome proprio...',
+    'setup.custom.phrase.label': 'Frase',
+    'setup.custom.phrase.placeholder': 'SCRIVI LA FRASE QUI',
+    'setup.custom.phrase.rule': 'min 4 lettere · max 60 caratteri · solo lettere e spazi',
+    'setup.feat.timer': 'Cronometro',
+    'setup.feat.phrases3': '3 Frasi',
+    'setup.feat.record': 'Record',
+    'setup.feat.phrases5': '5 Frasi',
+    'setup.feat.megaturno': 'Megaturno',
+    'setup.feat.finale': 'Finale Speciale',
+    'user.profile': 'Il tuo profilo',
+    'user.tab.friends': 'Amici',
+    'user.tab.requests': 'Richieste',
+    'user.tab.leaderboard': 'Classifica',
+    'user.friends.empty': 'Nessun amico ancora. Cerca un username!',
+    'user.requests.empty': 'Nessuna richiesta in arrivo',
+    'user.leaderboard.loading': 'Caricamento...',
+    'user.logout': "Esci dall'account",
+    'user.search.placeholder': 'Cerca username...',
+    'auth.tab.login': 'Accedi',
+    'auth.tab.register': 'Registrati',
+    'auth.username.label': 'Username',
+    'auth.email.label': 'Email',
+    'auth.email.optional': '(opzionale)',
+    'auth.password.label': 'Password',
+    'auth.submit.login': 'Accedi',
+    'auth.submit.register': 'Registrati',
+    'auth.skip': 'Gioca senza account →',
+    'auth.username.placeholder': 'il tuo username',
+    'auth.error.fields': 'Compila tutti i campi',
     // Game screen
     'game.manche': 'MANCHE',
     'game.changephrase': '↻ Cambia frase',
@@ -229,7 +273,13 @@ const translations = {
     'logo.compact1': 'MAGIC',
     'logo.compact2': 'SPIN',
     // Home
-    'home.tagline': 'The word game to play with friends',
+    // Home mini steps
+    'home.mini.spin': '🎡 Spin',
+    'home.mini.call': '🔤 Call',
+    'home.mini.solve': '💡 Solve',
+    'home.mini.win': '🏆 Win',
+    // Home
+    'home.tagline': 'The free online wheel of fortune word game',
     'home.step1.label': 'Spin the Wheel',
     'home.step1.sub': 'get a value',
     'home.step2.label': 'Call Letters',
@@ -260,6 +310,44 @@ const translations = {
     'setup.lobby.waiting': 'Waiting for players...',
     'setup.lobby.start': 'START GAME',
     'setup.lobby.cancel': 'Cancel',
+    'setup.mode.play': 'Play',
+    'setup.mode.custom': 'Custom Phrase',
+    'setup.multi.pill': 'Multiplayer',
+    'setup.addplayer': '+ Add player',
+    'setup.custom.title': 'Create your phrase',
+    'setup.custom.sub': 'Local game · no leaderboard',
+    'setup.custom.hint.label': 'Category',
+    'setup.custom.hint.rule': 'min 2 · max 30 characters',
+    'setup.custom.hint.placeholder': 'e.g. Movie, Proverb, Proper noun...',
+    'setup.custom.phrase.label': 'Phrase',
+    'setup.custom.phrase.placeholder': 'TYPE YOUR PHRASE HERE',
+    'setup.custom.phrase.rule': 'min 4 letters · max 60 characters · letters and spaces only',
+    'setup.feat.timer': 'Timer',
+    'setup.feat.phrases3': '3 Phrases',
+    'setup.feat.record': 'Record',
+    'setup.feat.phrases5': '5 Rounds',
+    'setup.feat.megaturno': 'Megaturn',
+    'setup.feat.finale': 'Special Final',
+    'user.profile': 'Your profile',
+    'user.tab.friends': 'Friends',
+    'user.tab.requests': 'Requests',
+    'user.tab.leaderboard': 'Leaderboard',
+    'user.friends.empty': 'No friends yet. Search a username!',
+    'user.requests.empty': 'No incoming requests',
+    'user.leaderboard.loading': 'Loading...',
+    'user.logout': 'Log out',
+    'user.search.placeholder': 'Search username...',
+    'auth.tab.login': 'Log in',
+    'auth.tab.register': 'Sign up',
+    'auth.username.label': 'Username',
+    'auth.email.label': 'Email',
+    'auth.email.optional': '(optional)',
+    'auth.password.label': 'Password',
+    'auth.submit.login': 'Log in',
+    'auth.submit.register': 'Sign up',
+    'auth.skip': 'Play without an account →',
+    'auth.username.placeholder': 'your username',
+    'auth.error.fields': 'Please fill in all fields',
     // Game screen
     'game.manche': 'ROUND',
     'game.changephrase': '↻ Change phrase',
@@ -467,6 +555,17 @@ export function t(key) {
   return translations[currentLang]?.[key] ?? translations.it[key] ?? key;
 }
 
+const SEO = {
+  it: {
+    title: 'Ruota della Fortuna Online Gratis — MagicSpin',
+    description: 'Gioca gratis a MagicSpin: la ruota della fortuna online con gli amici. Gira, chiama le lettere, indovina la frase. 5 manche, classifica globale. Nessun download.',
+  },
+  en: {
+    title: 'Free Wheel of Fortune Game Online — MagicSpin',
+    description: 'Play MagicSpin free: spin the wheel, call letters, solve the phrase with friends. 5 rounds, global leaderboard. No download, no sign-up needed.',
+  },
+};
+
 export function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.getAttribute('data-i18n'));
@@ -482,4 +581,11 @@ export function applyTranslations() {
   if (langBtn) langBtn.textContent = currentLang === 'it' ? '🇬🇧 EN' : '🇮🇹 IT';
 
   document.documentElement.lang = currentLang;
+
+  const seo = SEO[currentLang];
+  if (seo) {
+    document.title = seo.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', seo.description);
+  }
 }

@@ -273,7 +273,7 @@ app.get('/api/leaderboard', async (req, res) => {
     const mode = req.query.mode === 'mp' ? 'mp' : 'solo';
     const lang = req.query.lang === 'en' ? 'en' : 'it';
     const nickname = req.query.nickname ? String(req.query.nickname).trim().slice(0, 30) : null;
-    const TOP_N = 8;
+    const TOP_N = 100;
     const orderCol = mode === 'solo' ? 'time_seconds' : 'score';
     const ascending = mode === 'solo';
 

@@ -27,7 +27,7 @@ import { callConsonant, buyVowel, trySolve, endManche, startGameDirectly, newGam
 import { callExpressConsonant, buyExpressVowel, setEndManche as expressSetEndManche } from './express.js';
 import { callFinalConsonant, callFinalVowel, setEndManche as finalRoundSetEndManche, setSyncGameState as finalRoundSetSyncGameState } from './finalRound.js';
 import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
-import { initSetup, setStartGameDirectly, initSoloButton, resetSoloSelection } from './setup.js';
+import { initSetup, setStartGameDirectly, initSoloButton, resetSoloSelection, refreshModeInfoCard } from './setup.js';
 import { initMobileLayout } from './mobile-layout.js';
 import { showLeaderboardPopup } from './leaderboard.js';
 
@@ -103,6 +103,7 @@ document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
 document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
     const newLang = getCurrentLang() === 'it' ? 'en' : 'it';
     setLang(newLang);
+    refreshModeInfoCard();
     clearWheelCache();
     renderWheelToCache();
     drawWheel(gameState.wheelRotation);

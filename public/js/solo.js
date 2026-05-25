@@ -2,7 +2,7 @@ import { gameState } from './state.js';
 import { t, getCurrentLang } from './lang.js';
 import { showPopup, popup } from './utils.js';
 import { saveSoloGame } from './history.js';
-import { submitScore, fetchLeaderboard, getSavedNickname } from './leaderboard.js';
+import { submitScore, renderInlineLeaderboard, getSavedNickname } from './leaderboard.js';
 
 export const SOLO_ROUNDS = 3;
 const HISTORY_KEY = 'magicspin_history_v1';
@@ -132,8 +132,7 @@ export function showSoloResults(newGame) {
             ${splitsHtml ? `<div class="solo-splits">${splitsHtml}</div>` : ''}
 
             <div class="solo-lb-section">
-                <div class="solo-lb-title">🏆 ${isIt ? 'Classifica Globale' : 'Global Leaderboard'}</div>
-                <div id="solo-lb-inline" class="solo-lb-inline"><div class="lb-loading">⏳</div></div>
+                <div id="solo-lb-inline" class="win-lb-inline"></div>
             </div>
 
             <div class="win-cta-stack">
@@ -149,52 +148,11 @@ export function showSoloResults(newGame) {
 
     document.getElementById('solo-newgame-btn')?.addEventListener('click', newGame);
 
-    // Auto-submit + load leaderboard in background
+    // Auto-submit + show inline leaderboard with tabs
     (async () => {
-        const rank = await submitScore({ nickname: nick, mode: 'solo', score: totalScore, time_seconds: totalTime });
-        const data = await fetchLeaderboard('solo', nick);
+        await submitScore({ nickname: nick, mode: 'solo', score: totalScore, time_seconds: totalTime });
         const lbEl = document.getElementById('solo-lb-inline');
-        if (!lbEl) return;
-
-        const top = data?.top ?? [];
-        const userRank = rank ?? data?.userRank ?? null;
-        const nickLower = nick.toLowerCase();
-
-        function fmtTime(s) { const m = Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
-
-        if (!top.length) {
-            lbEl.innerHTML = `<div class="lb-empty">${isIt ? 'Primo nella classifica!' : 'First on the board!'}</div>`;
-            return;
-        }
-
-        let rows = top.map((e, i) => {
-            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
-            const isMe = String(e.nickname).toLowerCase() === nickLower;
-            return `<div class="lb-row ${i < 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}">
-                <span class="lb-rank">${medal}</span>
-                <span class="lb-name">${String(e.nickname).replace(/&/g,'&amp;').replace(/</g,'&lt;')}${isMe ? ' 👈' : ''}</span>
-                <span class="lb-metrics">
-                    <span class="lb-time">${fmtTime(e.time_seconds ?? 0)}</span>
-                    <span class="lb-score">€${Number(e.score).toLocaleString('it-IT')}</span>
-                </span>
-            </div>`;
-        }).join('');
-
-        const alreadyVisible = userRank && userRank <= top.length;
-        let myRowHtml = '';
-        if (userRank && !alreadyVisible) {
-            myRowHtml = `
-                <div class="lb-separator">· · ·</div>
-                <div class="lb-row lb-me">
-                    <span class="lb-rank">${userRank}</span>
-                    <span class="lb-name">${nick} 👈</span>
-                    <span class="lb-metrics">
-                        <span class="lb-time">${fmtTime(totalTime)}</span>
-                        <span class="lb-score">€${totalScore.toLocaleString('it-IT')}</span>
-                    </span>
-                </div>`;
-        }
-        lbEl.innerHTML = `<div class="lb-table">${rows}${myRowHtml}</div>`;
+        if (lbEl) renderInlineLeaderboard(lbEl, 'solo', nick);
     })();
 
     const shareBtn = document.getElementById('solo-share-btn');

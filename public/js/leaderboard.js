@@ -163,6 +163,39 @@ function escHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+export async function renderInlineLeaderboard(container, defaultTab = 'solo', nickname = '') {
+    if (!container) return;
+    const isIt = getCurrentLang() === 'it';
+    const uid = Date.now();
+
+    container.innerHTML = `
+        <div class="lb-inline-tabs">
+            <button class="lb-tab ${defaultTab === 'solo' ? 'active' : ''}" data-mode="solo">⏱ Solo</button>
+            <button class="lb-tab ${defaultTab === 'mp' ? 'active' : ''}" data-mode="mp">👥 ${isIt ? 'Torneo' : 'Tournament'}</button>
+        </div>
+        <div class="lb-inline-body" id="lb-ib-${uid}"><div class="lb-loading">⏳</div></div>
+    `;
+
+    const body = container.querySelector(`#lb-ib-${uid}`);
+    const tabs = container.querySelectorAll('.lb-tab');
+
+    async function loadTab(mode) {
+        if (body) body.innerHTML = '<div class="lb-loading">⏳</div>';
+        const data = await fetchLeaderboard(mode, nickname);
+        if (body) body.innerHTML = renderTable(data, mode, nickname);
+    }
+
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadTab(btn.dataset.mode);
+        });
+    });
+
+    loadTab(defaultTab);
+}
+
 export function showSubmitAndLeaderboard({ mode, score, time_seconds, suggestedName }) {
     const isIt = getCurrentLang() === 'it';
     const saved = getSavedNickname() || suggestedName || '';

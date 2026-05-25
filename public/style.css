@@ -5661,7 +5661,7 @@ body.manche-finale .board-frame {
 
 .name-input-row input {
     flex: 1;
-    padding: 10px 12px 10px 0;
+    padding: 10px 12px;
     background: transparent;
     border: none;
     border-bottom: 2px solid rgba(255,255,255,0.15);
@@ -5671,6 +5671,7 @@ body.manche-finale .board-frame {
     font-family: var(--font-family);
     transition: border-color 0.2s ease;
     box-sizing: border-box;
+    text-align: center;
 }
 .name-input-row input:focus {
     outline: none;
@@ -5721,6 +5722,20 @@ body.manche-finale .board-frame {
     border-color: rgba(251,191,36,0.4);
     color: #fbbf24;
     background: rgba(251,191,36,0.04);
+}
+.btn-add-player--prominent {
+    width: auto;
+    align-self: center;
+    border: 1.5px solid rgba(251,191,36,0.45);
+    color: #fbbf24;
+    font-weight: 600;
+    padding: 7px 16px;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+}
+.btn-add-player--prominent:hover {
+    background: rgba(251,191,36,0.1);
+    border-color: rgba(251,191,36,0.7);
 }
 
 /* Mode info — inline badge row, NOT cards */
@@ -7067,7 +7082,16 @@ body.manche-finale .board-frame {
 .lb-body {
     width: 100%;
     min-height: 120px;
+    max-height: 340px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(251,191,36,0.25) transparent;
+    mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
 }
+.lb-body::-webkit-scrollbar { width: 4px; }
+.lb-body::-webkit-scrollbar-track { background: transparent; }
+.lb-body::-webkit-scrollbar-thumb { background: rgba(251,191,36,0.25); border-radius: 2px; }
 .lb-loading, .lb-empty {
     text-align: center;
     color: rgba(255,255,255,0.4);
@@ -7360,9 +7384,32 @@ body.manche-finale .board-frame {
 .solo-lb-section {
     width: 100%;
     margin: 12px 0 4px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    padding-top: 12px;
 }
+
+/* Shared inline leaderboard (solo + mp win screen) */
+.win-lb-inline {
+    width: 100%;
+    margin: 16px 0 4px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 14px;
+}
+.lb-inline-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+.lb-inline-body {
+    max-height: 304px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(251,191,36,0.25) transparent;
+    mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+}
+.lb-inline-body::-webkit-scrollbar { width: 4px; }
+.lb-inline-body::-webkit-scrollbar-track { background: transparent; }
+.lb-inline-body::-webkit-scrollbar-thumb { background: rgba(251,191,36,0.25); border-radius: 2px; }
 .solo-lb-title {
     font-size: 0.75rem;
     font-weight: 700;
