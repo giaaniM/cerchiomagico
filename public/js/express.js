@@ -20,7 +20,7 @@ export function callExpressConsonant() {
     }
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        triggerExpressBankruptcy(t('msg.alreadycalled.inline'));
+        triggerExpressBankruptcy(t('msg.alreadycalled.inline'), letter);
         return;
     }
 
@@ -51,7 +51,7 @@ export function callExpressConsonant() {
             }
         }, occurrences * 1500 + 500);
     } else {
-        triggerExpressBankruptcy(t('msg.notpresent.inline'));
+        triggerExpressBankruptcy(t('msg.notpresent.inline'), letter);
     }
 }
 
@@ -74,7 +74,7 @@ export function buyExpressVowel() {
 
     const normalized = normalizeChar(letter);
     if (gameState.usedLetters.has(normalized)) {
-        triggerExpressBankruptcy(t('msg.alreadycalled.inline'));
+        triggerExpressBankruptcy(t('msg.alreadycalled.inline'), letter);
         return;
     }
 
@@ -96,11 +96,11 @@ export function buyExpressVowel() {
             }
         }, occurrences * 1500 + 500);
     } else {
-        triggerExpressBankruptcy(t('msg.notpresent.inline'));
+        triggerExpressBankruptcy(t('msg.notpresent.inline'), letter);
     }
 }
 
-export function triggerExpressBankruptcy(reason) {
+export function triggerExpressBankruptcy(reason, letter = null) {
     soundManager.stopExpress();
     const player = getCurrentPlayer();
     const hasShield = gameState.hasShield[player.name];
@@ -120,7 +120,8 @@ export function triggerExpressBankruptcy(reason) {
         soundManager.playGameOver();
         gameState.partialScores[player.name] = 0;
         renderPlayersList();
-        showPopup(popup('💥', t('msg.crollo.title'), reason), 4000, 'danger');
+        const title = letter ? `💥 "${letter}" – ${t('msg.crollo.title')}` : `💥 ${t('msg.crollo.title')}`;
+        showPopup(`<div class="popup-crollo-express"><div class="crollo-letter">${letter ?? '💥'}</div><div class="crollo-title">${t('msg.crollo.title')}</div><div class="crollo-reason">${reason}</div></div>`, 4000, 'danger');
         setTimeout(passTurn, 4500);
     }
 }
