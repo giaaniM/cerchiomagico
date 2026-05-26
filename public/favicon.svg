@@ -1,14 +1,215 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="32" cy="32" r="32" fill="#1a1a2e"/>
-  <circle cx="32" cy="32" r="28" fill="none" stroke="#f59e0b" stroke-width="3"/>
-  <circle cx="32" cy="32" r="5" fill="#f59e0b"/>
-  <line x1="32" y1="4" x2="32" y2="14" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="32" y1="50" x2="32" y2="60" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="4" y1="32" x2="14" y2="32" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="50" y1="32" x2="60" y2="32" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="11.5" y1="11.5" x2="18.5" y2="18.5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="45.5" y1="45.5" x2="52.5" y2="52.5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="52.5" y1="11.5" x2="45.5" y2="18.5" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="18.5" y1="45.5" x2="11.5" y2="52.5" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round"/>
-  <polygon points="32,4 34,10 32,9 30,10" fill="#ef4444"/>
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 520 520" width="520" height="520">
+  <defs>
+    
+    <linearGradient id="c-neon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00f2ff"></stop>
+      <stop offset="100%" stop-color="#ff00d4"></stop>
+    </linearGradient>
+    <linearGradient id="c-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe681"></stop>
+      <stop offset="50%" stop-color="#d4af37"></stop>
+      <stop offset="100%" stop-color="#8a6e18"></stop>
+    </linearGradient>
+    <linearGradient id="c-tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"></stop>
+      <stop offset="100%" stop-color="#e2e8f0"></stop>
+    </linearGradient>
+    <linearGradient id="c-gem" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff99ee"></stop>
+      <stop offset="40%" stop-color="#ff00d4"></stop>
+      <stop offset="100%" stop-color="#a30090"></stop>
+    </linearGradient>
+    <linearGradient id="c-spoke" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.5"></stop>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.6"></stop>
+    </linearGradient>
+    <radialGradient id="c-light" cx="0.5" cy="0.35" r="0.7">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"></stop>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.04"></stop>
+      <stop offset="70%" stop-color="#070b19" stop-opacity="0.10"></stop>
+      <stop offset="100%" stop-color="#070b19" stop-opacity="0.55"></stop>
+    </radialGradient>
+    <clipPath id="c-wheel-clip">
+      <circle cx="260" cy="260" r="232"></circle>
+    </clipPath>
+    <filter id="c-soft-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6"></feGaussianBlur>
+    </filter>
+    <filter id="c-cursor-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="blur"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+    <filter id="c-tile-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.8"></feGaussianBlur>
+      <feOffset dx="0" dy="1" result="offsetblur"></feOffset>
+      <feComponentTransfer><feFuncA type="linear" slope="0.45"></feFuncA></feComponentTransfer>
+      <feMerge>
+        <feMergeNode></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+    <path id="c-bot" d="M 100 260 A 160 160 0 0 0 420 260" fill="none"></path>
+  </defs>
+
+  
+  <circle cx="260" cy="260" r="252" fill="url(#c-neon)" opacity="0.18" filter="url(#c-soft-glow)"></circle>
+
+  
+  <circle cx="260" cy="260" r="248" fill="#070b19"></circle>
+
+  
+  <g clip-path="url(#c-wheel-clip)">
+    <path d="M 260 260 L 214.74 32.46 A 232 232 0 0 1 305.26 32.46 Z" fill="#155e5a"></path>
+    <path d="M 260 260 L 305.26 32.46 A 232 232 0 0 1 388.89 67.10 Z" fill="#a16207"></path>
+    <path d="M 260 260 L 388.89 67.10 A 232 232 0 0 1 452.90 131.11 Z" fill="#0e7490"></path>
+    <path d="M 260 260 L 452.90 131.11 A 232 232 0 0 1 487.54 214.74 Z" fill="#1e293b"></path>
+    <path d="M 260 260 L 487.54 214.74 A 232 232 0 0 1 487.54 305.26 Z" fill="#155e5a"></path>
+    <path d="M 260 260 L 487.54 305.26 A 232 232 0 0 1 452.90 388.89 Z" fill="#0e7490"></path>
+    <path d="M 260 260 L 452.90 388.89 A 232 232 0 0 1 388.89 452.90 Z" fill="#a16207"></path>
+    <path d="M 260 260 L 388.89 452.90 A 232 232 0 0 1 305.26 487.54 Z" fill="#a855f7"></path>
+    <path d="M 260 260 L 305.26 487.54 A 232 232 0 0 1 214.74 487.54 Z" fill="#0e7490"></path>
+    <path d="M 260 260 L 214.74 487.54 A 232 232 0 0 1 131.11 452.90 Z" fill="#155e5a"></path>
+    <path d="M 260 260 L 131.11 452.90 A 232 232 0 0 1 67.10 388.89 Z" fill="#a16207"></path>
+    <path d="M 260 260 L 67.10 388.89 A 232 232 0 0 1 32.46 305.26 Z" fill="#1e293b"></path>
+    <path d="M 260 260 L 32.46 305.26 A 232 232 0 0 1 32.46 214.74 Z" fill="#155e5a"></path>
+    <path d="M 260 260 L 32.46 214.74 A 232 232 0 0 1 67.10 131.11 Z" fill="#a16207"></path>
+    <path d="M 260 260 L 67.10 131.11 A 232 232 0 0 1 131.11 67.10 Z" fill="#0e7490"></path>
+    <path d="M 260 260 L 131.11 67.10 A 232 232 0 0 1 214.74 32.46 Z" fill="#1e293b"></path>
+
+    
+    <g>
+      <line x1="260" y1="260" x2="214.74" y2="32.46" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="305.26" y2="32.46" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="388.89" y2="67.10" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="452.90" y2="131.11" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="487.54" y2="214.74" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="487.54" y2="305.26" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="452.90" y2="388.89" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="388.89" y2="452.90" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="305.26" y2="487.54" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="214.74" y2="487.54" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="131.11" y2="452.90" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="67.10" y2="388.89" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="32.46" y2="305.26" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="32.46" y2="214.74" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="67.10" y2="131.11" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+      <line x1="260" y1="260" x2="131.11" y2="67.10" stroke="url(#c-spoke)" stroke-width="0.9"></line>
+    </g>
+
+    
+    <rect x="0" y="0" width="520" height="520" fill="url(#c-light)"></rect>
+    <ellipse cx="260" cy="120" rx="180" ry="40" fill="#ffffff" fill-opacity="0.15"></ellipse>
+    <ellipse cx="260" cy="400" rx="180" ry="50" fill="#000000" fill-opacity="0.30"></ellipse>
+  </g>
+
+  
+  <g fill="#fbbf24">
+    <circle cx="215.52" cy="36.38" r="1.6"></circle>
+    <circle cx="304.48" cy="36.38" r="1.6"></circle>
+    <circle cx="386.67" cy="70.42" r="1.6"></circle>
+    <circle cx="449.58" cy="133.33" r="1.6"></circle>
+    <circle cx="483.62" cy="215.52" r="1.6"></circle>
+    <circle cx="483.62" cy="304.48" r="1.6"></circle>
+    <circle cx="449.58" cy="386.67" r="1.6"></circle>
+    <circle cx="386.67" cy="449.58" r="1.6"></circle>
+    <circle cx="304.48" cy="483.62" r="1.6"></circle>
+    <circle cx="215.52" cy="483.62" r="1.6"></circle>
+    <circle cx="133.33" cy="449.58" r="1.6"></circle>
+    <circle cx="70.42" cy="386.67" r="1.6"></circle>
+    <circle cx="36.38" cy="304.48" r="1.6"></circle>
+    <circle cx="36.38" cy="215.52" r="1.6"></circle>
+    <circle cx="70.42" cy="133.33" r="1.6"></circle>
+    <circle cx="133.33" cy="70.42" r="1.6"></circle>
+  </g>
+
+  
+  <circle cx="260" cy="260" r="248" fill="none" stroke="url(#c-gold)" stroke-width="1" opacity="0.9"></circle>
+  <circle cx="260" cy="260" r="244" fill="none" stroke="url(#c-neon)" stroke-width="6"></circle>
+  <circle cx="260" cy="260" r="240" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="0.8"></circle>
+  <circle cx="260" cy="260" r="233" fill="none" stroke="url(#c-gold)" stroke-width="2"></circle>
+  <circle cx="260" cy="260" r="231" fill="none" stroke="#000000" stroke-opacity="0.4" stroke-width="1"></circle>
+
+  
+  <g fill="#fbbf24">
+    <g transform="translate(150.1 24.4)">
+      <path d="M 0 -9 L 1.62 -1.62 L 9 0 L 1.62 1.62 L 0 9 L -1.62 1.62 L -9 0 L -1.62 -1.62 Z"></path>
+    </g>
+    <g transform="translate(369.9 24.4)">
+      <path d="M 0 -9 L 1.62 -1.62 L 9 0 L 1.62 1.62 L 0 9 L -1.62 1.62 L -9 0 L -1.62 -1.62 Z"></path>
+    </g>
+    <g transform="translate(369.9 495.6)">
+      <path d="M 0 -9 L 1.62 -1.62 L 9 0 L 1.62 1.62 L 0 9 L -1.62 1.62 L -9 0 L -1.62 -1.62 Z"></path>
+    </g>
+    <g transform="translate(150.1 495.6)">
+      <path d="M 0 -9 L 1.62 -1.62 L 9 0 L 1.62 1.62 L 0 9 L -1.62 1.62 L -9 0 L -1.62 -1.62 Z"></path>
+    </g>
+  </g>
+
+  
+  <path d="M 100 260 A 160 160 0 0 0 420 260" fill="none" stroke="#070b19" stroke-width="32" opacity="0.92" stroke-linecap="round"></path>
+  <path d="M 100 260 A 160 160 0 0 0 420 260" fill="none" stroke="url(#c-gold)" stroke-width="0.8" opacity="0.7"></path>
+  <path d="M 112 260 A 148 148 0 0 0 408 260" fill="none" stroke="url(#c-gold)" stroke-width="0.5" opacity="0.4"></path>
+
+  
+  <g>
+    <path d="M 113.42 184 L 406.58 184 L 406.58 222 L 431 222 L 431 298 L 406.58 298 L 406.58 336 L 113.42 336 L 113.42 298 L 89 298 L 89 222 L 113.42 222 Z" fill="none" stroke="url(#c-neon)" stroke-width="7" filter="url(#c-soft-glow)" opacity="0.65"></path>
+    <path d="M 114.28 185 L 405.72 185 L 405.72 222.5 L 430 222.5 L 430 297.5 L 405.72 297.5 L 405.72 335 L 114.28 335 L 114.28 297.5 L 90 297.5 L 90 222.5 L 114.28 222.5 Z" fill="#070b19"></path>
+    <path d="M 114.28 185 L 405.72 185 L 405.72 222.5 L 430 222.5 L 430 297.5 L 405.72 297.5 L 405.72 335 L 114.28 335 L 114.28 297.5 L 90 297.5 L 90 222.5 L 114.28 222.5 Z" fill="none" stroke="url(#c-neon)" stroke-width="2.6"></path>
+    <path d="M 116.85 188 L 403.15 188 L 403.15 224 L 427 224 L 427 296 L 403.15 296 L 403.15 332 L 116.85 332 L 116.85 296 L 93 296 L 93 224 L 116.85 224 Z" fill="none" stroke="url(#c-gold)" stroke-width="0.6" opacity="0.55"></path>
+    <path d="M 120.28 192 L 399.72 192 L 399.72 226 L 423 226 L 423 294 L 399.72 294 L 399.72 328 L 120.28 328 L 120.28 294 L 97 294 L 97 226 L 120.28 226 Z" fill="#0f172a"></path>
+
+    
+    <g filter="url(#c-tile-shadow)">
+      <rect x="111.5" y="206.5" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="138.8" y="231.75" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">M</text>
+    </g>
+    <g filter="url(#c-tile-shadow)">
+      <rect x="172.1" y="206.5" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="199.4" y="231.75" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">A</text>
+    </g>
+    <g filter="url(#c-tile-shadow)">
+      <rect x="232.7" y="206.5" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="260" y="231.75" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">G</text>
+    </g>
+    <g filter="url(#c-tile-shadow)">
+      <rect x="293.3" y="206.5" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="320.6" y="231.75" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">I</text>
+    </g>
+    <g filter="url(#c-tile-shadow)">
+      <rect x="353.9" y="206.5" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="381.2" y="231.75" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">C</text>
+    </g>
+    
+    <g filter="url(#c-tile-shadow)">
+      <rect x="141.8" y="263" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="169.1" y="288.25" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">S</text>
+    </g>
+    <g filter="url(#c-tile-shadow)">
+      <rect x="202.4" y="263" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="229.7" y="288.25" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">P</text>
+    </g>
+    <g filter="url(#c-tile-shadow)">
+      <rect x="263" y="263" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="290.3" y="288.25" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">I</text>
+    </g>
+    <g filter="url(#c-tile-shadow)">
+      <rect x="323.6" y="263" width="54.6" height="50.5" rx="3" fill="url(#c-tile)" stroke="url(#c-gold)" stroke-width="0.8"></rect>
+      <text x="350.9" y="288.25" font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="800" font-size="32" fill="#0f172a" text-anchor="middle" dominant-baseline="central">N</text>
+    </g>
+  </g>
+
+  
+  <g filter="url(#c-cursor-glow)">
+    <polygon points="260,2 240,44 280,44" fill="url(#c-gem)" stroke="url(#c-gold)" stroke-width="0.8"></polygon>
+    <polygon points="260,8 252,30 268,30" fill="#ffffff" fill-opacity="0.5"></polygon>
+  </g>
+
+  
+  <text font-family="Lexend, Helvetica, Arial, sans-serif" font-weight="700" font-size="14" fill="url(#c-gold)" letter-spacing="7">
+    <textPath href="#c-bot" xlink:href="#c-bot" startOffset="50%" text-anchor="middle">CERCHIO  MAGICO</textPath>
+  </text>
 </svg>

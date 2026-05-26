@@ -429,9 +429,9 @@ body {
 
 body {
     font-family: var(--font-main);
-    background-color: var(--bg-dark);
-    background-image:
-        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%);
+    background-color: var(--bg-base);
+    background-image: var(--bg-ambient);
+    background-attachment: fixed;
     color: var(--text-primary);
     margin: 0;
     padding: 40px 10px 80px 10px;
@@ -486,7 +486,13 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 .logo-icon {
     font-size: 3rem;
     filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6));
-    animation: spin-slow 25s linear infinite;
+    /* removed permanent animation — spin-slow is now hover-only */
+    transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.logo-icon:hover,
+.logo-container:hover .logo-icon {
+    animation: spin-slow 1.5s var(--ease-out);
 }
 
 @keyframes spin-slow {
@@ -930,26 +936,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     font-size: 1.1rem;
     color: var(--text-primary);
     text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}5);
-    border-radius: 50px;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
 }
-
-.btn-secondary:hover {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-    border-color: var(--accent-blue);
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 rgba(0,0,0,0.3);
-}
-
-.btn-secondary:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 0 rgba(0,0,0,0.3);
-}
+/* NOTE: .btn-secondary orphan body + :hover/:active removed (old duplicate) */
 
 .btn-guess {
     padding: 15px 30px;
@@ -1315,27 +1303,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
-.btn-skip-phrase {
-    justify-self: end;
-    margin-right: 108px;
-    background: rgba(251, 191, 36, 0.08);
-    border: 1px solid rgba(251, 191, 36, 0.35);
-    color: rgba(251, 191, 36, 0.75);
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    padding: 7px 14px;
-    border-radius: 20px;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-.btn-skip-phrase:hover {
-    background: rgba(251, 191, 36, 0.15);
-    border-color: rgba(251, 191, 36, 0.7);
-    color: var(--accent-gold);
-    box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
-}
+/* .btn-skip-phrase removed — replaced by .btn.btn--ghost.btn--sm in HTML */
+/* Layout-specific override for skip button position kept below via #skip-phrase-btn if needed */
 
 .used-letter.correct {
     background: var(--accent-green);
@@ -1773,36 +1742,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     box-shadow: 0 0 100px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 191, 36, 0.3);
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-    color: white; /* Changed to white for better contrast */
-    font-weight: 800;
-    border: none;
-    padding: 18px 45px;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    text-transform: uppercase;
-}
-
-.btn-primary:hover:not(:disabled) {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 15px 35px rgba(0, 242, 255, 0.5);
-}
-
-.btn-secondary {
-    background: rgba(157, 78, 221, 0.1);
-    color: var(--accent-primary);
-    border: 1px solid rgba(0, 242, 255, 0.3);
-    padding: 12px 24px;
-    border-radius: 50px;
-    backdrop-filter: blur(10px);
-}
-
-.btn-secondary:hover {
-    background: rgba(157, 78, 221, 0.2);
-    border-color: var(--accent-secondary);
-}
+/* .btn-primary, .btn-secondary legacy defs removed — use .btn .btn--primary / .btn .btn--secondary */
 }
 
 .modal-overlay {
@@ -2335,11 +2275,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     margin: 10px 0;
 }
 
-.btn-small {
-    padding: 8px 15px;
-    font-size: 0.9rem;
-    margin-top: 10px;
-}
+/* .btn-small removed — use .btn .btn--sm */
 
 /* ===== New Game Layout ===== */
 
@@ -2364,7 +2300,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 .logo-icon-small {
     font-size: 1.5rem;
     filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.4));
-    animation: spin-slow 25s linear infinite;
+    /* removed permanent spin — hover-only via .logo-icon rules */
+    transition: transform var(--dur-slow) var(--ease-out);
 }
 
 .logo-text-small {
@@ -2966,50 +2903,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     border-top: 35px solid var(--accent-secondary);
 }
 
-.btn-spin {
-    padding: 22px 50px;
-    font-size: 1.6rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--accent-tertiary), var(--accent-secondary));
-    color: white;
-    border: none;
-    border-radius: 60px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.6), inset 0 2px 5px rgba(255,255,255,0.4);
-    text-transform: uppercase;
-    animation: spinPulse 2s infinite ease-in-out;
-}
-
-@keyframes spinPulse {
-    0%, 100% {
-        box-shadow: 0 8px 0 #581c87, 0 12px 30px rgba(168, 85, 247, 0.5);
-    }
-    50% {
-        box-shadow: 0 8px 0 #581c87, 0 20px 45px rgba(168, 85, 247, 0.7), 0 0 30px rgba(255, 0, 212, 0.5);
-    }
-}
-
-.btn-spin:hover:not(:disabled) {
-    transform: translateY(2px) scale(1.02);
-    box-shadow: 0 6px 0 #581c87, 0 10px 20px rgba(168, 85, 247, 0.6);
-    background: linear-gradient(135deg, var(--accent-tertiary), #d946ef);
-}
-
-.btn-spin:active:not(:disabled) {
-    transform: translateY(8px);
-    box-shadow: 0 0 0 #7b2cbf, 0 4px 10px rgba(255, 0, 212, 0.2);
-}
-
-.btn-spin:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    animation: none;
-    transform: translateY(8px);
-    box-shadow: none;
-}
-    box-shadow: 0 0 0 #b45309;
-}
+/* .btn-spin removed — use .btn .btn--gold .btn--xl */
 
 /* Action Controls */
 .action-controls {
@@ -3067,99 +2961,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     box-shadow: none;
 }
 
-.btn-action {
-    padding: 12px 28px;
-    font-weight: 800;
-    font-size: 1rem;
-    background: linear-gradient(135deg, var(--accent-primary), #0284c7);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(0, 242, 255, 0.4), inset 0 2px 4px rgba(255,255,255,0.3);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.btn-action:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 242, 255, 0.6), inset 0 2px 4px rgba(255,255,255,0.4);
-    filter: brightness(1.1);
-}
-
-.btn-action:active:not(:disabled) {
-    transform: translateY(4px);
-    box-shadow: 0 0 0 #0369a1;
-}
-
-.btn-action:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: translateY(4px);
-    box-shadow: 0 0 0 #0369a1;
-}
-
-.btn-vowel {
-    background: linear-gradient(180deg, var(--accent-pink) 0%, #be185d 100%);
-    box-shadow: 0 4px 0 #831843, 0 6px 12px rgba(0,0,0,0.3);
-}
-
-.btn-vowel:hover:not(:disabled) {
-    background: linear-gradient(180deg, #f472b6 0%, #be185d 100%);
-    box-shadow: 0 2px 0 #831843, 0 4px 8px rgba(0,0,0,0.3);
-}
-
-.btn-vowel:active:not(:disabled) {
-    box-shadow: 0 0 0 #831843;
-}
-
-.btn-solve {
-    padding: 14px 24px;
-    font-weight: 800;
-    font-size: 1.1rem;
-    background: linear-gradient(180deg, #10b981 0%, #047857 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    box-shadow: 0 5px 0 #064e3b, 0 8px 16px rgba(0,0,0,0.3);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.btn-solve:hover {
-    transform: translateY(2px);
-    box-shadow: 0 3px 0 #064e3b, 0 5px 10px rgba(0,0,0,0.3);
-    background: linear-gradient(180deg, #34d399 0%, #047857 100%);
-}
-.btn-solve:active {
-    transform: translateY(5px);
-    box-shadow: 0 0 0 #064e3b;
-}
-
-.btn-pass {
-    padding: 14px 24px;
-    font-weight: 800;
-    font-size: 1rem;
-    background: linear-gradient(180deg, #64748b 0%, #334155 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    box-shadow: 0 4px 0 #1e293b, 0 6px 12px rgba(0,0,0,0.3);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-.btn-pass:hover {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #1e293b, 0 4px 8px rgba(0,0,0,0.3);
-}
-.btn-pass:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 0 #1e293b;
-}
+/* .btn-action, .btn-vowel removed — use .btn .btn--cyan / .btn .btn--primary */
+/* .btn-solve, .btn-pass removed — use .btn .btn--primary / .btn .btn--ghost */
 
 /* Game Footer */
 .game-footer {
@@ -6023,41 +5826,8 @@ body.manche-finale .board-frame {
     color: #f87171;
 }
 
-.btn-add-player {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: 1px dashed rgba(255,255,255,0.18);
-    border-radius: 10px;
-    color: rgba(255,255,255,0.35);
-    font-size: 0.8rem;
-    font-family: var(--font-family);
-    padding: 8px 14px;
-    cursor: pointer;
-    width: 100%;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-.btn-add-player:hover {
-    border-color: rgba(251,191,36,0.4);
-    color: #fbbf24;
-    background: rgba(251,191,36,0.04);
-}
-.btn-add-player--prominent {
-    width: auto;
-    align-self: center;
-    border: 1.5px solid rgba(251,191,36,0.45);
-    color: #fbbf24;
-    font-weight: 600;
-    padding: 7px 16px;
-    font-size: 0.78rem;
-    letter-spacing: 0.01em;
-}
-.btn-add-player--prominent:hover {
-    background: rgba(251,191,36,0.1);
-    border-color: rgba(251,191,36,0.7);
-}
+/* .btn-add-player, .btn-add-player--prominent removed — use .btn .btn--secondary */
+/* TODO audit: if layout breaks check #add-player-btn in setup.js */
 
 /* Mode info — inline badge row, NOT cards */
 .mode-info-card {
