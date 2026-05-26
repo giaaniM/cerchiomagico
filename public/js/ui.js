@@ -1,6 +1,6 @@
 import { gameState, TOTAL_MANCHES, VOWEL_COST } from './state.js';
 import { elements } from './elements.js';
-import { showPopup, showMessage } from './utils.js';
+import { showPopup, showMessage, avatarUrl } from './utils.js';
 import { renderPlayersList, getCurrentPlayer } from './players.js';
 import { t, getCurrentLang } from './lang.js';
 import { saveMultiplayerGame } from './history.js';
@@ -193,7 +193,7 @@ export function showPartialRanking() {
     sortedPlayers.forEach((p, i) => {
         const score = gameState.totalScores[p.name] || 0;
         const medal = medals[i] || `${i + 1}.`;
-        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(p.name)}&radius=20`;
+        const avatarUrl = `https://robohash.org/${encodeURIComponent(p.name)}.png?set=4&size=80x80&bgset=bg1`;
         html += `
             <div class="ranking-item ${i === 0 ? 'top-rank' : ''}">
                 <span class="rank-medal">${medal}</span>
@@ -243,7 +243,7 @@ export function showFinalResults(newGame) {
         const p = sortedPlayers[order];
         if (!p) return;
         const score = gameState.totalScores[p.name] || 0;
-        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(p.name)}&radius=50`;
+        const avatarUrl = `https://robohash.org/${encodeURIComponent(p.name)}.png?set=4&size=80x80&bgset=bg1`;
         resultsHtml += `
         <div class="podium-place ${cls}">
             <div class="place-icon">${icon}</div>

@@ -9,7 +9,7 @@ let _onNewGame = () => {};
 export function setOnNewGame(fn) { _onNewGame = fn; }
 import { t, getCurrentLang } from './lang.js';
 import { elements } from './elements.js';
-import { normalizeChar, normalizePhrase, sanitizePhrase, isVowel, showScreen, showMessage, showPopup, popup, npPopup, avatarUrl, showFloatingScore } from './utils.js';
+import { normalizeChar, normalizePhrase, sanitizePhrase, isVowel, showScreen, showMessage, showPopup, popup, npPopup, avatarUrl, preloadAvatars, showFloatingScore } from './utils.js';
 import { applyMobileLayout } from './mobile-layout.js';
 import { soundManager } from './sound.js';
 import { getCurrentPlayer, passTurn, renderPlayersList } from './players.js';
@@ -201,7 +201,7 @@ export function callConsonant() {
     if (isVowel(letter)) {
         soundManager.playError();
         showMessage(t('msg.calledvowel'), 'error');
-        showPopup(popup('🚫', t('msg.insertedvowel.title'), t('msg.insertedvowel.body')), 2500, 'danger');
+        showPopup(npPopup({ badge: t('msg.insertedvowel.title'), badgeColor: 'red', avatar: avatarUrl(player.name), main: player.name, sub: t('msg.insertedvowel.body') }), 2500, 'danger slim-pad');
         return;
     }
 
@@ -216,7 +216,7 @@ export function callConsonant() {
             gameState.wheelPhase = 'idle';
             updateUI();
         } else {
-            showPopup(popup('🚫', t('msg.alreadycalled.title'), t('msg.alreadycalled.body')), 3000, 'danger');
+            showPopup(npPopup({ badge: t('msg.alreadycalled.title'), badgeColor: 'red', avatar: avatarUrl(player.name), main: player.name, sub: t('msg.alreadycalled.body') }), 3000, 'danger slim-pad');
             setTimeout(passTurn, 3000);
         }
         return;
@@ -270,12 +270,18 @@ export function callConsonant() {
             if (specialAction === 'RADDOPPIA' || specialAction === 'RADDOPPIA_ZERO') {
                 gameState.partialScores[player.name] = raddoppiaData.final;
                 const { isZero, current, final } = raddoppiaData;
-                showPopup(popup('🔥', 'RADDOPPIA!', isZero ? `Bonus: €${final}` : `Da €${current} → €${final}`), 3500, 'warning');
+                showPopup(npPopup({ badge: 'RADDOPPIA! 🔥', badgeColor: 'gold', avatar: avatarUrl(player.name), main: player.name, sub: isZero ? `Bonus: €${final}` : `Da €${current} → €${final}` }), 3500, 'subtle-success slim-pad');
                 renderPlayersList();
                 soundManager.playCash();
             } else if (specialAction === 'SCUDO') {
-                gameState.hasShield[player.name] = true;
-                showPopup(popup('🛡️', t('msg.shield.title'), `${player.name} ${t('msg.shield.body')}`), 2500, 'subtle-success');
+                if (gameState.hasShield[player.name]) {
+                    // Already has shield → €1000 bonus
+                    gameState.partialScores[player.name] = (gameState.partialScores[player.name] || 0) + 1000;
+                    showPopup(npPopup({ badge: t('msg.shield.title'), badgeColor: 'blue', avatar: avatarUrl(player.name), main: player.name, sub: 'Hai già lo scudo! Bonus €1.000 💰' }), 2500, 'subtle-success slim-pad');
+                } else {
+                    gameState.hasShield[player.name] = true;
+                    showPopup(npPopup({ badge: t('msg.shield.title'), badgeColor: 'green', avatar: avatarUrl(player.name), main: player.name, sub: t('msg.shield.body') }), 2500, 'subtle-success slim-pad');
+                }
                 renderPlayersList();
             }
 
@@ -288,7 +294,7 @@ export function callConsonant() {
                 gameState.allConsonantsRevealed = checkAllConsonantsRevealed();
 
                 if (!wasFinished && gameState.allConsonantsRevealed) {
-                    showPopup(popup('✅', t('msg.consonantsfinished.title'), t('msg.consonantsfinished.body')), 2500);
+                    showPopup(npPopup({ badge: t('msg.consonantsfinished.title'), badgeColor: 'green', main: t('msg.consonantsfinished.body') }), 2500, 'subtle-success slim-pad');
                 }
 
                 if (gameState.currentManche === 5) {
@@ -371,7 +377,7 @@ export function buyVowel() {
     if (gameState.usedLetters.has(normalized)) {
         showMessage(`"${letter}" ${t('msg.alreadycalled.body')}`, 'error');
         soundManager.playError();
-        showPopup(popup('🚫', t('msg.vowelalreadycalled.title'), t('msg.turnoflost')), 2000, 'danger');
+        showPopup(npPopup({ badge: t('msg.vowelalreadycalled.title'), badgeColor: 'red', avatar: avatarUrl(player.name), main: player.name, sub: t('msg.turnoflost') }), 2000, 'danger slim-pad');
         setTimeout(passTurn, 2500);
         return;
     }
@@ -405,7 +411,7 @@ export function buyVowel() {
         soundManager.playError();
         const costText = (gameState.currentManche === 5) ? "" : ` (-€${VOWEL_COST})`;
         showMessage(`❌ "${letter}" ${t('msg.notfound')}${costText}`, 'error');
-        showPopup(popup('❌', `"${letter}" ${t('msg.notfound')}`, t('msg.turnoflost')), 2000, 'danger');
+        showPopup(npPopup({ badge: `"${letter}" ${t('msg.notfound')}`, badgeColor: 'red', avatar: avatarUrl(player.name), main: player.name, sub: t('msg.turnoflost') }), 2000, 'danger slim-pad');
         setTimeout(passTurn, 2500);
     }
 }
@@ -462,7 +468,8 @@ export function trySolve() {
         } else {
             soundManager.playError();
             showMessage(t('msg.wrongsolution'), 'error');
-            showPopup(popup('❌', t('msg.wrongsolution.title'), t('msg.turnoflost')), 2500, 'danger');
+            const _solvePlayer = getCurrentPlayer();
+            showPopup(npPopup({ badge: t('msg.wrongsolution.title'), badgeColor: 'red', avatar: avatarUrl(_solvePlayer.name), main: _solvePlayer.name, sub: t('msg.turnoflost') }), 2500, 'danger slim-pad');
             setTimeout(passTurn, 2500);
         }
     }
@@ -672,6 +679,7 @@ export function startGameDirectly(players, soloMode = false, customOpts = null) 
     gameState.gameId++;
     gameState.currentManche = null;
     gameState.players = soloMode ? players : players.sort(() => Math.random() - 0.5);
+    preloadAvatars(gameState.players.map(p => p.name));
     gameState.currentPlayerIndex = 0;
     gameState.totalScores = {};
     gameState.partialScores = {};

@@ -186,7 +186,7 @@ function renderBigLobbyPlayers(players) {
     players.forEach(player => {
         const card = document.createElement('div');
         card.className = 'lobby-player-card';
-        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(player.name)}&radius=50`;
+        const avatarUrl = `https://robohash.org/${encodeURIComponent(player.name)}.png?set=4&size=80x80&bgset=bg1`;
         card.innerHTML = `
             <div class="player-avatar-circle" style="background-image: url('${avatarUrl}'); background-size: cover; background-position: center; font-size: 0;"></div>
             <div class="player-card-name">${player.name}</div>

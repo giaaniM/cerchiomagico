@@ -28,12 +28,11 @@ export function renderPlayersList() {
         // Add Jolly shield if player has it (with pulsing animation)
         const shieldIcon = gameState.hasShield[item.player.name] ? '<span class="shield-icon">🛡️</span>' : '';
 
-        // Avatar URL using DiceBear (Fun Emoji style)
-        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(item.player.name)}&radius=20`;
+        const itemAvatarUrl = avatarUrl(item.player.name);
 
         li.innerHTML = `
             <div class="player-avatar-wrap">
-                <img src="${avatarUrl}" class="player-avatar" alt="Avatar">
+                <img src="${itemAvatarUrl}" class="player-avatar" alt="Avatar">
                 ${gameState.hasShield[item.player.name] ? '<span class="player-shield-badge">🛡️</span>' : ''}
             </div>
             <div class="player-info-wrap">
@@ -62,11 +61,10 @@ export function renderTotalWinnings() {
 
     playersWithTotals.forEach((item) => {
         const li = document.createElement('li');
-        // Small Avatar URL using DiceBear
-        const avatarUrl = `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(item.name)}&radius=20`;
+        const itemAvatarUrl = avatarUrl(item.name);
 
         li.innerHTML = `
-            <img src="${avatarUrl}" class="total-avatar" alt="Avatar">
+            <img src="${itemAvatarUrl}" class="total-avatar" alt="Avatar">
             <span class="win-name">${item.name}</span>
             <span class="win-amount">€${item.total}</span>
         `;

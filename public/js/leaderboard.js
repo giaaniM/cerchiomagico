@@ -17,7 +17,7 @@ function formatTime(secs) {
 }
 
 function fmt(n) {
-    return `€${Number(n).toLocaleString('it-IT')}`;
+    return `€${Math.round(Number(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 }
 
 export async function submitScore({ nickname, mode, score, time_seconds }) {
@@ -114,9 +114,9 @@ export function showLeaderboardPopup(defaultTab = 'solo') {
     loadTab(defaultTab);
 }
 
-function renderTable(data, mode, myNick) {
+function renderTable(data, mode, myNick, limit = Infinity) {
     const isIt = getCurrentLang() === 'it';
-    const top = data?.top ?? [];
+    const top = (data?.top ?? []).slice(0, limit);
     const userRank = data?.userRank ?? null;
     const userWindow = data?.userWindow ?? null;
 
@@ -130,7 +130,7 @@ function renderTable(data, mode, myNick) {
     function renderRow(e, rank) {
         const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}`;
         const isMe = myNickLower && escHtml(e.nickname).toLowerCase() === myNickLower;
-        const timeStr = isSolo ? `<span class="lb-time">${formatTime(e.time_seconds ?? 0)}</span>` : '';
+        const timeStr = isSolo ? `<span class="lb-time">${formatTime(e.time_seconds ?? 0)}<span style="font-size:0.65em;opacity:0.65;margin-left:2px">min</span></span>` : '';
         const scoreStr = `<span class="lb-score${isSolo ? '' : ' lb-score--primary'}">${fmt(e.score)}</span>`;
         return `<div class="lb-row ${rank <= 3 ? 'lb-top' : ''} ${isMe ? 'lb-me' : ''}" data-rank="${rank}">
             <span class="lb-rank">${medal}</span>

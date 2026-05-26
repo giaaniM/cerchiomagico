@@ -76,7 +76,14 @@ export function popup(icon, title, body = '') {
 }
 
 export function avatarUrl(name) {
-    return `https://api.dicebear.com/9.x/fun-emoji/svg?seed=${encodeURIComponent(name)}&radius=50`;
+    return `https://robohash.org/${encodeURIComponent(name)}.png?set=4&size=80x80&bgset=bg1`;
+}
+
+export function preloadAvatars(names) {
+    names.forEach(name => {
+        const img = new Image();
+        img.src = avatarUrl(name);
+    });
 }
 
 // New unified popup builder

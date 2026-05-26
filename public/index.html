@@ -215,7 +215,7 @@
                     <div id="local-names-container" class="names-list"></div>
 
                     <!-- Add player (multi only) -->
-                    <button id="add-player-btn" class="btn-add-player btn-add-player--prominent" type="button" style="display:none" data-i18n="setup.addplayer">+ Aggiungi giocatore</button>
+                    <button id="add-player-btn" class="btn btn--secondary" type="button" style="display:none" data-i18n="setup.addplayer">+ Aggiungi giocatore</button>
 
                     <!-- ③ PRIMARY CTA -->
                     <button id="start-local-game-btn" class="btn btn--primary setup-start-btn" data-i18n="setup.start">
@@ -226,9 +226,7 @@
                     <div class="setup-actions-bottom">
                         <div class="setup-tertiary-row">
                             <button id="leaderboard-btn" class="setup-lb-standalone" data-i18n="setup.leaderboard">🏆 Classifica</button>
-                            <button id="history-btn" class="setup-secondary-btn setup-history-btn" data-i18n="setup.history">📋 Storico</button>
-                            <button id="how-to-play-btn" class="setup-secondary-btn" data-i18n="setup.howtoplay">? Regole</button>
-                            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="setup-secondary-btn setup-kofi-inline" data-i18n="setup.kofi">☕ Caffè</a>
+<button id="how-to-play-btn" class="setup-secondary-btn" data-i18n="setup.howtoplay">? Regole</button>
                         </div>
                     </div>
 
@@ -276,7 +274,7 @@
                     <div id="custom-names-container" class="names-list"></div>
 
                     <!-- Add player -->
-                    <button id="custom-add-player-btn" class="btn-add-player btn-add-player--prominent" type="button" data-i18n="setup.addplayer">+ Aggiungi giocatore</button>
+                    <button id="custom-add-player-btn" class="btn btn--secondary" type="button" data-i18n="setup.addplayer">+ Aggiungi giocatore</button>
 
                     <!-- CTA -->
                     <button id="start-custom-game-btn" class="btn btn--primary setup-start-btn setup-custom-start-btn">
@@ -315,6 +313,19 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Ko-fi support card -->
+            <div class="home-kofi-card">
+                <div class="home-kofi-left">
+                    <span class="home-kofi-icon">☕</span>
+                    <div class="home-kofi-copy">
+                        <span class="home-kofi-title">Questo gioco è gratis</span>
+                        <span class="home-kofi-sub">Se ti piace, un caffè aiuta a tenerlo vivo 🙏</span>
+                    </div>
+                </div>
+                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="home-kofi-btn">Offrimi un caffè</a>
+            </div>
+
         </div>
 
         <!-- Game Screen -->
@@ -387,7 +398,7 @@
                     <!-- Spin Button Center & Consonant Call Area -->
                     <div id="central-action-area" class="central-action-area">
                         <!-- State 1: Spin -->
-                        <button id="spin-btn" class="btn btn--gold btn--xl" data-i18n="game.spin">GIRA IL CERCHIO</button>
+                        <button id="spin-btn" class="btn-spin" data-i18n="game.spin">GIRA IL CERCHIO</button>
 
                         <!-- State 2: Call Consonant (Hidden by default) -->
                         <div id="consonant-call-container" class="consonant-call-container" style="display: none;">
@@ -521,9 +532,14 @@
                     <button id="next-level-btn" class="win-cta-primary">Nuova partita</button>
                 </div>
 
-                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="win-kofi-link" data-i18n="win.kofi.btn">
-                    ☕ Offrimi un caffè
-                </a>
+                <div class="win-kofi-card">
+                    <p class="win-kofi-msg">Questo gioco è gratis e lo tengo vivo da solo.<br>Se ti ha divertito, un caffè fa la differenza 🙏</p>
+                    <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="win-kofi-cta">☕ Offrimi un caffè</a>
+                    <div class="win-kofi-preview">
+                        <img src="/assets/kofi-preview.png" alt="Come donare su Ko-fi" class="win-kofi-preview-img">
+                        <span class="win-kofi-preview-label">Clicca "Tip" per donare €1</span>
+                    </div>
+                </div>
             </div>
         </div>
 

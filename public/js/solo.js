@@ -77,8 +77,31 @@ export function initSoloRecord(playerName) {
     if (personal.length === 0) { row.style.display = 'none'; return; }
     const best = personal.reduce((b, e) => e.time < b.time ? e : b);
     const val = document.getElementById('solo-record-val');
-    if (val) val.textContent = `${formatTime(best.time)} · €${Number(best.score).toLocaleString('it-IT')}`;
+    if (val) val.textContent = `${formatTime(best.time)} · €${Number(best.score).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
     row.style.display = 'flex';
+}
+
+function showKofiInterstitial(newGame, isIt) {
+    const overlay = document.createElement('div');
+    overlay.className = 'kofi-interstitial-overlay';
+    overlay.innerHTML = `
+        <div class="kofi-interstitial">
+            <div class="kofi-inter-icon">☕</div>
+            <div class="kofi-inter-title">${isIt ? 'Questo gioco è gratis' : 'This game is free'}</div>
+            <div class="kofi-inter-sub">${isIt ? 'Lo tengo vivo da solo. Se ti è piaciuto,<br>un caffè fa davvero la differenza 🙏' : 'I keep it alive on my own.<br>If you enjoyed it, a coffee helps a lot 🙏'}</div>
+            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="kofi-inter-cta">☕ ${isIt ? 'Offrimi un caffè' : 'Buy me a coffee'}</a>
+            <button class="kofi-inter-skip" id="kofi-skip-btn">${isIt ? 'Non voglio donare' : 'No thanks'}</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#kofi-skip-btn').addEventListener('click', () => {
+        overlay.remove();
+        newGame();
+    });
+    overlay.querySelector('.kofi-inter-cta').addEventListener('click', () => {
+        setTimeout(() => { overlay.remove(); newGame(); }, 400);
+    });
 }
 
 export function showSoloResults(newGame) {
@@ -91,7 +114,7 @@ export function showSoloResults(newGame) {
     const roundTimes = splits.map((s, i) => s - (i === 0 ? 0 : splits[i - 1]));
     saveSoloGame(playerName, totalTime, totalScore, roundTimes, getCurrentLang());
     const timeStr = formatTime(totalTime);
-    const scoreStr = `€${totalScore.toLocaleString('it-IT')}`;
+    const scoreStr = `€${totalScore.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 
     const shareText = t('solo.share.text')
         .replace('{score}', scoreStr)
@@ -136,17 +159,15 @@ export function showSoloResults(newGame) {
             </div>
 
             <div class="win-cta-stack">
-                <button class="win-cta-primary" id="solo-newgame-btn">${t('solo.newgame')}</button>
-                <button class="win-cta-share" id="solo-share-btn">${t('solo.share.btn')}</button>
+                <button class="win-cta-primary" id="solo-newgame-btn">${isIt ? 'Rigioca' : 'Play again'}</button>
+                <button class="win-cta-share" id="solo-share-btn">📲 ${isIt ? 'Condividi con gli amici' : 'Share with friends'}</button>
             </div>
-
-            <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="win-kofi-btn">
-                ☕ ${isIt ? 'Offrimi un caffè' : 'Buy me a coffee'}
-            </a>
         </div>
     `;
 
-    document.getElementById('solo-newgame-btn')?.addEventListener('click', newGame);
+    document.getElementById('solo-newgame-btn')?.addEventListener('click', () => {
+        showKofiInterstitial(newGame, isIt);
+    });
 
     // Auto-submit + show inline leaderboard with tabs
     (async () => {
