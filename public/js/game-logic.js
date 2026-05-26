@@ -873,8 +873,8 @@ export function newGame() {
             <div class="popup-title">ABBANDONARE LA PARTITA?</div>
             <div class="popup-text">I progressi andranno persi.</div>
             <div style="display:flex;gap:12px;justify-content:center;margin-top:16px">
-                <button onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'" class="btn-secondary" style="padding:8px 20px">Annulla</button>
-                <button onclick="window._confirmNewGame()" class="btn-solve" style="padding:8px 20px">Abbandona</button>
+                <button onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'" class="btn btn--secondary" style="padding:8px 20px">Annulla</button>
+                <button onclick="window._confirmNewGame()" class="btn btn--primary" style="padding:8px 20px">Abbandona</button>
             </div>
         </div>`, 0, 'warning');
         window._confirmNewGame = _doNewGame;

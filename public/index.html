@@ -218,8 +218,8 @@
                     <button id="add-player-btn" class="btn-add-player btn-add-player--prominent" type="button" style="display:none" data-i18n="setup.addplayer">+ Aggiungi giocatore</button>
 
                     <!-- ③ PRIMARY CTA -->
-                    <button id="start-local-game-btn" class="btn-primary setup-start-btn" data-i18n="setup.start">
-                        Inizia Partita
+                    <button id="start-local-game-btn" class="btn btn--primary setup-start-btn" data-i18n="setup.start">
+                        INIZIA PARTITA
                     </button>
 
                     <!-- ④ TERTIARY ACTIONS -->
@@ -279,8 +279,8 @@
                     <button id="custom-add-player-btn" class="btn-add-player btn-add-player--prominent" type="button" data-i18n="setup.addplayer">+ Aggiungi giocatore</button>
 
                     <!-- CTA -->
-                    <button id="start-custom-game-btn" class="btn-primary setup-start-btn setup-custom-start-btn">
-                        Inizia Partita
+                    <button id="start-custom-game-btn" class="btn btn--primary setup-start-btn setup-custom-start-btn">
+                        INIZIA PARTITA
                     </button>
                 </div>
 
@@ -310,8 +310,8 @@
                         <p style="color: #64748b; font-style: italic; font-size: 0.9rem;" data-i18n="setup.lobby.waiting">In attesa di giocatori...</p>
                     </div>
                     <div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center;">
-                        <button id="start-smartphone-game-btn" class="btn-primary pulse" style="max-width: 300px;" disabled data-i18n="setup.lobby.start">AVVIA PARTITA</button>
-                        <button class="btn-secondary back-mode-btn" style="width: auto;" data-i18n="setup.lobby.cancel">Annulla</button>
+                        <button id="start-smartphone-game-btn" class="btn btn--primary btn--pulse" style="max-width: 300px;" disabled data-i18n="setup.lobby.start">INIZIA PARTITA</button>
+                        <button class="btn btn--secondary back-mode-btn" style="width: auto;" data-i18n="setup.lobby.cancel">Annulla</button>
                     </div>
                 </div>
             </div>
@@ -341,7 +341,7 @@
                     <span id="manche-number" class="manche-number">1</span>
                     <span>/ <span id="manche-total">5</span></span>
                 </div>
-                <button id="skip-phrase-btn" class="btn-skip-phrase" data-i18n="game.changephrase">↻ Cambia frase</button>
+                <button id="skip-phrase-btn" class="btn btn--ghost btn--sm" data-i18n="game.changephrase">↻ Cambia frase</button>
             </div>
 
             <!-- Solo Timer Bar (hidden in multiplayer) -->
@@ -387,7 +387,7 @@
                     <!-- Spin Button Center & Consonant Call Area -->
                     <div id="central-action-area" class="central-action-area">
                         <!-- State 1: Spin -->
-                        <button id="spin-btn" class="btn-spin" data-i18n="game.spin">GIRA IL CERCHIO</button>
+                        <button id="spin-btn" class="btn btn--gold btn--xl" data-i18n="game.spin">GIRA IL CERCHIO</button>
 
                         <!-- State 2: Call Consonant (Hidden by default) -->
                         <div id="consonant-call-container" class="consonant-call-container" style="display: none;">
@@ -397,7 +397,7 @@
                             </div>
                             <div class="consonant-input-wrapper">
                                 <input type="text" id="consonant-input" maxlength="1" autocomplete="off" placeholder="A-Z">
-                                <button id="consonant-btn" class="btn-action" data-i18n="game.call">CHIAMA</button>
+                                <button id="consonant-btn" class="btn btn--cyan" data-i18n="game.call">CHIAMA</button>
                             </div>
                         </div>
 
@@ -471,7 +471,7 @@
                         <label data-i18n="game.buyvowel">Compra una VOCALE (€1000):</label>
                         <div class="input-group">
                             <input type="text" id="vowel-input" maxlength="1" autocomplete="off" disabled>
-                            <button id="vowel-btn" class="btn-action btn-vowel" disabled data-i18n="game.buy">COMPRA</button>
+                            <button id="vowel-btn" class="btn btn--primary" disabled data-i18n="game.buy">COMPRA</button>
                         </div>
                     </div>
 
@@ -486,8 +486,8 @@
                         <div class="input-group full-width">
                             <input type="text" id="solution-input" data-i18n-placeholder="game.solve.placeholder" placeholder="Scrivi la soluzione..."
                                 autocomplete="off">
-                            <button id="solve-btn" class="btn-solve" data-i18n="game.solve">RISOLVI</button>
-                            <button id="pass-btn" class="btn-pass" style="display: none;" data-i18n="game.pass">PASSA</button>
+                            <button id="solve-btn" class="btn btn--primary" data-i18n="game.solve">RISOLVI</button>
+                            <button id="pass-btn" class="btn btn--ghost" style="display: none;" data-i18n="game.pass">PASSA</button>
                         </div>
                     </div>
                 </div>
@@ -495,7 +495,7 @@
 
             <!-- New Game Button -->
             <div class="game-footer">
-                <button id="new-game-btn" class="btn-secondary" data-i18n="game.newgame">Nuova Partita</button>
+                <button id="new-game-btn" class="btn btn--secondary" data-i18n="game.newgame">Nuova partita</button>
             </div>
         </div>
 

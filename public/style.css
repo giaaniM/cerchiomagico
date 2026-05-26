@@ -190,6 +190,231 @@
   }
 }
 
+
+/* ════════════════════════════════════════════════════════════
+ * SECTION 3 — BUTTONS (3 levels + 4 tonal variants)
+ * Consolidated button system. Old .btn-primary etc. kept below
+ * as aliases until all HTML/JS references are updated.
+ * ════════════════════════════════════════════════════════════ */
+
+/* === Base === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: 14px 28px;
+  font-family: var(--font-main);
+  font-size: var(--t-body);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: 0;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  color: var(--text-primary);
+  background: transparent;
+  transition: transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              filter var(--dur-fast) var(--ease-out);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+  white-space: nowrap;
+}
+.btn:hover  { transform: translateY(-2px); filter: brightness(1.08); }
+.btn:active { transform: translateY(1px) scale(0.98); }
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: grayscale(0.4);
+}
+
+/* === Levels === */
+.btn--primary {
+  background: var(--grad-action);
+  box-shadow: var(--shadow-3), var(--shadow-glow-magenta),
+              inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.btn--primary:hover { box-shadow: var(--shadow-4), 0 8px 30px rgba(255,0,212,0.55); }
+
+.btn--secondary {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-1);
+}
+.btn--secondary:hover { background: rgba(255,255,255,0.10); }
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  text-shadow: none;
+}
+.btn--ghost:hover { color: var(--text-primary); }
+
+/* === Tonal variants === */
+.btn--cyan    { background: var(--grad-cyan);   box-shadow: var(--shadow-3), var(--shadow-glow-cyan), inset 0 1px 0 rgba(255,255,255,0.25); }
+.btn--gold    { background: var(--grad-gold);   color: #451a03; text-shadow: none;
+                box-shadow: var(--shadow-3), 0 6px 24px rgba(251,191,36,0.45), inset 0 1px 0 rgba(255,255,255,0.4); }
+.btn--success { background: var(--grad-success); box-shadow: var(--shadow-3), 0 6px 24px rgba(16,185,129,0.4); }
+.btn--danger  { background: var(--grad-danger);  box-shadow: var(--shadow-3), 0 6px 24px rgba(239,68,68,0.4); }
+
+/* === Sizes === */
+.btn--sm { padding: 8px 16px; font-size: var(--t-small); }
+.btn--lg { padding: 18px 40px; font-size: 1.125rem; }
+.btn--xl { padding: 22px 50px; font-size: var(--t-h3); letter-spacing: 2px; }
+
+/* === Block === */
+.btn--block { width: 100%; }
+
+/* === Pulse modifier === */
+.btn--pulse { animation: btnPulse 2s infinite; }
+@keyframes btnPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,0,212,0.6); }
+  70%  { box-shadow: 0 0 0 18px rgba(255,0,212,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,0,212,0); }
+}
+
+
+/* ════════════════════════════════════════════════════════════
+ * SECTION 4 — POPUP (1 base + 4 variants + slots)
+ * Old .popup-message etc. kept below as aliases.
+ * ════════════════════════════════════════════════════════════ */
+
+.popup {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xl);
+  padding: var(--s-6);
+  text-align: center;
+  max-width: 90%;
+  width: 500px;
+  box-shadow: var(--shadow-4);
+  animation: popIn var(--dur-base) var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+}
+
+.popup--info {
+  border-color: var(--color-info);
+  box-shadow: var(--shadow-4), 0 0 28px rgba(56,189,248,0.25);
+}
+.popup--success {
+  background: var(--grad-success);
+  border-color: var(--color-success);
+  box-shadow: var(--shadow-4), 0 0 28px rgba(16,185,129,0.35);
+}
+.popup--warning {
+  border-color: var(--color-warning);
+  box-shadow: var(--shadow-4), 0 0 28px rgba(245,158,11,0.30);
+}
+.popup--danger {
+  background: var(--grad-danger);
+  border-color: var(--color-danger);
+  box-shadow: var(--shadow-4), 0 0 36px rgba(239,68,68,0.35);
+}
+
+.popup__icon  { font-size: 3rem; line-height: 1; margin-bottom: var(--s-3); }
+.popup__title {
+  font-size: var(--t-h2);
+  font-weight: 800;
+  letter-spacing: var(--tr-tight);
+  margin-bottom: var(--s-3);
+}
+.popup__body   { font-size: var(--t-body); color: var(--text-secondary); margin-bottom: var(--s-4); }
+.popup__amount {
+  font-size: var(--t-hero);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-gold);
+  margin: var(--s-3) 0;
+  text-shadow: 0 0 20px rgba(251,191,36,0.4);
+}
+.popup__actions {
+  display: flex; gap: var(--s-3); justify-content: center;
+  margin-top: var(--s-5);
+}
+
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.85) translateY(8px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+
+/* ════════════════════════════════════════════════════════════
+ * SECTION 5 — TILE (state machine via data-state)
+ * Old .tile.letter etc. kept below as aliases.
+ * ════════════════════════════════════════════════════════════ */
+
+.tile[data-state="hidden"] {
+  background: var(--tile-bg-hidden);
+  color: transparent;
+  border-color: var(--tile-outline);
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.5);
+}
+.tile[data-state="empty"] {
+  background: var(--tile-bg-empty);
+  border-color: var(--tile-outline);
+}
+.tile[data-state="revealed"] {
+  background: var(--tile-bg-letter);
+  color: var(--text-inverse);
+  border-color: #000;
+}
+.tile[data-state="invisible"] {
+  opacity: 0;
+  pointer-events: none;
+}
+.tile--flip {
+  animation: tileFlip var(--dur-slow) var(--ease-out);
+}
+@keyframes tileFlip {
+  0%   { transform: rotateY(0); }
+  50%  { transform: rotateY(90deg); }
+  100% { transform: rotateY(0); }
+}
+
+
+/* ════════════════════════════════════════════════════════════
+ * SECTION 6 — INPUTS
+ * ════════════════════════════════════════════════════════════ */
+
+.input {
+  width: 100%;
+  padding: 14px 18px;
+  font-family: var(--font-main);
+  font-size: var(--t-body);
+  color: var(--text-primary);
+  background: rgba(0,0,0,0.4);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--r-md);
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out),
+              background var(--dur-fast);
+}
+.input::placeholder { color: var(--text-muted); }
+.input:focus,
+.input:focus-visible {
+  border-color: var(--color-gold);
+  box-shadow: var(--glow-gold);
+  background: rgba(0,0,0,0.6);
+}
+
+
+/* ════════════════════════════════════════════════════════════
+ * SECTION 7 — A11Y
+ * ════════════════════════════════════════════════════════════ */
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+@supports selector(:focus-visible) {
+  :focus { outline: none; }
+}
+
+
 /* ===== Base Styles ===== */
 html {
     background: var(--bg-dark);

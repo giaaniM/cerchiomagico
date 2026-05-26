@@ -89,8 +89,8 @@ document.getElementById('skip-phrase-btn')?.addEventListener('click', () => {
         <div class="popup-title">${t('skip.title')}</div>
         <div class="popup-text">${t('skip.body')}</div>
         <div style="display:flex;gap:12px;justify-content:center;margin-top:16px">
-            <button onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'" class="btn-secondary" style="padding:8px 20px">${t('skip.cancel')}</button>
-            <button onclick="window._confirmSkipPhrase()" class="btn-solve" style="padding:8px 20px">${t('skip.confirm')}</button>
+            <button onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'" class="btn btn--secondary" style="padding:8px 20px">${t('skip.cancel')}</button>
+            <button onclick="window._confirmSkipPhrase()" class="btn btn--primary" style="padding:8px 20px">${t('skip.confirm')}</button>
         </div>
     </div>`, 0);
     window._confirmSkipPhrase = () => {

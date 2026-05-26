@@ -85,16 +85,19 @@ export function createBoard() {
 
             if (isRowEdge) {
                 tileElement.classList.add('invisible');
+                tileElement.dataset.state = 'invisible';
             } else {
                 const charIndex = col - startCol;
                 const content = (contentRow && charIndex >= 0 && charIndex < contentRow.length) ? contentRow[charIndex] : null;
 
                 if (content && content.type === 'letter') {
                     tileElement.classList.add('letter');
+                    tileElement.dataset.state = 'hidden';
                     tileElement.dataset.letter = normalizeChar(content.char);
                     tileElement.textContent = content.char.toUpperCase();
                 } else {
                     tileElement.classList.add('empty');
+                    tileElement.dataset.state = 'empty';
                 }
             }
             rowElement.appendChild(tileElement);
@@ -113,6 +116,8 @@ export function revealLetter(letter, animate = true, onRevealIndividual = null) 
             if (animate) {
                 setTimeout(() => {
                     tile.classList.add('revealed', 'just-revealed');
+                    tile.dataset.state = 'revealed';
+                    tile.classList.add('tile--flip');
 
                     // INCREMENTAL JACKPOT SOUND (no particles)
                     soundManager.playCorrect();
@@ -120,10 +125,14 @@ export function revealLetter(letter, animate = true, onRevealIndividual = null) 
                     // Incremental score update
                     if (onRevealIndividual) onRevealIndividual();
 
-                    setTimeout(() => tile.classList.remove('just-revealed'), 1100);
+                    setTimeout(() => {
+                        tile.classList.remove('just-revealed');
+                        tile.classList.remove('tile--flip');
+                    }, 600);
                 }, index * 1500); // 1.5s delay between each letter per user request
             } else {
                 tile.classList.add('revealed');
+                tile.dataset.state = 'revealed';
                 if (onRevealIndividual) onRevealIndividual();
             }
         }

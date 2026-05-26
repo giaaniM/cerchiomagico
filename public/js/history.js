@@ -109,7 +109,7 @@ export function showHistoryPopup() {
         </div>
         <div class="hist-panel" id="hist-panel-multi">${multiHtml}</div>
         <div class="hist-panel" id="hist-panel-solo" style="display:none">${soloLbHtml}</div>
-        <button class="btn-secondary hist-close-btn" onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'">
+        <button class="btn btn--secondary hist-close-btn" onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'">
             ${isIt ? 'Chiudi' : 'Close'}
         </button>
     </div>`;
