@@ -55,40 +55,139 @@
 }
 
 :root {
-    /* Refined Identity Palette - Modern Midnight (Slate + Soft Blue + Indigo) */
-    --bg-dark: #070b19; /* Deeper midnight blue for higher contrast */
-    --bg-panel: rgba(15, 23, 42, 0.85); /* Slate 900 Glass */
-    --accent-primary: #00f2ff; /* Neon Cyan */
-    --accent-secondary: #ff00d4; /* Neon Pink/Magenta */
-    --accent-tertiary: #a855f7; /* Vibrant Purple */
-    --accent-gold: #fbbf24; /* Amber Gold */
-    --accent-pink: #ec4899; /* Pink */
-    
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    
-    --tile-bg: #1e293b; /* Slate 800 for hidden tiles */
-    --tile-border: rgba(255, 255, 255, 0.1);
-    --tile-glow: rgba(56, 189, 248, 0.2);
-    
-    --font-main: 'Lexend', sans-serif;
-    --font-display: 'Lexend', sans-serif;
+  /* ────────────── Brand colors ────────────── */
+  --color-cyan:     #00f2ff;
+  --color-magenta:  #ff00d4;
+  --color-purple:   #a855f7;
+  --color-pink:     #ec4899;
+  --color-gold:     #fbbf24;
+  --color-amber:    #d97706;
 
-    /* Glow Effects */
-    --glow-blue: 0 0 20px rgba(0, 212, 255, 0.5);
-    --glow-purple: 0 0 20px rgba(139, 92, 246, 0.5);
-    --glow-gold: 0 0 20px rgba(251, 191, 36, 0.5);
+  /* Functional aliases */
+  --color-success:  #34d399;
+  --color-warning:  #f59e0b;
+  --color-danger:   #ef4444;
+  --color-info:     #38bdf8;
 
-    /* Typography */
-    --font-family: 'Outfit', sans-serif;
+  /* ────────────── Surfaces & text ────────────── */
+  --bg-base:        #070b19;          /* page bg */
+  --bg-elevated:    #0f172a;          /* cards, modals */
+  --bg-panel:       rgba(15,23,42,0.85);
+  --bg-overlay:     rgba(7,11,25,0.92);
+  --bg-loader:      #0a0f1e;
 
-    /* Spacing */
-    --tile-size: clamp(30px, 6vw, 65px);
-    /* Increased max size */
-    --tile-gap: clamp(2px, 0.5vw, 6px);
-    /* Slightly reduced gap for tighter grid */
-    --border-radius: 8px;
-    /* Slightly sharper */
+  --tile-bg-hidden: #1e293b;
+  --tile-bg-empty:  rgba(15,23,42,0.95);
+  --tile-bg-letter: #ffffff;
+  --tile-border:    rgba(255,255,255,0.10);
+  --tile-outline:   rgba(56,189,248,0.50);
+
+  --text-primary:   #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted:     #64748b;
+  --text-inverse:   #0f172a;
+
+  --border-soft:    rgba(255,255,255,0.08);
+  --border-strong:  rgba(255,255,255,0.14);
+
+  /* ────────────── Brand gradients ────────────── */
+  --grad-neon:      linear-gradient(135deg, #00f2ff 0%, #ff00d4 100%);
+  --grad-action:    linear-gradient(135deg, #a855f7 0%, #ff00d4 100%);
+  --grad-cyan:      linear-gradient(135deg, #00f2ff 0%, #a855f7 100%);
+  --grad-gold:      linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  --grad-success:   linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --grad-danger:    linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+
+  /* ────────────── Ambient page bg (cyan + magenta) ────────────── */
+  --bg-ambient:
+    radial-gradient(900px 500px at 80% -5%, rgba(255, 0, 212, 0.14), transparent 60%),
+    radial-gradient(900px 500px at 0% 5%, rgba(0, 242, 255, 0.12), transparent 60%),
+    radial-gradient(1100px 700px at 50% 110%, rgba(168, 85, 247, 0.08), transparent 60%);
+
+  /* ────────────── Glow (functional shadows) ────────────── */
+  --glow-cyan:    0 0 24px rgba(0, 242, 255, 0.45);
+  --glow-magenta: 0 0 24px rgba(255, 0, 212, 0.45);
+  --glow-purple:  0 0 24px rgba(168, 85, 247, 0.45);
+  --glow-gold:    0 0 24px rgba(251, 191, 36, 0.45);
+
+  /* ────────────── Shadow scale (6 step) ────────────── */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);              /* hairline */
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.35);             /* card */
+  --shadow-3: 0 10px 30px rgba(0, 0, 0, 0.45);            /* hover / popover */
+  --shadow-4: 0 20px 60px rgba(0, 0, 0, 0.55);            /* modal */
+  --shadow-glow-cyan:    0 6px 24px rgba(0, 242, 255, 0.35);
+  --shadow-glow-magenta: 0 6px 24px rgba(255, 0, 212, 0.35);
+
+  /* ────────────── Radius scale (5 step) ────────────── */
+  --r-sm:   6px;    /* tile, badge */
+  --r-md:   10px;   /* input, small button */
+  --r-lg:   16px;   /* card */
+  --r-xl:   24px;   /* mode-card, popup */
+  --r-pill: 999px;  /* CTA pill, tag */
+  /* legacy alias (existing CSS reads --border-radius) */
+  --border-radius: var(--r-md);
+
+  /* ────────────── Spacing scale (8 step, base 4px) ────────────── */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  24px;
+  --s-6:  32px;
+  --s-7:  48px;
+  --s-8:  72px;
+
+  /* ────────────── Typography ────────────── */
+  --font-main: 'Lexend', sans-serif;
+  /* DEPRECATED — kept for compatibility; will be removed sprint 3:
+     --font-display, --font-family — both alias to --font-main */
+
+  --t-micro:   0.75rem;   /* 12 — label, eyebrow */
+  --t-small:   0.875rem;  /* 14 — helper */
+  --t-body:    1rem;      /* 16 — body, button */
+  --t-h3:      1.25rem;   /* 20 — card title */
+  --t-h2:      1.75rem;   /* 28 — section title */
+  --t-h1:      2.5rem;    /* 40 — screen title */
+  --t-display: 4rem;      /* 64 — logo, lobby id */
+  --t-hero:    6rem;      /* 96 — celebrazioni */
+
+  /* Tracking presets */
+  --tr-tight:  -0.02em;
+  --tr-normal: 0;
+  --tr-loose:  0.05em;
+  --tr-caps:   0.15em;
+
+  /* ────────────── Motion ────────────── */
+  --ease-out:    cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --dur-fast:    0.18s;
+  --dur-base:    0.3s;
+  --dur-slow:    0.6s;
+
+  /* ────────────── Game-specific ────────────── */
+  --tile-size: clamp(30px, 6vw, 65px);
+  --tile-gap:  clamp(2px, 0.5vw, 6px);
+
+  /* ────────────── Legacy aliases (backward compat) ────────────── */
+  --bg-dark:        var(--bg-base);
+  --accent-primary: var(--color-cyan);
+  --accent-secondary: var(--color-magenta);
+  --accent-tertiary: var(--color-purple);
+  --accent-gold:    var(--color-gold);
+  --accent-pink:    var(--color-pink);
+  --tile-bg:        var(--tile-bg-hidden);
+  --tile-glow:      rgba(56, 189, 248, 0.2);
+  --font-display:   var(--font-main);
+  --font-family:    var(--font-main);
+}
+
+/* Honor user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
 }
 
 /* ===== Base Styles ===== */
@@ -526,29 +625,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 /* ===== Buttons ===== */
-.btn-primary {
-    width: 100%;
-    padding: 18px 32px;
-    font-size: 1.2rem;
-    font-weight: 800;
-    font-family: var(--font-family);
-    background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-secondary) 100%);
-    border: none;
-    border-radius: 50px; /* Modern pill shape */
-    color: white;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    box-shadow: 0 10px 30px rgba(255, 0, 212, 0.5), inset 0 2px 5px rgba(255,255,255,0.4);
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    position: relative;
-    overflow: hidden;
-}
+/* NOTE: .btn-primary first definition removed (duplicate — keep the one below ~line 1656) */
+/* NOTE: .btn-secondary first definition removed (duplicate — keep the one below ~line 1673) */
 
 #proceed-to-gift-btn {
     padding: 20px 40px;
@@ -556,43 +634,6 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     font-size: 1.3rem;
     margin-bottom: 40px;
     /* Add margin at bottom */
-}
-
-.btn-primary.pulse {
-    animation: btnPulse 2s infinite;
-}
-
-@keyframes btnPulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 0, 212, 0.6);
-    }
-    70% {
-        box-shadow: 0 0 0 20px rgba(255, 0, 212, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 0, 212, 0);
-    }
-}
-
-.btn-primary:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 15px 40px rgba(255, 0, 212, 0.6), inset 0 2px 5px rgba(255,255,255,0.5);
-    filter: brightness(1.2);
-}
-
-.btn-primary:active {
-    transform: translateY(2px) scale(0.98);
-    box-shadow: 0 4px 15px rgba(219, 39, 119, 0.4);
-}
-
-.btn-secondary {
-    padding: 16px 32px;
-    font-size: 1rem;
-    font-weight: 700;
-    font-family: var(--font-family);
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    border-radius: 50px;
 }
 
 /* ===== Premium Big Lobby (Smartphone Mode) ===== */
@@ -701,7 +742,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .btn-guess:hover {
     transform: scale(1.05);
-    box-shadow: var(--glow-blue);
+    box-shadow: var(--glow-cyan);
 }
 
 /* ===== Game Board ===== */
@@ -987,9 +1028,9 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     color: var(--text-secondary);
 }
 
-.input-group.full-width {
-    width: 100%;
-}
+/* NOTE: .input-group.full-width first def removed (duplicate — keep below) */
+/* NOTE: .btn-solve first def removed (duplicate — keep below) */
+/* NOTE: .btn-pass first def removed (duplicate — keep below) */
 
 #solution-input {
     flex-grow: 1;
@@ -1011,43 +1052,9 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     box-shadow: var(--glow-purple);
 }
 
-.btn-solve {
-    padding: 0 20px;
-    font-weight: 700;
-    text-transform: uppercase;
-    background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));
-    border: none;
-    border-radius: var(--border-radius);
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-solve:hover {
-    box-shadow: var(--glow-pink);
-    transform: translateY(-2px);
-}
-
-.btn-pass {
-    padding: 0 20px;
-    font-weight: 700;
-    text-transform: uppercase;
-    background: linear-gradient(90deg, #6b7280, #374151);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-pass:hover {
-    background: linear-gradient(90deg, #4b5563, #1f2937);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-}
-
 #letter-input:focus {
     outline: none;
-    box-shadow: var(--glow-blue);
+    box-shadow: var(--glow-cyan);
     background: rgba(255, 255, 255, 0.15);
 }
 
@@ -1110,21 +1117,8 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     color: white;
 }
 
-/* Modal Overlay */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
-    background: rgba(0, 0, 0, 0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    transition: background-color 0.3s ease;
-}
+/* Modal Overlay — first def removed (duplicate, keep the one below ~line 1596) */
+/* .modal-overlay second definition is kept below */
 
 .modal-overlay.transparent {
     background: rgba(0, 0, 0, 0.1);
@@ -1431,12 +1425,12 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 .np-main {
     font-size: 2rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #ffffff;
     line-height: 1.1;
     text-align: center;
 }
-.np-main-text { font-size: 1.6rem; font-weight: 900; color: #fff; }
+.np-main-text { font-size: 1.6rem; font-weight: 800; color: #fff; }
 .np-sub {
     font-size: 0.82rem;
     color: rgba(255,255,255,0.45);
@@ -1445,7 +1439,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 .np-letter {
     display: block;
     font-size: 4rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #f87171;
     line-height: 1;
     text-shadow: 0 0 24px rgba(248,113,113,0.55);
@@ -1454,7 +1448,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 .np-money {
     display: block;
     font-size: 1.8rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #4ade80;
     text-shadow: 0 0 16px rgba(74,222,128,0.45);
     line-height: 1.1;
@@ -1471,7 +1465,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 .np-hint-txt {
     font-size: clamp(1.4rem, 5vw, 2.4rem);
-    font-weight: 900;
+    font-weight: 800;
     color: #fff;
     text-shadow: 0 0 20px rgba(56,189,248,0.35);
     line-height: 1.15;
@@ -1508,7 +1502,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-title {
     font-size: 1.8rem;
-    font-weight: 900;
+    font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
     line-height: 1.1;
@@ -2397,7 +2391,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .win-card h2 {
     font-size: 2.4rem;
-    font-weight: 900;
+    font-weight: 800;
     margin-bottom: 10px;
     background: linear-gradient(to bottom, #fff, var(--accent-gold));
     -webkit-background-clip: text;
@@ -2410,7 +2404,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 /* Podio Risultati */
 .win-title-name {
     font-size: 2.2rem;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     text-shadow: 0 0 30px rgba(251,191,36,0.6);
     display: block;
@@ -2527,7 +2521,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 }
 
 .place-score {
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     font-size: 1.1rem;
     margin-bottom: 8px;
@@ -2535,7 +2529,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .win-message {
     font-size: 1.2rem;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     text-shadow: 0 0 20px rgba(251,191,36,0.5);
     margin: 8px 0 14px;
@@ -2691,11 +2685,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     text-align: center;
 }
 
-.btn-solve {
-    padding: 12px 30px;
-    font-size: 1.1rem;
-    white-space: nowrap;
-}
+/* NOTE: .btn-solve second def removed (duplicate — keep the one below ~line 2896) */
 
 /* Hide old selectors if present or override */
 .game-bottom-layout {
@@ -2901,7 +2891,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .btn-solve {
     padding: 14px 24px;
-    font-weight: 900;
+    font-weight: 800;
     font-size: 1.1rem;
     background: linear-gradient(180deg, #10b981 0%, #047857 100%);
     color: white;
@@ -3232,7 +3222,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-letter-wrong {
     font-size: 96px;
-    font-weight: 900;
+    font-weight: 800;
     color: #9ca3af;
     display: inline-block;
     text-shadow: 0 0 20px rgba(156, 163, 175, 0.5);
@@ -3271,7 +3261,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-letter-wrong-small {
     font-size: 80px;
-    font-weight: 900;
+    font-weight: 800;
     color: #9ca3af;
     display: block;
     text-align: center;
@@ -3312,7 +3302,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-raddoppia-title {
     font-size: 3rem;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     text-shadow: 0 0 40px rgba(251, 191, 36, 0.8), 0 4px 20px rgba(0, 0, 0, 0.5);
     text-transform: uppercase;
@@ -3327,7 +3317,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-raddoppia-highlight {
     font-size: 3.5rem;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     text-shadow: 0 0 50px rgba(251, 191, 36, 1), 0 4px 20px rgba(0, 0, 0, 0.5);
     text-transform: uppercase;
@@ -3390,7 +3380,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-name {
     font-size: 1.5rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #fbbf24;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     text-transform: uppercase;
@@ -3410,7 +3400,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     margin-top: 15px;
     font-size: 5rem;
     /* Huge font for name */
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     text-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
     animation: pulseName 2s infinite ease-in-out;
@@ -3571,7 +3561,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-mystery-result .popup-value {
     font-size: 3rem;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     display: block;
     margin-top: 10px;
@@ -3605,7 +3595,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-express-title {
     font-size: 2.8rem;
-    font-weight: 900;
+    font-weight: 800;
     margin-bottom: 25px;
     color: #facc15;
     text-transform: uppercase;
@@ -3696,7 +3686,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 900;
+    font-weight: 800;
     flex-shrink: 0;
 }
 
@@ -3714,7 +3704,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 #pass-btn-center {
     padding: 20px 45px;
     font-size: 1.4rem;
-    font-weight: 900;
+    font-weight: 800;
     background: linear-gradient(90deg, #6b7280, #374151);
     color: white;
     border: 3px solid rgba(255, 255, 255, 0.3);
@@ -3812,7 +3802,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .mystery-title {
     font-size: 2rem;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
     margin-bottom: 30px;
@@ -3907,7 +3897,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .megaturno-choice-title {
     font-size: 2.5rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #ef4444;
     text-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
 }
@@ -4020,7 +4010,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .popup-manche-hint-large {
     font-size: clamp(1.2rem, 5vw, 2.4rem);
-    font-weight: 900;
+    font-weight: 800;
     color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -4306,11 +4296,11 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .big-lobby-id {
     font-size: 3.5rem; /* Scaled down from 5.5 */
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-blue);
     text-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
     letter-spacing: 4px;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-main);
     line-height: 1;
     margin: 10px 0;
 }
@@ -4460,7 +4450,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .ranking-header {
     font-size: 1.8rem;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     text-transform: uppercase;
     letter-spacing: 4px;
@@ -4521,7 +4511,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .rank-pos {
     font-size: 1.1rem;
-    font-weight: 900;
+    font-weight: 800;
     width: 30px;
     flex-shrink: 0;
     color: var(--text-secondary);
@@ -4540,7 +4530,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .rank-val {
     font-size: 1.2rem;
-    font-weight: 900;
+    font-weight: 800;
     color: var(--accent-gold);
     flex-shrink: 0;
 }
@@ -4700,7 +4690,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 
 .express-banner-title {
     color: #facc15;
-    font-weight: 900;
+    font-weight: 800;
     font-size: 0.85rem;
     letter-spacing: 1px;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -4723,7 +4713,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     padding: 6px 20px;
     border-radius: 20px;
     color: #fef08a;
-    font-weight: 900;
+    font-weight: 800;
     font-size: 1.9rem;
     border: 2px solid rgba(250, 204, 21, 0.7);
     min-width: 110px;
@@ -4740,7 +4730,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     left: 50%;
     transform: translateX(-50%);
     font-size: 1.2rem;
-    font-weight: 900;
+    font-weight: 800;
     pointer-events: none;
     animation: flashSlideUp 0.9s ease-out forwards;
     white-space: nowrap;
@@ -4750,7 +4740,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 .flash-loss { color: #f87171; }
 
 .popup-crollo-express { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; }
-.crollo-letter { font-size: 3.5rem; font-weight: 900; color: #f87171; line-height: 1; letter-spacing: 0.05em; text-shadow: 0 0 20px rgba(248,113,113,0.7); }
+.crollo-letter { font-size: 3.5rem; font-weight: 800; color: #f87171; line-height: 1; letter-spacing: 0.05em; text-shadow: 0 0 20px rgba(248,113,113,0.7); }
 .crollo-title { font-size: 1.1rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
 .crollo-reason { font-size: 0.82rem; color: rgba(255,255,255,0.55); }
 
@@ -4822,7 +4812,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
     color: #facc15 !important;
     animation: expressPulse 1s infinite;
     border: 3px solid #facc15;
-    font-weight: 900;
+    font-weight: 800;
 }
 
 @keyframes expressPulse {
@@ -4981,7 +4971,7 @@ h1, h2, h3, .big-lobby-id, .mode-card h2 {
 .final-banner-value {
     color: #fff;
     font-size: 1rem;
-    font-weight: 900;
+    font-weight: 800;
     line-height: 1;
 }
 
@@ -5617,7 +5607,7 @@ body.manche-finale .board-frame {
 
 .final-round-value-amount {
     font-size: 1.1rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #fff;
 }
 
@@ -6961,7 +6951,7 @@ body.manche-finale .board-frame {
 }
 .penalty-center-flash .pcf-time {
     font-size: 1.6rem;
-    font-weight: 900;
+    font-weight: 800;
     font-variant-numeric: tabular-nums;
     line-height: 1.1;
 }
@@ -6993,7 +6983,7 @@ body.manche-finale .board-frame {
 .solo-results-emoji { font-size: 2.4rem; }
 .solo-results-title {
     font-size: 1.5rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #fbbf24;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -7026,7 +7016,7 @@ body.manche-finale .board-frame {
 }
 .solo-time-hero-value {
     font-size: 3.2rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #fbbf24;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -7139,7 +7129,7 @@ body.manche-finale .board-frame {
 }
 .solo-penalty-seconds {
     font-size: 3rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #ef4444;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -7544,7 +7534,7 @@ body.manche-finale .board-frame {
 .solo-results-crown { font-size: 2rem; line-height: 1; }
 .solo-results-player {
     font-size: 1.4rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #fff;
     letter-spacing: -0.5px;
 }
@@ -7586,7 +7576,7 @@ body.manche-finale .board-frame {
 }
 .solo-stat-value {
     font-size: 1.8rem;
-    font-weight: 900;
+    font-weight: 800;
     font-variant-numeric: tabular-nums;
     line-height: 1.1;
 }
@@ -7623,7 +7613,7 @@ body.manche-finale .board-frame {
 .lb-submit-score-icon { font-size: 1.4rem; }
 .lb-submit-score-val {
     font-size: 2.4rem;
-    font-weight: 900;
+    font-weight: 800;
     color: #fbbf24;
     font-variant-numeric: tabular-nums;
     line-height: 1.1;
