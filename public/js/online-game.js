@@ -1,5 +1,5 @@
 import { SOCKET_URL } from './native.js';
-import { currentProfile } from './auth.js';
+import { currentProfile, getFriends } from './auth.js';
 import { t, getCurrentLang } from './lang.js';
 import { showScreen } from './utils.js';
 import { soundManager } from './sound.js';
@@ -76,7 +76,7 @@ export function showPrivateRoomChoice() {
     el.innerHTML = `
         <div class="mm-container">
             <div class="mm-title">VS Amico</div>
-            <button class="mm-share-btn" id="prc-create-btn" style="width:100%;max-width:280px;">✨ Crea stanza</button>
+            <button class="mm-share-btn" id="prc-create-btn" style="width:100%;max-width:280px;">Crea stanza</button>
             <div class="prc-divider">oppure inserisci il codice</div>
             <div class="prc-code-row">
                 <input id="prc-code-input" class="prc-code-input" type="text" maxlength="6"
@@ -84,7 +84,7 @@ export function showPrivateRoomChoice() {
                     style="text-transform:uppercase;">
                 <button class="og-btn og-spin-btn" id="prc-join-btn">Entra</button>
             </div>
-            <button class="mm-cancel-btn" id="prc-cancel-btn">← Indietro</button>
+            <button class="mm-cancel-btn" id="prc-cancel-btn">Indietro</button>
         </div>
     `;
     document.getElementById('prc-create-btn')?.addEventListener('click', () => {
@@ -157,6 +157,7 @@ function _initOnlineGameScreen() {
     _spinResultPending = null;
 
     showScreen('game-screen');
+    document.getElementById('game-screen')?.classList.add('online-mode');
 
     // Initialize wheel canvas
     renderWheelToCache();
@@ -371,6 +372,7 @@ function _exitOnlineGame() {
     if (skipBtn) skipBtn.style.display = '';
     if (footer) footer.style.display = '';
     document.getElementById('og-gameover-overlay')?.remove();
+    document.getElementById('game-screen')?.classList.remove('online-mode');
     showScreen('setup-screen');
 }
 
@@ -603,7 +605,7 @@ function showMatchmakingScreen(mode) {
     }
     el.innerHTML = `
         <div class="mm-container">
-            <div class="mm-spinner">🔄</div>
+            <div class="mm-spinner mm-spinner-anim"></div>
             <div class="mm-title">${mode === 'searching' ? (t('online.searching') || 'Ricerca avversario...') : (t('online.waiting') || 'Attendo...')}</div>
             <div class="mm-status" id="mm-status">${t('online.timeout') || ''}</div>
             <button class="mm-cancel-btn" id="mm-cancel-btn">${t('cancel') || 'Annulla'}</button>
@@ -611,6 +613,71 @@ function showMatchmakingScreen(mode) {
     `;
     document.getElementById('mm-cancel-btn')?.addEventListener('click', cancelMatchmaking);
     showScreen('online-matchmaking-screen');
+}
+
+// ── Friend Picker Screen (native VS Amico flow) ──
+
+export async function showFriendPickerScreen() {
+    let el = document.getElementById('online-friend-picker-screen');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'online-friend-picker-screen';
+        el.className = 'screen online-screen';
+        document.querySelector('.game-container').appendChild(el);
+    }
+
+    el.innerHTML = `
+        <div class="mm-container">
+            <div class="mm-title">Sfida un Amico</div>
+            <div id="fpicker-list" class="fpicker-list">
+                <div class="fpicker-loading">Caricamento amici...</div>
+            </div>
+            <button class="mm-cancel-btn" id="fpicker-cancel-btn">Indietro</button>
+        </div>
+    `;
+
+    document.getElementById('fpicker-cancel-btn')?.addEventListener('click', () => showScreen('setup-screen'));
+    showScreen('online-friend-picker-screen');
+
+    // Load friends
+    const friends = await getFriends();
+    const listEl = document.getElementById('fpicker-list');
+    if (!listEl) return;
+
+    if (!friends || friends.length === 0) {
+        listEl.innerHTML = '<div class="fpicker-empty">Nessun amico ancora.<br>Aggiungine nel tuo Profilo.</div>';
+        return;
+    }
+
+    listEl.innerHTML = friends.map(f => {
+        const initial = (f.username || '?')[0].toUpperCase();
+        const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(f.username)}&size=36&radius=50`;
+        return `
+            <div class="fpicker-row" data-id="${escHtml(f.id)}" data-username="${escHtml(f.username)}">
+                <img class="fpicker-avatar" src="${avatarUrl}" alt="${escHtml(initial)}" width="36" height="36"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <span class="fpicker-avatar-fallback" style="display:none">${escHtml(initial)}</span>
+                <span class="fpicker-name">${escHtml(f.username)}</span>
+                <button class="fpicker-challenge-btn" data-id="${escHtml(f.id)}" data-username="${escHtml(f.username)}">Sfida</button>
+            </div>
+        `;
+    }).join('');
+
+    listEl.querySelectorAll('.fpicker-challenge-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const friendId = btn.dataset.id;
+            const friendUsername = btn.dataset.username;
+            showScreen('setup-screen');
+            // Import challenge module lazily to avoid circular deps
+            const { sendChallenge, showChallengeLobby } = await import('./challenge.js');
+            showChallengeLobby(friendUsername);
+            sendChallenge(friendId);
+        });
+    });
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function showPrivateRoomScreen(code) {
@@ -626,7 +693,7 @@ function showPrivateRoomScreen(code) {
             <div class="mm-title">Sfida un amico</div>
             <div class="private-code-display">${code}</div>
             <p class="private-code-sub">Condividi questo codice con il tuo amico</p>
-            <button class="mm-share-btn" id="mm-share-btn">📤 Condividi</button>
+            <button class="mm-share-btn" id="mm-share-btn">Condividi codice</button>
             <div class="mm-status" id="mm-status">In attesa che l'amico si connetta...</div>
             <button class="mm-cancel-btn" id="mm-cancel-btn">Annulla</button>
         </div>

@@ -53,7 +53,7 @@ function _activateMulti(count) {
         const onlineRow = document.getElementById('online-multi-row');
         if (onlineRow) onlineRow.style.display = 'flex';
         const divider = document.getElementById('multi-locale-divider');
-        if (divider) divider.style.display = 'flex';
+        if (divider) divider.style.display = 'none';
         const countRow = document.getElementById('player-count-row');
         if (countRow) countRow.style.display = 'none';
         const startBtn = document.getElementById('start-local-game-btn');

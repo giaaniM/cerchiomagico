@@ -154,14 +154,18 @@
 
                 <!-- Native compact logo (hidden on web) -->
                 <div class="app-logo-compact">
-                    <span class="app-logo-icon">🎡</span>
-                    <h1 class="app-logo-text">
-                        <span data-i18n="logo.word1">CERCHIO</span>
-                        <span data-i18n="logo.word2">MAGICO</span>
-                    </h1>
-                </div>
-                <div class="app-greeting" id="app-greeting" style="display:none;">
-                    Ciao, <span id="app-greeting-name"></span> 👋
+                    <div class="app-logo-img-wrap">
+                        <img src="/assets/og-image.png" alt="MagicSpin" class="app-logo-img">
+                    </div>
+                    <div class="app-logo-text-col">
+                        <h1 class="app-logo-text">
+                            <span data-i18n="logo.word1">CERCHIO</span>
+                            <span class="app-logo-text-gold" data-i18n="logo.word2">MAGICO</span>
+                        </h1>
+                        <div class="app-greeting" id="app-greeting" style="display:none;">
+                            Ciao, <span id="app-greeting-name"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="setup-layout">
@@ -348,40 +352,79 @@
 
             <!-- ═══ TAB: PROFILO ═══ -->
             <div class="tab-panel" id="tab-profile">
-                <div class="prof-card">
+
+                <!-- Hero card -->
+                <div class="prof-hero-card">
                     <div class="prof-avatar" id="prof-avatar">?</div>
-                    <div class="prof-username" id="prof-username">—</div>
-                    <div class="prof-record" id="prof-record"></div>
+                    <div class="prof-hero-info">
+                        <div class="prof-username" id="prof-username">—</div>
+                        <div class="prof-record" id="prof-record"></div>
+                    </div>
                 </div>
 
                 <!-- Pending challenge invites -->
                 <div id="profile-invites-section" style="display:none;"></div>
 
-                <div class="prof-actions-grid">
-                    <button class="prof-action-cell" id="prof-friends-btn">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.31 3.13-6 7-6"/><circle cx="17" cy="8" r="3"/><path d="M13 20c0-3.31 3.13-6 7-6"/></svg>
-                        <span>Amici</span>
+                <!-- iOS-style action list -->
+                <div class="prof-list">
+                    <!-- Amici -->
+                    <button class="prof-list-row" id="prof-friends-btn">
+                        <span class="prof-list-icon prof-list-icon--purple">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.31 3.13-6 7-6"/><circle cx="17" cy="8" r="3"/><path d="M13 20c0-3.31 3.13-6 7-6"/></svg>
+                        </span>
+                        <span class="prof-list-label">Amici</span>
+                        <span class="prof-list-badge" id="prof-friends-badge" style="display:none;"></span>
+                        <svg class="prof-list-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
-                    <button class="prof-action-cell" id="prof-history-btn">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
-                        <span>Storico</span>
+                    <!-- Storico -->
+                    <button class="prof-list-row" id="prof-history-btn">
+                        <span class="prof-list-icon prof-list-icon--blue">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+                        </span>
+                        <span class="prof-list-label">Storico</span>
+                        <svg class="prof-list-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
-                    <button class="prof-action-cell" id="prof-rules-btn">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        <span>Regole</span>
+                    <!-- Regole -->
+                    <button class="prof-list-row" id="prof-rules-btn">
+                        <span class="prof-list-icon prof-list-icon--teal">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </span>
+                        <span class="prof-list-label">Regole</span>
+                        <svg class="prof-list-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
-                    <button class="prof-action-cell" id="prof-lang-btn">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                        <span>Lingua</span>
+                    <!-- Lingua — mostra solo la bandiera corrente come badge, niente label "Lingua" -->
+                    <button class="prof-list-row" id="prof-lang-btn">
+                        <span class="prof-list-icon prof-list-icon--gold">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        </span>
+                        <span class="prof-list-label">Lingua</span>
+                        <span class="prof-list-value" id="prof-lang-badge">🇮🇹</span>
+                        <svg class="prof-list-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
-                    <button class="prof-action-cell" id="prof-audio-btn">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="prof-audio-icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                        <span>Audio</span>
+                    <!-- Audio — mostra stato ON/OFF come badge -->
+                    <button class="prof-list-row" id="prof-audio-btn">
+                        <span class="prof-list-icon prof-list-icon--red">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" id="prof-audio-icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                        </span>
+                        <span class="prof-list-label">Audio</span>
+                        <span class="prof-list-value" id="prof-audio-badge">ON</span>
+                        <svg class="prof-list-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                 </div>
 
-                <!-- Friends sub-panel (inline, toggles open) -->
-                <div id="friends-panel" class="friends-panel" style="display:none;">
+                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="prof-kofi-link">
+                    ☕ Offri un caffè
+                </a>
+
+                <button class="prof-signout-btn" id="prof-signout-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Disconnetti
+                </button>
+
+                <!-- Friends sheet (slide-up da bottom) — overlay dietro -->
+                <div id="friends-panel-overlay" class="fp-overlay" style="display:none;" aria-hidden="true"></div>
+                <div id="friends-panel" class="friends-panel friends-panel--sheet" style="display:none;">
+                    <div class="fp-handle-bar"></div>
                     <div class="fp-header">
                         <span class="fp-title">Amici</span>
                         <button class="fp-close" id="fp-close-btn">✕</button>
@@ -396,15 +439,6 @@
                     <div class="fp-section-title">I tuoi amici</div>
                     <div id="fp-friends-list" class="fp-list"></div>
                 </div>
-
-                <a href="https://ko-fi.com/giaaniM" target="_blank" rel="noopener noreferrer" class="prof-kofi-link">
-                    ☕ Offri un caffè
-                </a>
-
-                <button class="prof-signout-btn" id="prof-signout-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Disconnetti
-                </button>
 
                 <!-- Hidden proxy elements — keep IDs for app-native.js compat -->
                 <div id="setup-profile-bar" style="display:none;">

@@ -118,13 +118,11 @@ function showProfileBar(user) {
     if (profUsername) profUsername.textContent = username;
     if (profAvatar)   profAvatar.textContent   = avatarChar;
 
-    // Greeting in home tab
-    const greeting = document.getElementById('app-greeting');
+    // Greeting in home tab — ora è inline nella logo compact
     const greetingName = document.getElementById('app-greeting-name');
-    if (greeting && greetingName) {
-        greetingName.textContent = username;
-        greeting.style.display = 'block';
-    }
+    const greeting = document.getElementById('app-greeting');
+    if (greetingName) greetingName.textContent = username;
+    if (greeting) greeting.style.display = 'block';
 
     // Wire spb-signout-btn (used by profile tab sign-out via proxy click)
     const signoutBtn = document.getElementById('spb-signout-btn');
@@ -133,22 +131,123 @@ function showProfileBar(user) {
         showScreen('login-screen');
     }, { once: true });
 
-    // Wire friends panel open (triggered by prof-friends-btn via proxy)
+    // Wire spb-friends-btn proxy → openFriendsPanel (sheet con overlay)
+    // main.js gestisce prof-friends-btn → spb-friends-btn.click() → qui
     const friendsBtn = document.getElementById('spb-friends-btn');
     friendsBtn?.addEventListener('click', openFriendsPanel, { once: true });
+
+    // Sorveglia l'overlay quando main.js chiude il panel senza passare per openFriendsPanel
+    // (es. secondo clic su prof-friends-btn = toggle close)
+    document.getElementById('prof-friends-btn')?.addEventListener('click', () => {
+        const fp      = document.getElementById('friends-panel');
+        const overlay = document.getElementById('friends-panel-overlay');
+        if (!fp || !overlay) return;
+        // main.js ha già aggiornato display — sincronizzo l'overlay
+        if (fp.style.display === 'none') {
+            overlay.style.display = 'none';
+        }
+    });
+
+    // Badge lingua/audio: aggiornati dopo ogni clic sui bottoni già wirat da main.js
+    document.getElementById('prof-lang-btn')?.addEventListener('click', () => {
+        // main.js fa già lang-toggle-btn.click(); qui aggiorniamo solo il badge
+        setTimeout(_updateLangBadge, 50); // piccolo delay per aspettare il cambio lingua
+    });
+    document.getElementById('prof-audio-btn')?.addEventListener('click', () => {
+        // main.js fa già audio-toggle-btn.click(); qui aggiorniamo solo il badge
+        setTimeout(_updateAudioBadge, 50);
+    });
+
+    // Initial badge state
+    _updateLangBadge();
+    _updateAudioBadge();
+    updateRequestBadge();
+}
+
+/** Aggiorna il badge bandiera lingua nel profilo */
+function _updateLangBadge() {
+    const badge = document.getElementById('prof-lang-badge');
+    if (!badge) return;
+    const lang = localStorage.getItem('cerchio_lang') || 'it';
+    badge.textContent = lang === 'en' ? '🇬🇧' : '🇮🇹';
+}
+
+/** Aggiorna il badge ON/OFF audio nel profilo */
+function _updateAudioBadge() {
+    const badge = document.getElementById('prof-audio-badge');
+    if (!badge) return;
+    const isMuted = window.soundManager?.isMuted ?? false;
+    badge.textContent = isMuted ? 'OFF' : 'ON';
+}
+
+/**
+ * Aggiorna il badge rosso su:
+ * - #prof-friends-badge (icona Amici nella lista profilo)
+ * - #btb-profile (tab nella bottom bar)
+ * Legge il DOM: conta richieste in fp-requests-list e inviti in profile-invites-section.
+ */
+export function updateRequestBadge() {
+    const requestsList   = document.getElementById('fp-requests-list');
+    const invitesSection = document.getElementById('profile-invites-section');
+
+    // Conta elementi significativi (esclude loader e "nessuna richiesta")
+    const hasRequests = requestsList
+        ? requestsList.querySelectorAll('.fp-row, .fp-result-row').length > 0
+        : false;
+    const hasInvites = invitesSection
+        ? invitesSection.style.display !== 'none' && invitesSection.innerHTML.trim() !== ''
+        : false;
+
+    const hasBadge = hasRequests || hasInvites;
+
+    // Badge sulla row Amici nel profilo
+    const friendsBadge = document.getElementById('prof-friends-badge');
+    if (friendsBadge) friendsBadge.style.display = hasBadge ? 'block' : 'none';
+
+    // Badge sul tab profile nella bottom tab bar
+    const btbProfile = document.getElementById('btb-profile');
+    if (btbProfile) {
+        // Rimuovi badge esistente per evitare duplicati
+        btbProfile.querySelector('.btb-badge')?.remove();
+        if (hasBadge) {
+            const dot = document.createElement('span');
+            dot.className = 'btb-badge';
+            dot.setAttribute('aria-label', 'Notifiche in arrivo');
+            btbProfile.appendChild(dot);
+        }
+    }
 }
 
 function openFriendsPanel() {
-    const panel = document.getElementById('friends-panel');
+    const panel   = document.getElementById('friends-panel');
+    const overlay = document.getElementById('friends-panel-overlay');
     if (!panel) return;
+
+    // Mostra overlay + sheet
+    if (overlay) {
+        overlay.style.display = 'block';
+        // Tap sull'overlay chiude lo sheet
+        overlay.addEventListener('click', _closeFriendsPanel, { once: true });
+    }
     panel.style.display = 'flex';
     refreshFriendsPanel();
 
-    document.getElementById('fp-close-btn')?.addEventListener('click', () => {
-        panel.style.display = 'none';
-        // re-wire friends button for next open
+    function _closeFriendsPanel() {
+        const _panel   = document.getElementById('friends-panel');
+        const _overlay = document.getElementById('friends-panel-overlay');
+        if (_panel)   _panel.style.display   = 'none';
+        if (_overlay) _overlay.style.display = 'none';
+        // re-wire proxy
         document.getElementById('spb-friends-btn')?.addEventListener('click', openFriendsPanel, { once: true });
-    }, { once: true });
+    }
+
+    // Rimuovi listener precedenti da fp-close-btn (evita duplicati su riaperture)
+    const closeBtn = document.getElementById('fp-close-btn');
+    if (closeBtn) {
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode?.replaceChild(newCloseBtn, closeBtn);
+        newCloseBtn.addEventListener('click', _closeFriendsPanel, { once: true });
+    }
 
     // Live user search
     const fpInput  = document.getElementById('fp-username-input');
@@ -211,9 +310,12 @@ async function refreshFriendsPanel() {
     requestsList.querySelectorAll('.fp-accept-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             await acceptFriendRequest(btn.dataset.id);
-            refreshFriendsPanel();
+            await refreshFriendsPanel();
         });
     });
+
+    // Aggiorna badge dopo il caricamento
+    updateRequestBadge();
 
     friendsList.innerHTML = friendsArr.length === 0
         ? '<div class="fp-empty">Nessun amico ancora</div>'

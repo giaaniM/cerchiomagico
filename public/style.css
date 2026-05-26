@@ -7373,6 +7373,40 @@ body.manche-finale .board-frame {
     display: none !important;
 }
 
+/* Hide "o gioca in locale" divider and local start button in native */
+.is-native #multi-locale-divider {
+    display: none !important;
+}
+.is-native #start-local-game-btn {
+    display: none !important;
+}
+
+/* ── Native game board: responsive tiles that fit any phone width ──
+   Formula: (100vw - 32px padding - 13 gaps) / 14 tiles
+   At 390px → ≈ 23px wide; clamp min 18px, max 52px to keep readability */
+.is-native #game-screen .tile {
+    width: clamp(18px, calc((100vw - 32px - 13 * 3px) / 14), 52px);
+    height: clamp(26px, calc(clamp(18px, calc((100vw - 32px - 13 * 3px) / 14), 52px) * 1.4), 72px);
+    font-size: clamp(0.6rem, calc(clamp(18px, calc((100vw - 32px - 13 * 3px) / 14), 52px) * 0.5), 1.8rem);
+    border-radius: 3px;
+}
+.is-native #game-screen .board-row {
+    gap: clamp(1px, 0.5vw, 3px);
+}
+.is-native #game-screen.online-mode .game-main-layout {
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 4px;
+}
+.is-native #game-screen.online-mode .players-sidebar,
+.is-native #game-screen.online-mode .wheel-value-sidebar {
+    display: none;
+}
+.is-native #game-screen.online-mode .board-area {
+    width: 100%;
+    flex: none;
+}
+
 /* ===== HOME REDESIGN — Mode selector ===== */
 .mode-selector-grid {
     display: grid;
@@ -7869,6 +7903,87 @@ body:has(#setup-screen.active) .quick-actions-container {
     font-size: 0.78rem;
     color: rgba(255,255,255,0.4);
     margin: 0;
+}
+
+/* ── Spinner CSS puro (no emoji) per mm-spinner-anim ── */
+.mm-spinner-anim {
+    width: 44px;
+    height: 44px;
+    border: 4px solid rgba(255,255,255,0.15);
+    border-top-color: var(--accent-gold, #f5a623);
+    border-radius: 50%;
+    animation: mm-spin 0.9s linear infinite;
+    flex-shrink: 0;
+}
+
+/* ── Friend Picker Screen ── */
+.fpicker-list {
+    width: 100%;
+    max-width: 380px;
+    max-height: 55vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.fpicker-loading,
+.fpicker-empty {
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.9rem;
+    padding: 32px 16px;
+    line-height: 1.6;
+}
+.fpicker-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+}
+.fpicker-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.fpicker-avatar-fallback {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(167,139,250,0.25);
+    border: 1.5px solid rgba(167,139,250,0.4);
+    color: #a78bfa;
+    font-weight: 800;
+    font-size: 1rem;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+.fpicker-name {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.fpicker-challenge-btn {
+    padding: 7px 16px;
+    background: var(--accent-gold, #f5a623);
+    border: none;
+    border-radius: 20px;
+    color: #000;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* ─── Online Game Screen ─── */
@@ -8688,14 +8803,14 @@ html:not(.is-native) #tab-play { display: block; flex: none; }
     font-weight: 800;
 }
 
-/* Play tab: setup-layout takes remaining space, centered */
+/* Play tab: setup-layout pushes card up, not center-centered */
 .is-native #tab-play .setup-layout {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 0 16px 24px;
+    justify-content: flex-start;
+    padding: 8px 16px 24px;
     width: 100%;
     max-width: 480px;
     margin: 0 auto;
@@ -8704,8 +8819,10 @@ html:not(.is-native) #tab-play { display: block; flex: none; }
     width: 100%;
 }
 
-/* Hide footer tertiary row on native (tab bar handles it) */
+/* Hide footer rows on native (tab bar handles navigation) */
 .is-native .setup-tertiary-row { display: none; }
+.is-native .setup-icon-row { display: none; }
+.is-native .setup-actions-bottom { display: none; }
 
 /* ── Multiplayer rows — minimal iOS-style ── */
 .online-multi-row {
@@ -9131,4 +9248,257 @@ html:not(.is-native) #tab-play { display: block; flex: none; }
 }
 .pi-accept { background: #22c55e; color: #fff; }
 .pi-decline { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+
+/* ══════════════════════════════════════════════
+   MOBILE REDESIGN v2 — Home logo + Profile list
+══════════════════════════════════════════════ */
+
+/* ── 1. Home logo compact — impattante con immagine ── */
+.is-native .app-logo-compact {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 20px 6px;
+    flex-shrink: 0;
+}
+.app-logo-img-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1.5px rgba(251,191,36,0.25);
+}
+.app-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    /* og-image è 1200x630, il logo è centrato — crop centrato è buono */
+    transform: scale(1.15);
+    transform-origin: center center;
+}
+.app-logo-text-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+/* Override app-logo-text per layout colonna */
+.app-logo-text-col .app-logo-text {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.5px;
+    display: flex;
+    gap: 5px;
+    line-height: 1;
+}
+.app-logo-text-gold {
+    color: #fbbf24;
+}
+/* Greeting ora è dentro la text-col, inline sotto il titolo */
+.app-logo-text-col .app-greeting {
+    padding: 0;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    display: none; /* mostrato via JS */
+}
+.app-logo-text-col .app-greeting span {
+    color: rgba(255,255,255,0.85);
+    font-weight: 700;
+}
+/* Override: il vecchio #app-greeting (ora dentro text-col) eredita dal parent */
+#app-greeting {
+    /* lascio gestire dalla regola sopra */
+}
+
+/* ── 2. Profilo — hero card orizzontale ── */
+.prof-hero-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: max(24px, calc(env(safe-area-inset-top, 20px) + 8px)) 20px 16px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(79,70,229,0.06));
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+}
+.prof-hero-card .prof-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(139,92,246,0.3), 0 4px 20px rgba(124,58,237,0.4);
+}
+.prof-hero-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.prof-hero-card .prof-username {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.prof-hero-card .prof-record {
+    font-size: 0.78rem;
+    color: rgba(251,191,36,0.7);
+    font-weight: 600;
+}
+
+/* ── 3. Profilo — lista azioni iOS-style ── */
+.prof-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+}
+.prof-list-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-family);
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+    position: relative;
+}
+.prof-list-row:last-child { border-bottom: none; }
+.prof-list-row:active { background: rgba(255,255,255,0.07); }
+.prof-list-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+}
+.prof-list-icon--purple { background: #7c3aed; }
+.prof-list-icon--blue   { background: #2563eb; }
+.prof-list-icon--teal   { background: #0d9488; }
+.prof-list-icon--gold   { background: #d97706; }
+.prof-list-icon--red    { background: #dc2626; }
+.prof-list-label {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+.prof-list-value {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.38);
+    font-weight: 500;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+.prof-list-chevron {
+    color: rgba(255,255,255,0.2);
+    flex-shrink: 0;
+}
+/* Badge richieste amici sulla row */
+.prof-list-badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    margin-right: 4px;
+    flex-shrink: 0;
+    animation: badgePop 0.3s cubic-bezier(.36,.07,.19,.97);
+}
+
+/* ── 4. Friends panel — bottom sheet ── */
+.fp-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 8900;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: fpOverlayIn 0.25s ease;
+}
+@keyframes fpOverlayIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.friends-panel--sheet {
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    z-index: 9000 !important;
+    width: 100% !important;
+    max-height: 82vh !important;
+    border-radius: 24px 24px 0 0 !important;
+    background: #0f1324 !important;
+    border-top: 1px solid rgba(255,255,255,0.1) !important;
+    box-shadow: 0 -8px 48px rgba(0,0,0,0.6) !important;
+    padding: 0 16px 32px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* slide-up */
+    transform: translateY(0) !important;
+    animation: sheetSlideUp 0.32s cubic-bezier(0.34, 1.2, 0.64, 1) !important;
+}
+@keyframes sheetSlideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+.fp-handle-bar {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.18);
+    margin: 12px auto 8px;
+    flex-shrink: 0;
+}
+/* Adattamento header per sheet */
+.friends-panel--sheet .fp-header {
+    margin-top: 4px;
+}
+/* Sovrascrivi la position fixed originale del .friends-panel quando è sheet */
+.friends-panel--sheet {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+}
+
+/* ── Override: profile tab padding con la nuova hero card ── */
+#tab-profile {
+    padding: 0 !important;
+    gap: 0 !important;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 16px)) !important;
+}
+#tab-profile .prof-list {
+    margin: 16px 16px 0;
+    width: calc(100% - 32px);
+}
+#tab-profile .prof-kofi-link {
+    margin: 16px 16px 0;
+}
+#tab-profile .prof-signout-btn {
+    margin: 12px 16px 0;
+    width: calc(100% - 32px);
+    justify-content: center;
+}
+
+/* ── Fix: greeting inline nel logo header ── */
+.is-native #tab-play .app-logo-compact .app-greeting {
+    display: block;
+}
+/* Quando il greeting non ha username (non loggato), rimane hidden via JS */
 .pi-accept:active, .pi-decline:active { transform: scale(0.9); }

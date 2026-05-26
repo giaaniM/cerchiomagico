@@ -32,7 +32,8 @@ import { syncGameState, setHandlers as socketSetHandlers } from './socket.js';
 import { initSetup, setStartGameDirectly, initSoloButton, resetSoloSelection, refreshModeInfoCard } from './setup.js';
 import { initMobileLayout } from './mobile-layout.js';
 import { showLeaderboardPopup, fetchLeaderboard } from './leaderboard.js';
-import { joinMatchmaking, showPrivateRoomChoice } from './online-game.js';
+import { joinMatchmaking, showPrivateRoomChoice, cancelMatchmaking, showFriendPickerScreen } from './online-game.js';
+import { showHistoryPopup, hasHistory } from './history.js';
 
 // ===== Wire cross-module dependencies =====
 
@@ -177,7 +178,11 @@ document.getElementById('online-casuale-btn')?.addEventListener('click', () => {
 });
 document.getElementById('online-amico-btn')?.addEventListener('click', () => {
     soundManager.playClick();
-    showPrivateRoomChoice();
+    if (isNative) {
+        showFriendPickerScreen();
+    } else {
+        showPrivateRoomChoice();
+    }
 });
 
 // Prevent accidental navigation during an active game
@@ -275,7 +280,17 @@ window.addEventListener('beforeunload', (e) => {
     });
 
     document.getElementById('prof-history-btn')?.addEventListener('click', () => {
-        document.getElementById('history-btn')?.click();
+        if (hasHistory()) {
+            showHistoryPopup();
+        } else {
+            showPopup(`<div class="popup-body">
+                <div class="popup-icon" style="font-size:2rem;">📋</div>
+                <div class="popup-title">Nessuna partita</div>
+                <div class="popup-text">Non hai ancora giocato nessuna partita.</div>
+                <button class="btn-secondary" style="margin-top:16px;padding:8px 24px;"
+                    onclick="document.getElementById('modal-overlay').style.display='none';document.getElementById('popup-message').style.display='none'">Chiudi</button>
+            </div>`, 0);
+        }
     });
 
     document.getElementById('prof-rules-btn')?.addEventListener('click', () => {
@@ -283,7 +298,11 @@ window.addEventListener('beforeunload', (e) => {
     });
 
     document.getElementById('prof-lang-btn')?.addEventListener('click', () => {
-        document.getElementById('lang-toggle-btn')?.click();
+        // Chiama toggleLanguage direttamente (lang-toggle-btn è nascosto su nativo)
+        toggleLanguage();
+        // Aggiorna il badge bandiera nel profilo
+        const badge = document.getElementById('prof-lang-badge');
+        if (badge) badge.textContent = getCurrentLang() === 'en' ? '🇬🇧' : '🇮🇹';
     });
 
     document.getElementById('prof-audio-btn')?.addEventListener('click', () => {
@@ -319,6 +338,12 @@ if (isNative) {
         if (id === 'game-screen' || id === 'win-screen') {
             gameState.currentManche = 0; // bypass confirmation popup
             newGame();
+            return;
+        }
+        // Online dynamic screens: close and cancel matchmaking if needed
+        if (active.classList.contains('online-screen')) {
+            cancelMatchmaking();
+            return;
         }
         // setup-screen / login-screen: let Android minimize app
     });
