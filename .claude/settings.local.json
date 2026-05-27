@@ -55,7 +55,22 @@
       "Skill(caveman:caveman)",
       "Bash(git *)",
       "Bash(grep *)",
-      "Bash(npx esbuild *)"
+      "Bash(npx esbuild *)",
+      "Bash(cp /Users/valeriopadovano/Downloads/handoff/assets/logo/magicspin-logo.svg /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/favicon.svg)",
+      "Bash(cp /Users/valeriopadovano/Downloads/handoff/assets/logo/magicspin-logo-32.png /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/favicon-32.png)",
+      "Bash(cp /Users/valeriopadovano/Downloads/handoff/assets/logo/magicspin-logo-192.png /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/favicon-192.png)",
+      "Bash(cp /Users/valeriopadovano/Downloads/handoff/assets/logo/magicspin-logo-192.png /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/assets/icons/icon-192.png)",
+      "Bash(cp /Users/valeriopadovano/Downloads/handoff/assets/logo/magicspin-logo-256.png /Users/valeriopadovano/applicazioni/wheel-of-fortune/public/assets/icons/icon-256.png)",
+      "Bash(xxd)",
+      "Bash(awk NR>=720 && NR<=745 *)",
+      "Bash(awk NR>=540 && NR<=570 *)",
+      "Bash(awk NR>=530 && NR<=542 *)",
+      "Bash(awk NR>=505 && NR<=535 *)",
+      "Bash(awk NR>=430 && NR<=460 *)",
+      "Bash(awk NR>=460 && NR<=485 *)",
+      "Bash(awk NR>=315 && NR<=325 *)",
+      "Bash(awk NR>=310 && NR<=320 *)",
+      "WebFetch(domain:canaledieci.it)"
     ]
   }
 }

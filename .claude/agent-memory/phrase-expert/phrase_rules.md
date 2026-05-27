@@ -133,6 +133,33 @@ Quando si genera un batch di frasi, verificare che la proporzione di personaggi 
 
 ---
 
+---
+
+## STILE INDIZIO — Regola fondamentale (aggiornamento apr 2026)
+
+La frase deve essere un **indizio specifico** che punta a UN SOLO soggetto. Non una scena generica.
+
+**Test:** togli l'hint. La frase punta ancora a un solo soggetto? Sì → ok. No → riscrivila.
+
+**Frasi approvate dall'utente:**
+- SCOIATTOLO → PICCOLO RODITORE CHE FA SCORTA DI GHIANDE (41) ✅
+- LUCIANO PAVAROTTI → LA VOCE PIU POTENTE DELL OPERA LIRICA ITALIANA (46) ✅
+- 1969 NEGLI USA → TRE GIORNI DI PACE E MUSICA IN UN PRATO FANGOSO (47) ✅
+- KOALA → SI AGGRAPPA AL RAMO E DORME VENTI ORE AL GIORNO (47) ✅
+- MERCATO RIONALE → BANCARELLE RUMOROSE E PREZZI DA CONTRATTARE (43) ✅
+
+**Rifiutate (troppo generiche):**
+- PROFESSORE SERIO E BANCO CHE TREMA DI PAURA ❌
+- PIGIAMA SOTTO E CAMICIA STIRATA IN ALTO ❌
+- SLIDESHOW NOIOSO E CAFFE FREDDO SUL TAVOLO ❌
+
+**Parole lunghe preferite (8-13 lettere, note, non desuete):** AUTOMOBILISTI, INTERMINABILI, STRAVAGANTI, AFFOLLATISSIME, INCOMPRENSIBILE, STRACOLMO, LENTISSIME.
+**Parole rifiutate:** CONTIGUI (desueto), FEED (troppo di nicchia in italiano).
+
+**MAI inserire in DB senza conferma esplicita dell'utente.**
+
+---
+
 ## Esempi validi
 
 ```
