@@ -131,7 +131,7 @@ export function showSoloResults(newGame) {
     const winCard = winScreen?.querySelector('.win-card');
     if (!winCard) return;
 
-    const nick = getSavedNickname() || playerName;
+    const nick = playerName || getSavedNickname();
 
     winCard.innerHTML = `
         <div class="solo-results">
