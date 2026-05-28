@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#070b19">
+  <title>MagicSpin</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Auth Gate ──────────────────────────────────────────── -->
+    <div id="screen-auth" class="screen hidden">
+      <div class="auth-inner">
+        <div class="auth-logo">MagicSpin</div>
+        <div class="auth-tagline">Gira, indovina, vinci.</div>
+
+        <div class="auth-card">
+          <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login">Accedi</button>
+            <button class="auth-tab" data-tab="register">Registrati</button>
+          </div>
+
+          <div id="auth-form-login">
+            <div class="auth-field">
+              <label>Username</label>
+              <input id="login-username" type="text" placeholder="il tuo username" autocomplete="username" autocapitalize="off">
+            </div>
+            <div class="auth-field" style="margin-top:12px">
+              <label>Password</label>
+              <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+          </div>
+
+          <div id="auth-form-register" class="hidden">
+            <div class="auth-field">
+              <label>Username</label>
+              <input id="reg-username" type="text" placeholder="scegli un username" autocomplete="username" autocapitalize="off">
+            </div>
+            <div class="auth-field" style="margin-top:12px">
+              <label>Password</label>
+              <input id="reg-password" type="password" placeholder="min 6 caratteri" autocomplete="new-password">
+            </div>
+            <div class="auth-field" style="margin-top:12px">
+              <label>Email (opzionale)</label>
+              <input id="reg-email" type="email" placeholder="per recupero account" autocomplete="email">
+            </div>
+          </div>
+
+          <div id="auth-error" class="auth-error"></div>
+          <button id="auth-submit" class="auth-submit">Accedi</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Home Screen ────────────────────────────────────────── -->
+    <div id="screen-home" class="screen hidden">
+      <!-- Top bar -->
+      <div class="home-topbar">
+        <div class="home-user">
+          <div id="home-avatar" class="avatar" style="width:36px;height:36px;font-size:15px;"></div>
+          <div class="home-user-info">
+            <div class="home-user-greeting">Ciao</div>
+            <div id="home-username" class="home-user-name">—</div>
+          </div>
+        </div>
+        <div class="home-actions">
+          <div class="coin-pill">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity=".25"/><circle cx="12" cy="12" r="8"/><text x="12" y="16" text-anchor="middle" font-size="11" font-family="Lexend" font-weight="800" fill="#070b19">€</text></svg>
+            <span id="home-coins">12.4K</span>
+          </div>
+          <button class="notif-btn pressable">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 8a6 6 0 0112 0v5l2 3H4l2-3V8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 19a2 2 0 004 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <div class="notif-dot"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero Quick Match card -->
+      <div class="hero-card pressable">
+        <div class="hero-ring-1"></div>
+        <div class="hero-ring-2"></div>
+        <div class="hero-orb"></div>
+        <div class="hero-eyebrow">⚡ Partita Rapida</div>
+        <div class="hero-title">Sfida un<br>avversario</div>
+        <div class="hero-subtitle">Tempo medio attesa <b style="color:var(--gold)">~12s</b></div>
+        <button class="hero-cta" id="hero-play-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 3l8 8M5 3h3l9 13v3l-2 0v-2L2 8V5l1-2zM21 3l-8 8M19 3h-3l-3 4M21 21l-5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          GIOCA ORA
+        </button>
+      </div>
+
+      <!-- Mode cards 2×2 -->
+      <div class="mode-grid">
+        <div class="mode-card pressable">
+          <div class="mode-card-glow" style="background:radial-gradient(circle,rgba(0,242,255,0.30) 0%,transparent 65%)"></div>
+          <div class="mode-card-icon" style="color:var(--cyan)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" opacity=".4"/><path d="M12 3v4M21 12h-4M12 21v-4M3 12h4M18.4 5.6l-2.8 2.8M18.4 18.4l-2.8-2.8M5.6 18.4l2.8-2.8M5.6 5.6l2.8 2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <div class="mode-card-title">Solitario</div>
+          <div class="mode-card-sub">Allenati &amp; batti il record</div>
+        </div>
+        <div class="mode-card pressable">
+          <div class="mode-card-glow" style="background:radial-gradient(circle,rgba(251,191,36,0.28) 0%,transparent 65%)"></div>
+          <div class="mode-card-icon" style="color:var(--gold)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M3 19a6 6 0 0112 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M16 19a5 5 0 015-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div class="mode-card-title">Sfida amici</div>
+          <div class="mode-card-sub">Invita 1 dei tuoi amici</div>
+        </div>
+      </div>
+
+      <!-- Daily challenge -->
+      <div class="daily-row pressable">
+        <div class="daily-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c2 4 6 6 6 11a6 6 0 11-12 0c0-3 2-4 2-7 0 2 2 3 4 1z"/></svg>
+        </div>
+        <div class="daily-info">
+          <div class="daily-title">Sfida del giorno</div>
+          <div class="daily-sub">Risolvi in <b style="color:var(--gold)">60s</b> · premio 500€</div>
+        </div>
+        <div class="daily-chev">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+
+      <!-- Friends online -->
+      <div class="friends-section">
+        <div class="section-header">
+          <div class="section-label">Amici online</div>
+          <div class="section-action">Vedi tutti</div>
+        </div>
+        <div class="friends-scroll" id="friends-list">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Play / Match Mode Select ────────────────────────────── -->
+    <div id="screen-play" class="screen hidden">
+      <!-- Nav header -->
+      <div class="play-nav">
+        <div class="play-back-btn pressable" id="play-back-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="play-nav-title">Nuova partita</div>
+        <div style="width:36px"></div>
+      </div>
+
+      <!-- Header text -->
+      <div class="play-header">
+        <div class="play-header-eyebrow">SCEGLI LA MODALITA'</div>
+        <div class="play-header-title">Come vuoi<br>giocare oggi?</div>
+      </div>
+
+      <!-- Mode cards -->
+      <div class="play-modes">
+
+        <!-- Random match — primary big card -->
+        <div class="play-mode-hero pressable" id="play-go-random">
+          <div class="play-mode-hero-glow"></div>
+          <div class="play-mode-hero-top">
+            <div class="play-mode-hero-icon">
+              <!-- swords icon -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 3l8 8M5 3h3l9 13v3l-2 0v-2L2 8V5l1-2zM21 3l-8 8M19 3h-3l-3 4M21 21l-5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="play-mode-hero-text">
+              <div class="play-mode-hero-title">Avversario casuale</div>
+              <div class="play-mode-hero-sub">Cerca giocatori al tuo livello</div>
+            </div>
+          </div>
+          <div class="play-mode-hero-meta">
+            <div class="play-mode-hero-online">
+              <div class="online-dot"></div>
+              1.247 online
+            </div>
+            <div class="play-mode-hero-wait">Attesa ~12s</div>
+          </div>
+          <button class="play-mode-hero-cta pressable" id="play-find-btn">TROVA AVVERSARIO</button>
+        </div>
+
+        <!-- Friend match -->
+        <div class="play-mode-row pressable" id="play-go-friends">
+          <div class="play-mode-row-icon play-mode-row-icon--gold">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M3 19a6 6 0 0112 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M16 19a5 5 0 015-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div class="play-mode-row-info">
+            <div class="play-mode-row-title">Sfida un amico</div>
+            <div class="play-mode-row-sub">Invita uno dei tuoi amici</div>
+          </div>
+          <div class="play-mode-row-chev">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+
+        <!-- Solo -->
+        <div class="play-mode-row pressable" id="play-go-solo">
+          <div class="play-mode-row-icon play-mode-row-icon--cyan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" opacity=".4"/><path d="M12 3v4M21 12h-4M12 21v-4M3 12h4M18.4 5.6l-2.8 2.8M18.4 18.4l-2.8-2.8M5.6 18.4l2.8-2.8M5.6 5.6l2.8 2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <div class="play-mode-row-info">
+            <div class="play-mode-row-title">Solitario</div>
+            <div class="play-mode-row-sub">Allena la mente, niente pressione</div>
+          </div>
+          <div class="play-mode-row-chev">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+
+        <!-- Lobby code -->
+        <div class="play-mode-lobby pressable" id="play-go-lobby">
+          <div class="play-mode-lobby-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M10 14a4 4 0 005.66 0l3-3a4 4 0 10-5.66-5.66l-1 1M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 105.66 5.66l1-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <div class="play-mode-lobby-text">Hai un codice lobby?</div>
+          <div class="play-mode-lobby-action">Inserisci</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Leaderboard Screen ──────────────────────────────────── -->
+    <div id="screen-leaderboard" class="screen hidden">
+      <div class="lb-topbar">
+        <h1>Classifica</h1>
+        <div class="lb-icon-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        </div>
+      </div>
+
+      <!-- Period control -->
+      <div class="lb-segments">
+        <button class="lb-seg active" data-period="week">Settimana</button>
+        <button class="lb-seg" data-period="month">Mese</button>
+        <button class="lb-seg" data-period="all">Sempre</button>
+      </div>
+
+      <!-- Scope filter -->
+      <div class="lb-filters">
+        <button class="lb-filter-btn active" data-scope="world">🌍 Mondo</button>
+        <button class="lb-filter-btn" data-scope="friends">👥 Amici</button>
+        <button class="lb-filter-btn" data-scope="italy">🇮🇹 Italia</button>
+      </div>
+
+      <div class="screen-scroll" id="lb-scroll">
+        <!-- Podium -->
+        <div class="lb-podium" id="lb-podium">
+          <!-- populated by JS -->
+        </div>
+
+        <div class="lb-divider"></div>
+
+        <!-- List -->
+        <div class="lb-list" id="lb-list">
+          <div class="lb-loading">Caricamento…</div>
+        </div>
+
+        <div class="scroll-bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- ── Profile Screen ─────────────────────────────────────── -->
+    <div id="screen-profile" class="screen hidden">
+      <div class="profile-topbar">
+        <div class="lb-icon-btn pressable">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v12M8 7l4-4 4 4M5 14v5a2 2 0 002 2h10a2 2 0 002-2v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h1>Profilo</h1>
+        <div class="lb-icon-btn pressable" id="profile-settings-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" stroke="currentColor" stroke-width="1.6"/></svg>
+        </div>
+      </div>
+
+      <div class="screen-scroll">
+        <!-- Avatar hero -->
+        <div class="profile-hero">
+          <div class="profile-avatar-glow">
+            <div id="profile-avatar" class="avatar" style="width:88px;height:88px;font-size:37px;"></div>
+          </div>
+          <div id="profile-name" class="profile-name">—</div>
+          <div id="profile-handle" class="profile-handle">@— · da Gen 2025</div>
+          <div class="profile-rank-badge">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="color:var(--gold)"><circle cx="12" cy="14" r="6" stroke="currentColor" stroke-width="1.8"/><path d="M8 3l2 6M16 3l-2 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span id="profile-rank-label" class="profile-rank-label">Argento II</span>
+            <span id="profile-rank-pts" class="profile-rank-pts">· 1.420 pt</span>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="profile-stats" id="profile-stats">
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--green)" id="stat-wins">47</div>
+            <div class="stat-label">Vittorie</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--cyan)" id="stat-wr">64%</div>
+            <div class="stat-label">Win rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--magenta)" id="stat-streak">7</div>
+            <div class="stat-label">Streak</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--gold)" id="stat-earned">€42K</div>
+            <div class="stat-label">Vinti</div>
+          </div>
+        </div>
+
+        <!-- Rank progress -->
+        <div class="profile-progress">
+          <div class="progress-header">
+            <span class="progress-label">Prossima promozione</span>
+            <span class="progress-next" id="progress-next-rank">Oro III</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-fill" style="width:62%"></div>
+          </div>
+          <div class="progress-pts">
+            <span id="progress-cur">1.420 pt</span>
+            <span id="progress-max">2.300 pt</span>
+          </div>
+        </div>
+
+        <!-- Achievements -->
+        <div class="profile-section">
+          <div class="profile-section-header">
+            <div class="profile-section-label">Obiettivi</div>
+            <div class="profile-section-action" id="achievements-count">8 / 24</div>
+          </div>
+          <div class="achievements-grid" id="achievements-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Match history -->
+        <div class="profile-section">
+          <div class="profile-section-header">
+            <div class="profile-section-label">Ultime partite</div>
+            <div class="profile-section-action">Vedi tutto</div>
+          </div>
+          <div class="history-list" id="history-list">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Logout -->
+        <div class="profile-logout">
+          <button class="logout-btn" id="logout-btn">Esci dall'account</button>
+        </div>
+
+        <div class="scroll-bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- ── Game Screen ─────────────────────────────────────────── -->
+    <div id="screen-game" class="screen screen-game hidden">
+
+      <!-- Top bar: manche + action icons -->
+      <div class="game-topbar">
+        <div class="game-manche-pill">
+          MANCHE <span class="game-manche-num" id="game-manche-num">1</span><span class="game-manche-tot">&thinsp;/&thinsp;3</span>
+        </div>
+        <div class="game-topbar-actions">
+          <button class="game-icon-btn pressable" id="game-home-btn" aria-label="Esci">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7v9a2 2 0 01-2 2h-4v-7h-6v7H5a2 2 0 01-2-2v-9z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="game-icon-btn pressable" id="game-sound-btn" aria-label="Audio">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <button class="game-icon-btn pressable" id="game-help-btn" aria-label="Regole">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="0.8" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Score bar: 1v1 -->
+      <div class="game-score-bar">
+        <div class="game-player game-player--left" id="game-player1">
+          <div class="game-player-av-wrap">
+            <div class="avatar game-player-av" id="game-av1" style="width:36px;height:36px;font-size:15px;background:linear-gradient(135deg,#00f2ff,#00f2ff99);box-shadow:0 0 0 2px #070b19,0 0 0 3.5px #00f2ff"></div>
+          </div>
+          <div class="game-player-info">
+            <div class="game-player-name" id="game-name1">Tu</div>
+            <div class="game-player-score" id="game-score1">€0</div>
+          </div>
+        </div>
+
+        <div class="game-turn-pill" id="game-turn-pill">TUO TURNO</div>
+
+        <div class="game-player game-player--right" id="game-player2">
+          <div class="game-player-info game-player-info--right">
+            <div class="game-player-name" id="game-name2">Avversario</div>
+            <div class="game-player-score" id="game-score2">€0</div>
+          </div>
+          <div class="game-player-av-wrap">
+            <div class="avatar game-player-av" id="game-av2" style="width:36px;height:36px;font-size:15px;background:linear-gradient(135deg,#ff00d4,#ff00d499)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category pill -->
+      <div class="game-category-wrap">
+        <div class="game-category-pill" id="game-category">
+          <span class="game-category-label">CATEGORIA</span>
+          <span class="game-category-name" id="game-category-name">—</span>
+        </div>
+      </div>
+
+      <!-- Puzzle board -->
+      <div class="game-board-wrap">
+        <div class="game-board-frame" id="game-board">
+          <!-- rows injected by JS -->
+        </div>
+      </div>
+
+      <!-- Used letters strip -->
+      <div class="game-used-strip">
+        <span class="game-used-label">USATE</span>
+        <div class="game-used-letters" id="game-used-letters">
+          <!-- chips injected by JS -->
+        </div>
+      </div>
+
+      <!-- Wheel section — large canvas, pointer overlay, spin strip -->
+      <div class="game-wheel-section">
+        <div class="game-wheel-wrap">
+          <canvas id="game-wheel-canvas" class="game-wheel-canvas"></canvas>
+        </div>
+
+        <!-- Compact value + turn + chiama strip below wheel -->
+        <div class="game-spin-strip" id="game-last-spin">
+          <div class="game-spin-info">
+            <div class="game-spin-label">ULTIMO LANCIO</div>
+            <div class="game-spin-value" id="game-spin-value">—</div>
+          </div>
+          <button class="game-chiama-btn pressable" id="game-chiama-btn">CHIAMA</button>
+        </div>
+      </div>
+
+      <!-- Primary CTA area -->
+      <div class="game-cta-area">
+
+        <!-- Main spin button -->
+        <button class="game-spin-btn pressable" id="game-spin-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" opacity=".4"/><path d="M12 3v4M21 12h-4M12 21v-4M3 12h4M18.4 5.6l-2.8 2.8M18.4 18.4l-2.8-2.8M5.6 18.4l2.8-2.8M5.6 5.6l2.8 2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          GIRA IL CERCHIO
+        </button>
+
+        <!-- Secondary actions -->
+        <div class="game-secondary-actions">
+          <button class="game-vowel-btn pressable" id="game-vowel-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity=".25"/><circle cx="12" cy="12" r="8"/><text x="12" y="16" text-anchor="middle" font-size="11" font-family="Lexend" font-weight="800" fill="#070b19">€</text></svg>
+            Vocale <span class="game-vowel-cost">€1k</span>
+          </button>
+          <button class="game-solve-btn pressable" id="game-solve-btn">
+            Risolvi
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Bottom safe area -->
+      <div class="game-safe-bottom"></div>
+    </div>
+
+    <!-- ── Searching Screen (matchmaking radar) ─────────────── -->
+    <div id="screen-searching" class="screen hidden screen-searching">
+      <!-- Back nav -->
+      <div class="searching-nav">
+        <div class="play-back-btn pressable" id="searching-back-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="play-nav-title">Partita rapida</div>
+        <div style="width:36px"></div>
+      </div>
+
+      <!-- Radar animation -->
+      <div class="searching-body">
+        <div class="radar-wrap">
+          <div class="radar-ring"></div>
+          <div class="radar-ring"></div>
+          <div class="radar-ring"></div>
+          <div class="radar-ring"></div>
+          <div class="radar-center" id="searching-avatar">?</div>
+        </div>
+
+        <div class="searching-status">
+          <div class="searching-title">Cerco un avversario…</div>
+          <div class="searching-sub">Ti abbineremo con un giocatore al tuo livello</div>
+        </div>
+
+        <!-- Animated dots -->
+        <div class="searching-dots">
+          <div class="searching-dot"></div>
+          <div class="searching-dot"></div>
+          <div class="searching-dot"></div>
+        </div>
+
+        <div class="searching-meta">
+          <div class="searching-online">
+            <div class="online-dot"></div>
+            <span>1.247 giocatori online</span>
+          </div>
+          <div class="searching-time" id="searching-timer">0:00</div>
+        </div>
+      </div>
+
+      <div class="searching-footer">
+        <button class="searching-cancel pressable" id="searching-cancel-btn">Annulla</button>
+      </div>
+    </div>
+
+    <!-- ── Versus Screen (pre-game reveal) ───────────────────── -->
+    <div id="screen-versus" class="screen hidden screen-versus">
+      <div class="versus-inner">
+        <!-- Match chips -->
+        <div class="versus-chips">
+          <div class="versus-chip">3 manche</div>
+          <div class="versus-chip versus-chip--gold">60s a turno</div>
+          <div class="versus-chip versus-chip--green">+25 pt</div>
+        </div>
+
+        <!-- Players VS layout -->
+        <div class="versus-players">
+          <!-- Me -->
+          <div class="versus-player versus-player--left">
+            <div class="versus-avatar-wrap versus-avatar-wrap--cyan">
+              <div class="versus-avatar" id="versus-avatar-me">?</div>
+            </div>
+            <div class="versus-name" id="versus-name-me">Tu</div>
+            <div class="versus-rank">Argento II</div>
+          </div>
+
+          <!-- VS badge -->
+          <div class="versus-vs">VS</div>
+
+          <!-- Opponent -->
+          <div class="versus-player versus-player--right">
+            <div class="versus-avatar-wrap versus-avatar-wrap--magenta">
+              <div class="versus-avatar" id="versus-avatar-opp">?</div>
+            </div>
+            <div class="versus-name" id="versus-name-opp">Avversario</div>
+            <div class="versus-rank">Bronzo I</div>
+          </div>
+        </div>
+
+        <!-- Countdown / CTA -->
+        <div class="versus-countdown-wrap">
+          <div class="versus-countdown" id="versus-countdown">3</div>
+          <div class="versus-countdown-label">La partita inizia tra…</div>
+        </div>
+
+        <!-- CTA button (appears when countdown reaches 0) -->
+        <button class="versus-start-btn hidden pressable" id="versus-start-btn">
+          VIA! INIZIA LA PARTITA
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Toast notification ─────────────────────────────────── -->
+    <div id="app-toast" class="app-toast hidden" aria-live="polite"></div>
+
+    <!-- ── Tab Bar ─────────────────────────────────────────────── -->
+    <nav id="tabbar">
+      <button class="tab-btn" data-tab="home">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 11l9-7 9 7v9a2 2 0 01-2 2h-4v-7h-6v7H5a2 2 0 01-2-2v-9z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="tab-btn" data-tab="play">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M10 8.5v7l6-3.5-6-3.5z" fill="currentColor"/></svg>
+        <span>Gioca</span>
+      </button>
+      <button class="tab-btn" data-tab="leaderboard">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v4a5 5 0 01-10 0V4zM3 5h4v3a4 4 0 01-4-4V5zm14 0h4v0a4 4 0 01-4 4V5zM9 14h6v3H9v-3zm-1 4h8v2H8v-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>Classifica</span>
+      </button>
+      <button class="tab-btn" data-tab="profile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21a8 8 0 0116 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>Profilo</span>
+      </button>
+    </nav>
+
+  </div><!-- /#app -->
+
+  <script type="module" src="js/app-main.js"></script>
+</body>
+</html>
